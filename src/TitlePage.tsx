@@ -111,7 +111,7 @@ export function TitlePage() {
   const trailer = pickTrailer(details?.videos)
   const cast = (details?.credits?.cast ?? []).slice(0, 12)
   const activeSeason = selectedSeason ?? 1
-  const defaultEpisode = (historyEntry && historyEntry.season === activeSeason && selectedSeasonParam === undefined) ? historyEntry.episode : undefined
+  const defaultEpisode = (historyEntry && historyEntry.season === activeSeason && selectedSeasonParam == null) ? historyEntry.episode : undefined
   const activeEpisode = selectedEpisodeParam ?? defaultEpisode ?? seasonDetails?.episodes[0]?.episode_number ?? 1
   const playerUrl = playback
     ? buildVideasyUrl(playback.mediaType, playback.id, playback.season, playback.episode, {
