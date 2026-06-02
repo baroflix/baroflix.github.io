@@ -24,13 +24,17 @@ export function FullscreenPlayer({
   useEffect(() => {
     let lastSavedTime = 0
     let latestTimestamp = 0
+    let latestDuration = 0
     let currentKey = progressKey
 
-    function persistProgress(key: string, timestamp: number) {
+    function persistProgress(key: string, timestamp: number, duration?: number) {
       try {
         const raw = window.localStorage.getItem(STORAGE_KEYS.progress)
         const data = raw ? JSON.parse(raw) : {}
         data[key] = timestamp
+        if (duration != null && duration > 0) {
+          data[key + ':duration'] = duration
+        }
         window.localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(data))
       } catch (e) { /* ignore */ }
     }
@@ -62,8 +66,9 @@ export function FullscreenPlayer({
                 }
               }
 
-              // --- Extract timestamp ---
+              // --- Extract timestamp & duration ---
               let ts = 0
+              let dur = 0
               if (parts.length >= 4) {
                 const season = parts[2]
                 const episode = parts[3]
@@ -71,18 +76,21 @@ export function FullscreenPlayer({
                 const epProgress = entry.show_progress?.[epKey]?.progress
                 if (epProgress && typeof epProgress.watched === 'number') {
                   ts = epProgress.watched
+                  if (epProgress.duration) dur = epProgress.duration
                 }
               }
               // Fallback to top-level progress
               if (ts === 0 && entry.progress?.watched != null) {
                 ts = entry.progress.watched
+                if (entry.progress.duration) dur = entry.progress.duration
               }
 
               if (ts > 0) {
                 latestTimestamp = ts
+                if (dur > 0) latestDuration = dur
                 if (Math.abs(ts - lastSavedTime) >= 5) {
                   lastSavedTime = ts
-                  persistProgress(currentKey!, ts)
+                  persistProgress(currentKey!, ts, dur > 0 ? dur : undefined)
                 }
               }
             }
@@ -126,7 +134,7 @@ export function FullscreenPlayer({
 
       // Ensure the absolute latest timestamp is saved before unmounting!
       if (currentKey && latestTimestamp > 0) {
-        persistProgress(currentKey, latestTimestamp)
+        persistProgress(currentKey, latestTimestamp, latestDuration > 0 ? latestDuration : undefined)
       }
 
       // Dispatch event on close so the underlying UI updates its progress bars

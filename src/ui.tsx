@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Star, ArrowRight, Play, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Star, ArrowRight, Play, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import heroFallback from './assets/hero.png'
 import { imageUrl, mediaTypeFromItem, titleFromItem, yearFromItem } from './lib/tmdb'
 import { useProgressStore } from './hooks'
@@ -209,10 +209,13 @@ export function ContentRail({ items, loading }: { items: MediaItem[]; loading: b
 
 // ─── Continue Watching Rail ───────────────────────────────────────────────────
 
-export function ContinueWatchingRail({ history }: { history: Array<{
-  mediaType: string; id: number; title: string; posterPath?: string | null;
-  backdropPath?: string | null; season?: number; episode?: number; watchedAt: number;
-}> }) {
+export function ContinueWatchingRail({ history, onRemove }: {
+  history: Array<{
+    mediaType: string; id: number; title: string; posterPath?: string | null;
+    backdropPath?: string | null; season?: number; episode?: number; watchedAt: number;
+  }>
+  onRemove: (index: number) => void
+}) {
   const progressStore = useProgressStore()
 
   const railRef = useRef<HTMLDivElement>(null)
@@ -242,16 +245,18 @@ export function ContinueWatchingRail({ history }: { history: Array<{
       </button>
 
       <div ref={railRef} className="rail">
-        {history.map((item) => {
-        const watchedSeconds = progressStore[`${item.mediaType}-${item.id}-${item.season || 0}-${item.episode || 0}`] || 0
-        const runtimeMinutes = item.mediaType === 'anime' ? 24 : 45
-        const progressPercent = Math.min(100, (watchedSeconds / (runtimeMinutes * 60)) * 100)
+        {history.map((item, index) => {
+        const progressKey = `${item.mediaType}-${item.id}-${item.season || 0}-${item.episode || 0}`
+        const watchedSeconds = progressStore[progressKey] || 0
+        const storedDuration = progressStore[progressKey + ':duration']
+        const runtimeSeconds = storedDuration || (item.mediaType === 'anime' ? 24 : 45) * 60
+        const progressPercent = Math.min(100, (watchedSeconds / runtimeSeconds) * 100)
 
         return (
           <Link
           key={`${item.mediaType}-${item.id}-${item.watchedAt}`}
           to={`/title/${item.mediaType}/${item.id}`}
-          className="group shrink-0 overflow-hidden transition-transform hover:-translate-y-1"
+          className="group shrink-0 overflow-hidden transition-transform hover:-translate-y-1 relative"
           style={{
             width: 220,
             borderRadius: 14,
@@ -266,6 +271,21 @@ export function ContinueWatchingRail({ history }: { history: Array<{
               className="h-full w-full object-cover"
             />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,8,8,0.9), transparent 60%)' }} />
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(index) }}
+              className="absolute top-1.5 right-1.5 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-20"
+              style={{
+                width: 20,
+                height: 20,
+                background: 'rgba(0,0,0,0.6)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                color: 'rgba(255,255,255,0.7)',
+              }}
+              aria-label="Remove from continue watching"
+            >
+              <X className="w-2.5 h-2.5" />
+            </button>
             {/* Progress bar */}
             {progressPercent > 0 && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'rgba(255,255,255,0.12)' }}>
@@ -273,13 +293,30 @@ export function ContinueWatchingRail({ history }: { history: Array<{
               </div>
             )}
           </div>
-          <div className="px-3 py-2.5">
-            <div className="text-sm font-semibold text-white truncate">{item.title}</div>
-            <div className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              {item.mediaType.toUpperCase()}
-              {item.season ? ` · S${item.season}` : ''}
-              {item.episode ? ` E${item.episode}` : ''}
+          <div className="px-3 py-2.5 flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold text-white truncate">{item.title}</div>
+              <div className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                {item.mediaType.toUpperCase()}
+                {item.season ? ` · S${item.season}` : ''}
+                {item.episode ? ` E${item.episode}` : ''}
+              </div>
             </div>
+            <Link
+              to={`/title/${item.mediaType}/${item.id}${item.season && item.episode ? `?season=${item.season}&episode=${item.episode}&autoplay=1` : '?autoplay=1'}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center justify-center rounded-full shrink-0 transition-all hover:scale-110 opacity-0 group-hover:opacity-100"
+              style={{
+                width: 28,
+                height: 28,
+                background: 'var(--accent)',
+                color: '#fff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+              }}
+              aria-label="Continue watching"
+            >
+              <Play className="w-3 h-3 ml-0.5" />
+            </Link>
           </div>
         </Link>
       )})}
