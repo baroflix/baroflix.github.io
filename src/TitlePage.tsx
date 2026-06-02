@@ -102,6 +102,15 @@ export function TitlePage() {
     return () => controller.abort()
   }, [details, id, mediaType, seasons, selectedSeason, isEpisodic])
 
+  // Auto-play when ?autoplay=1 is present (from continue-watching play button)
+  const autoplayParam = searchParams.get('autoplay')
+  useEffect(() => {
+    if (!autoplayParam || !mediaType) return
+    if (isEpisodic && !seasonDetails) return
+    if (!details) return
+    handlePlay(selectedSeason, activeEpisode)
+  }, [autoplayParam, mediaType, isEpisodic, seasonDetails, details])
+
   if (!hasTmdbCredentials && mediaType !== 'anime') return <div className="px-6 pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
   if (!mediaType) return <Navigate replace to="/" />
 

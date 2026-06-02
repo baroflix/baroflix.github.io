@@ -522,7 +522,7 @@ export function HomePage() {
         {history.length > 0 && (
           <section>
             <SectionHeader number="01" title={t.continueWatching} subtitle={t.continueWatchingSub} />
-            <ContinueWatchingRail history={history} />
+            <ContinueWatchingRail history={history} onRemove={(i) => setHistory(prev => prev.filter((_, idx) => idx !== i))} />
           </section>
         )}
 
