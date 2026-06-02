@@ -26,10 +26,76 @@ export function FullscreenPlayer({
     let latestTimestamp = 0
     let currentKey = progressKey
 
+    function persistProgress(key: string, timestamp: number) {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEYS.progress)
+        const data = raw ? JSON.parse(raw) : {}
+        data[key] = timestamp
+        window.localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(data))
+      } catch (e) { /* ignore */ }
+    }
+
     function handleMessage(event: MessageEvent) {
       if (typeof event.data !== 'string') return
       try {
         const payload = JSON.parse(event.data)
+        console.log('[FullscreenPlayer] postMessage:', payload)
+
+        // ── MEDIA_DATA: videasy sends bulk progress for all titles ──────
+        if (payload?.type === 'MEDIA_DATA' && typeof payload.data === 'string') {
+          const allMedia: Record<string, any> = JSON.parse(payload.data)
+
+          // Derive the show-level key from our currentKey, e.g. "tv-85552" from "tv-85552-1-2"
+          const parts = currentKey?.split('-')
+          if (parts && parts.length >= 2) {
+            const mediaPrefix = `${parts[0]}-${parts[1]}`  // e.g. "tv-85552"
+            const entry = allMedia[mediaPrefix]
+            if (entry) {
+              // --- Detect auto-advance (binge mode) ---
+              if (entry.last_season_watched != null && entry.last_episode_watched != null) {
+                const newKey = `${mediaPrefix}-${entry.last_season_watched}-${entry.last_episode_watched}`
+                if (newKey !== currentKey) {
+                  currentKey = newKey
+                  if (onEpisodeChange) {
+                    onEpisodeChange(Number(entry.last_season_watched), Number(entry.last_episode_watched))
+                  }
+                }
+              }
+
+              // --- Extract timestamp ---
+              let ts = 0
+              if (parts.length >= 4) {
+                const season = parts[2]
+                const episode = parts[3]
+                const epKey = `s${season}e${episode}`
+                const epProgress = entry.show_progress?.[epKey]?.progress
+                if (epProgress && typeof epProgress.watched === 'number') {
+                  ts = epProgress.watched
+                }
+              }
+              // Fallback to top-level progress
+              if (ts === 0 && entry.progress?.watched != null) {
+                ts = entry.progress.watched
+              }
+
+              if (ts > 0) {
+                latestTimestamp = ts
+                if (Math.abs(ts - lastSavedTime) >= 5) {
+                  lastSavedTime = ts
+                  persistProgress(currentKey!, ts)
+                }
+              }
+            }
+          }
+          return
+        }
+
+        // ── PLAYER_EVENT: unknown structure, log for analysis ──────────
+        if (payload?.type === 'PLAYER_EVENT') {
+          console.log('[FullscreenPlayer] PLAYER_EVENT data:', JSON.stringify(payload.data, null, 2))
+        }
+
+        // ── Fallback: direct timestamp object ──────────────────────────
         if (payload && typeof payload.timestamp === 'number') {
           latestTimestamp = payload.timestamp
           const nextKey = `${payload.type}-${payload.id}-${payload.season || 0}-${payload.episode || 0}`
@@ -37,20 +103,15 @@ export function FullscreenPlayer({
           if (!currentKey) {
             currentKey = nextKey
           } else if (currentKey !== nextKey) {
-            // Binge Mode: The player has automatically advanced to the next episode!
             currentKey = nextKey
             if (onEpisodeChange && payload.season && payload.episode) {
               onEpisodeChange(payload.season, payload.episode)
             }
           }
 
-          // Save every 5 seconds to avoid thrashing localStorage
           if (Math.abs(payload.timestamp - lastSavedTime) >= 5) {
             lastSavedTime = payload.timestamp
-            const raw = window.localStorage.getItem(STORAGE_KEYS.progress)
-            const data = raw ? JSON.parse(raw) : {}
-            data[currentKey] = payload.timestamp
-            window.localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(data))
+            persistProgress(currentKey!, payload.timestamp)
           }
         }
       } catch (err) {
@@ -65,12 +126,7 @@ export function FullscreenPlayer({
 
       // Ensure the absolute latest timestamp is saved before unmounting!
       if (currentKey && latestTimestamp > 0) {
-        try {
-          const raw = window.localStorage.getItem(STORAGE_KEYS.progress)
-          const data = raw ? JSON.parse(raw) : {}
-          data[currentKey] = latestTimestamp
-          window.localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(data))
-        } catch (e) { }
+        persistProgress(currentKey, latestTimestamp)
       }
 
       // Dispatch event on close so the underlying UI updates its progress bars

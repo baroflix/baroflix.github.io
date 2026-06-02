@@ -268,7 +268,7 @@ export function ContinueWatchingRail({ history }: { history: Array<{
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,8,8,0.9), transparent 60%)' }} />
             {/* Progress bar */}
             {progressPercent > 0 && (
-              <div className="absolute top-0 left-0 right-0 h-1" style={{ background: 'rgba(255,255,255,0.12)' }}>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'rgba(255,255,255,0.12)' }}>
                 <div className="h-full" style={{ width: `${progressPercent}%`, background: 'var(--accent)' }} />
               </div>
             )}

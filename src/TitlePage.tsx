@@ -589,7 +589,9 @@ function SeasonPanel({
           const isActive = ep.episode_number === activeEpisode
           const watchedSeconds = progressStore[`${mediaType}-${id}-${activeSeason}-${ep.episode_number}`] || 0
           const runtimeMinutes = ep.runtime || (mediaType === 'anime' ? 24 : 45)
-          const progressPercent = Math.min(100, (watchedSeconds / (runtimeMinutes * 60)) * 100)
+          const pct = (watchedSeconds / (runtimeMinutes * 60)) * 100
+          const progressPercent = Math.min(100, pct)
+          const hasProgress = watchedSeconds > 0
 
           return (
             <button
@@ -600,8 +602,18 @@ function SeasonPanel({
               style={{
                 borderRadius: 14,
                 padding: 12,
-                background: isActive ? 'var(--accent-dim)' : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${isActive ? 'var(--accent)' : 'rgba(255,255,255,0.07)'}`,
+                background: isActive
+                  ? 'var(--accent-dim)'
+                  : hasProgress
+                    ? 'rgba(var(--accent-rgb, 139,92,246),0.06)'
+                    : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${
+                  isActive
+                    ? 'var(--accent)'
+                    : hasProgress
+                      ? 'rgba(var(--accent-rgb, 139,92,246),0.2)'
+                      : 'rgba(255,255,255,0.07)'
+                }`,
               }}
             >
               <div className="flex gap-3">
@@ -616,9 +628,17 @@ function SeasonPanel({
                       No still
                     </div>
                   )}
-                  {progressPercent > 0 && (
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-white/20">
-                      <div className="h-full" style={{ width: `${progressPercent}%`, background: 'var(--accent)' }} />
+
+                  {hasProgress && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${Math.max(4, progressPercent)}%`,
+                          background: 'var(--accent)',
+                          boxShadow: '0 0 6px var(--accent-glow)',
+                        }}
+                      />
                     </div>
                   )}
                 </div>
@@ -627,9 +647,17 @@ function SeasonPanel({
                     <span className="text-[10px] uppercase tracking-widest" style={{ color: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.35)' }}>
                       E{ep.episode_number}
                     </span>
-                    {ep.runtime && <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{ep.runtime}m</span>}
+                    <div className="flex items-center gap-2">
+                      {hasProgress && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
+                          {Math.round(progressPercent)}%
+                        </span>
+                      )}
+                      {ep.runtime && <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{ep.runtime}m</span>}
+                    </div>
                   </div>
                   <div className="text-sm font-semibold text-white mb-1 truncate">{ep.name}</div>
+
                   <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
                     {ep.overview || 'No synopsis available.'}
                   </p>
