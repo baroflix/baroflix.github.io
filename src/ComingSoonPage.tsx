@@ -67,25 +67,26 @@ export function ComingSoonPage() {
   if (!hasTmdbCredentials) return <div className="px-6 pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-6 pb-20 pt-24 min-h-screen">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl sm:text-5xl font-bold text-white" style={{ fontFamily: 'DM Serif Display, serif' }}>
+    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-20 pt-24 min-h-screen">
+      {/* Header — title and tabs stack on mobile */}
+      <div className="mb-8 space-y-4">
+        <h1 className="text-3xl sm:text-5xl font-bold text-white" style={{ fontFamily: 'DM Serif Display, serif' }}>
           Coming Soon
         </h1>
-        
+
         {/* Tabs */}
-        <div className="flex items-center gap-1 bg-white/5 rounded-full p-1 border border-white/10">
+        <div className="flex items-center gap-1 bg-white/5 rounded-full p-1 border border-white/10 w-fit max-w-full overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           <button
             onClick={() => setTab('upcoming')}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${tab === 'upcoming' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
+            className={`shrink-0 px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-colors whitespace-nowrap ${tab === 'upcoming' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
           >
-            New & Upcoming
+            New &amp; Upcoming
           </button>
           <button
             onClick={() => setTab('reminders')}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 ${tab === 'reminders' ? 'bg-[var(--accent)] text-white shadow-[0_0_16px_var(--accent-glow)]' : 'text-white/60 hover:text-white'}`}
+            className={`shrink-0 px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 whitespace-nowrap ${tab === 'reminders' ? 'bg-[var(--accent)] text-white shadow-[0_0_16px_var(--accent-glow)]' : 'text-white/60 hover:text-white'}`}
           >
-            <Bell className="w-4 h-4" /> Reminders ({reminders.length})
+            <Bell className="w-4 h-4 shrink-0" /> Reminders ({reminders.length})
           </button>
         </div>
       </div>
@@ -142,10 +143,10 @@ export function ComingSoonPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.1, 1) }}
-                className="group relative flex flex-col md:flex-row gap-8 bg-white/5 rounded-3xl p-6 border border-white/10 transition-all hover:bg-white/10"
+                className="group relative flex flex-col sm:flex-row gap-5 sm:gap-8 bg-white/5 rounded-3xl p-4 sm:p-6 border border-white/10 transition-all hover:bg-white/10"
               >
                 {/* Poster */}
-                <div className="w-full md:w-64 shrink-0 rounded-2xl overflow-hidden bg-white/10 shadow-[0_16px_32px_rgba(0,0,0,0.5)] aspect-[2/3]">
+                <div className="w-full sm:w-44 md:w-56 shrink-0 rounded-2xl overflow-hidden bg-white/10 shadow-[0_16px_32px_rgba(0,0,0,0.5)] aspect-[2/3]">
                   {item.poster_path ? (
                     <img src={imageUrl(item.poster_path, 'w500')} alt={titleFromItem(item)} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                   ) : null}

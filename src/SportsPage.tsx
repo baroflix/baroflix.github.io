@@ -290,7 +290,7 @@ export function SportsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-6 pb-16 pt-32 relative min-h-screen">
+    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-16 pt-24 sm:pt-32 relative min-h-screen">
       {/* Background glow effects */}
       <div 
         className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[150px] pointer-events-none -z-10"
@@ -328,7 +328,7 @@ export function SportsPage() {
              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
           
           {/* Status Tabs */}
-          <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex gap-1 p-1 rounded-xl overflow-x-auto" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)', scrollbarWidth: 'none' }}>
             {(['live', 'today', 'popular', 'all'] as const).map((status) => (
               <button
                 key={status}
@@ -339,7 +339,7 @@ export function SportsPage() {
                     setSelectedSport('all')
                   }
                 }}
-                className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5`}
+                className={`shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap`}
                 style={{
                   background: statusFilter === status ? 'var(--accent)' : 'transparent',
                   color: statusFilter === status ? '#fff' : 'rgba(255,255,255,0.55)',
@@ -630,7 +630,7 @@ export function SportsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+            className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto"
             style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)' }}
           >
             <motion.div
@@ -760,7 +760,7 @@ export function SportsPage() {
                 </div>
 
                 {/* Right Column: Chat Panel */}
-                <div className="w-full lg:w-80 lg:h-full shrink-0 border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col bg-white/1 overflow-hidden min-h-[350px] lg:min-h-0">
+                <div className="w-full lg:w-80 lg:h-full shrink-0 border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col bg-white/1 overflow-hidden min-h-[220px] sm:min-h-[300px] lg:min-h-0">
                   {/* Chat Header */}
                   <div className="px-4 py-3.5 border-b border-white/5 bg-white/2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -774,7 +774,7 @@ export function SportsPage() {
                   </div>
 
                   {/* Messages list */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[350px] lg:max-h-none">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[180px] sm:max-h-[280px] lg:max-h-none">
                     {chatError && (
                       <div className="p-2 mb-2 text-[10px] bg-red-500/15 border border-red-500/30 text-red-400 rounded-lg text-center font-sans">
                         Error: {chatError}

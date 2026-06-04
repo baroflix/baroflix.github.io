@@ -63,7 +63,7 @@ export function BrowsePage() {
   }
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-6 pb-20 pt-28 space-y-12 animate-fade-up">
+    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-20 pt-24 sm:pt-28 space-y-12 animate-fade-up">
       
       {/* Page Header */}
       <div className="space-y-2">

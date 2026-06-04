@@ -38,7 +38,8 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
       }
     >
       {!isHome && <NavBar language={settings.language} />}
-      <main className="relative z-10">
+      {/* pb-safe ensures content isn't hidden behind iOS home indicator */}
+      <main className="relative z-10 pb-[env(safe-area-inset-bottom,0px)]">
         <Outlet />
       </main>
     </div>
@@ -77,7 +78,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           backdropFilter: 'blur(12px)',
         }}
       >
-        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-6 py-6 gap-4">
+        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 sm:px-6 py-4 sm:py-6 gap-4">
           <div className="flex items-center gap-8">
             {/* Logo */}
             <Link to="/" className="no-bg-hover shrink-0">

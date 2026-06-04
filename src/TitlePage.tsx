@@ -230,7 +230,7 @@ export function TitlePage() {
         <AddToCollectionModal item={details} onClose={() => setShowCollectionModal(false)} />
       )}
 
-      <div className="mx-auto max-w-screen-2xl px-6 pb-16 pt-20">
+      <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-16 pt-20">
 
         {/* ── Back button above hero card ──────────────────────────────── */}
         <div className="mb-4">
@@ -283,8 +283,8 @@ export function TitlePage() {
 
           {/* Content row: text left, poster right */}
           <div
-            className="relative z-10 flex gap-8 p-8 sm:p-10 lg:p-12"
-            style={{ minHeight: 420 }}
+            className="relative z-10 flex gap-4 sm:gap-8 p-4 sm:p-8 lg:p-12"
+            style={{ minHeight: 340 }}
           >
             {/* ── Left: info ───────────────────────────────────────────── */}
             <div className="flex flex-col justify-end flex-1 min-w-0 space-y-5">
@@ -360,14 +360,14 @@ export function TitlePage() {
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => handlePlay(
                     isEpisodic ? activeSeason : undefined,
                     isEpisodic ? activeEpisode : undefined
                   )}
-                  className="primary-btn inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 hover:text-white"
+                  className="primary-btn inline-flex items-center gap-2 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 hover:text-white"
                   style={{ background: 'var(--accent)', boxShadow: '0 0 32px var(--accent-glow)' }}
                 >
                   <Play className="w-4 h-4 fill-white" />
@@ -376,7 +376,7 @@ export function TitlePage() {
                 {details && (
                     <button
                       onClick={() => setShowCollectionModal(true)}
-                      className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all hover:opacity-90"
+                      className="inline-flex items-center gap-2 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold transition-all hover:opacity-90"
                       style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)' }}
                     >
                       <Plus className="w-4 h-4" /> Add to Collection
@@ -385,7 +385,7 @@ export function TitlePage() {
                 {isUnreleased && details && (
                   <button
                     onClick={toggleReminder}
-                    className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all"
+                    className="inline-flex items-center gap-2 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold transition-all"
                     style={isReminded ? {
                       background: 'var(--accent)',
                       color: 'white',
@@ -405,7 +405,7 @@ export function TitlePage() {
                     href={`https://www.youtube.com/watch?v=${trailer.key}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold"
+                    className="inline-flex items-center gap-2 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold"
                     style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)' }}
                   >
                     Trailer <ArrowRight className="w-4 h-4" />
@@ -628,7 +628,7 @@ function SeasonPanel({
               <div className="flex gap-3">
                 <div
                   className="shrink-0 overflow-hidden relative"
-                  style={{ width: 128, aspectRatio: '16/9', borderRadius: 8, background: 'rgba(255,255,255,0.06)' }}
+                  style={{ width: 'clamp(72px, 20vw, 128px)', aspectRatio: '16/9', borderRadius: 8, background: 'rgba(255,255,255,0.06)' }}
                 >
                   {ep.still_path ? (
                     <img src={imageUrl(ep.still_path, 'w342')} alt={ep.name} className="w-full h-full object-cover" loading="lazy" />

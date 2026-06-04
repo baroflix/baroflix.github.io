@@ -211,6 +211,22 @@ img {
   border-color: var(--border-hover);
 }
 
+/* ─── Mobile & safe-area ────────────────────────────────────────────────────── */
+
+/* Respect iOS home indicator / notch on all pages */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Minimum touch target size on mobile */
+@media (max-width: 639px) {
+  button, a, [role="button"] {
+    min-height: 36px;
+  }
+}
+
 /* Horizontal scroll rail */
 .rail {
   display: flex;
