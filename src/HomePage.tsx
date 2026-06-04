@@ -199,7 +199,7 @@ export function HomePage() {
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section
         className="relative overflow-hidden"
-        style={{ minHeight: '75svh' }}
+        style={{ minHeight: '100dvh' }}
       >
         {/* Ken Burns backdrop */}
         <div className="absolute inset-0 overflow-hidden">
@@ -381,7 +381,7 @@ export function HomePage() {
 
         {/* Hero content */}
         <div
-          className="relative z-10 mx-auto flex h-[75svh] max-w-screen-2xl w-full flex-col justify-end px-6 pb-12 sm:pb-14"
+          className="relative z-10 mx-auto flex h-[100dvh] max-w-screen-2xl w-full flex-col justify-end px-6 pb-12 sm:pb-14"
           onPointerDown={handleHeroPointerDown}
           onPointerUp={handleHeroPointerUp}
           onPointerCancel={() => { dragState.current = null }}
