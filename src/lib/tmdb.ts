@@ -275,3 +275,76 @@ export function buildVideasyUrl(
 export function pickTrailer(videos?: { results: Array<{ site: string; type: string; official?: boolean; key: string }> }) {
   return videos?.results.find((video) => video.site === 'YouTube' && /trailer|teaser/i.test(video.type)) ?? videos?.results.find((video) => video.site === 'YouTube') ?? null
 }
+
+// ─── Anime TMDB enrichment ────────────────────────────────────────────────────
+
+export interface AnimeTmdbMeta {
+  /** Transparent logo file_path strings from TMDB images */
+  logos: Array<{ file_path: string; vote_average: number }>
+  /** episode_number → overview from TMDB season 1 */
+  episodeOverviews: Map<number, string>
+}
+
+const animeTmdbMetaCache = new Map<string, Promise<AnimeTmdbMeta>>()
+
+/**
+ * Search TMDB for an anime TV show by title, then fetch its logo images and
+ * season-1 episode overviews. Results are cached in-memory per (title, year) pair.
+ *
+ * Returns empty data gracefully if TMDB credentials are absent or no match is found.
+ */
+export async function fetchAnimeTmdbMeta(
+  title: string,
+  year?: number | null,
+  signal?: AbortSignal
+): Promise<AnimeTmdbMeta> {
+  const empty: AnimeTmdbMeta = { logos: [], episodeOverviews: new Map() }
+  if (!hasTmdbCredentials) return empty
+
+  const cacheKey = `${title}|${year ?? ''}`
+  if (animeTmdbMetaCache.has(cacheKey)) return animeTmdbMetaCache.get(cacheKey)!
+
+  const promise = (async (): Promise<AnimeTmdbMeta> => {
+    // 1. Search for the show
+    const params: RequestParams = { query: title, language: 'en-US', page: 1 }
+    if (year) params.first_air_date_year = year
+
+    const searchData = await request<{ results: Array<{ id: number }> }>(
+      '/search/tv',
+      params,
+      signal
+    ).catch(() => null)
+
+    const tmdbId = searchData?.results?.[0]?.id
+    if (!tmdbId) return empty
+
+    // 2. Fetch images + season 1 in parallel
+    const [imagesData, season1Data] = await Promise.all([
+      request<{ logos?: Array<{ file_path: string; vote_average: number }> }>(
+        `/tv/${tmdbId}/images`,
+        { include_image_language: 'en,null' },
+        signal
+      ).catch(() => null),
+      request<{ episodes?: Array<{ episode_number: number; overview: string }> }>(
+        `/tv/${tmdbId}/season/1`,
+        {},
+        signal
+      ).catch(() => null),
+    ])
+
+    const logos = (imagesData?.logos ?? []).filter(l => l.file_path)
+
+    const episodeOverviews = new Map<number, string>()
+    for (const ep of season1Data?.episodes ?? []) {
+      if (ep.episode_number && ep.overview) {
+        episodeOverviews.set(ep.episode_number, ep.overview)
+      }
+    }
+
+    return { logos, episodeOverviews }
+  })()
+
+  animeTmdbMetaCache.set(cacheKey, promise)
+  promise.catch(() => animeTmdbMetaCache.delete(cacheKey))
+  return promise
+}

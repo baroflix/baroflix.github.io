@@ -15,7 +15,9 @@ import {
   subtitleFromItem,
   yearFromItem,
 } from './lib/tmdb'
-import { fetchAnimeDetails, generateAnimeSeasonDetails, type AnilistStreamingEpisode } from './lib/anilist'
+import { fetchAnimeDetails, generateAnimeSeasonDetails, type AnilistStreamingEpisode, type AnimeEpisodeMeta } from './lib/anilist'
+import { fetchJikanEpisodes } from './lib/jikan'
+import { fetchAnimeTmdbMeta, type AnimeTmdbMeta } from './lib/tmdb'
 import type { MediaDetails, SeasonDetails } from './types'
 import type { MediaKind } from './types'
 import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useReminders, useRatings } from './hooks'
@@ -54,6 +56,8 @@ export function TitlePage() {
   const [showCollectionModal, setShowCollectionModal] = useState(false)
   const [animeLang, setAnimeLang] = useState<'sub' | 'dub'>('sub')
   const [animeStreamingEps, setAnimeStreamingEps] = useState<AnilistStreamingEpisode[]>([])
+  const [jikanEpisodes, setJikanEpisodes] = useState<{ mal_id: number; title: string | null }[]>([])
+  const [animeTmdbMeta, setAnimeTmdbMeta] = useState<AnimeTmdbMeta>({ logos: [], episodeOverviews: new Map() })
 
   const historyEntry = useMemo(() => history.find(h => h.mediaType === mediaType && h.id === Number(id)), [history, mediaType, id])
 
@@ -64,6 +68,8 @@ export function TitlePage() {
     queueMicrotask(() => {
       setLoading(true); setError(null); setDetails(null)
       setSeasonDetails(null); setPlayback(null)
+      setAnimeStreamingEps([]); setJikanEpisodes([])
+      setAnimeTmdbMeta({ logos: [], episodeOverviews: new Map() })
     })
 
     const fetcher = mediaType === 'anime'
@@ -75,9 +81,26 @@ export function TitlePage() {
         if (!controller.signal.aborted) {
           setDetails(res)
           setLoading(false)
-          // Capture real episode data from AniList
-          if (mediaType === 'anime' && (res as any).streamingEpisodes) {
-            setAnimeStreamingEps((res as any).streamingEpisodes)
+          if (mediaType === 'anime') {
+            // AniList streaming episodes (thumbnails)
+            if ((res as any)._streamingEpisodes) {
+              setAnimeStreamingEps((res as any)._streamingEpisodes)
+            }
+            // Jikan episode list (titles) — needs MAL ID
+            const malId = (res as any).idMal
+            if (malId) {
+              fetchJikanEpisodes(malId, controller.signal)
+                .then(eps => { if (!controller.signal.aborted) setJikanEpisodes(eps) })
+                .catch(() => {/* graceful degradation */})
+            }
+            // TMDB meta (logo + episode synopses)
+            const animeTitle = res.title ?? res.name ?? ''
+            const animeYear = res.release_date ? new Date(res.release_date).getFullYear() : null
+            if (animeTitle) {
+              fetchAnimeTmdbMeta(animeTitle, animeYear, controller.signal)
+                .then(meta => { if (!controller.signal.aborted) setAnimeTmdbMeta(meta) })
+                .catch(() => {/* graceful degradation */})
+            }
           }
         }
       })
@@ -102,8 +125,25 @@ export function TitlePage() {
     const controller = new AbortController()
 
     if (mediaType === 'anime') {
-      const res = generateAnimeSeasonDetails(id, details.number_of_episodes || 1, animeStreamingEps)
-      setSeasonDetails(res)
+      // Merge all enrichment sources into a single AnimeEpisodeMeta[] array
+      const total = Math.max(
+        details.number_of_episodes ?? 0,
+        jikanEpisodes.length,
+        animeStreamingEps.length
+      )
+      const merged: AnimeEpisodeMeta[] = Array.from({ length: total }, (_, i) => {
+        const epNum = i + 1
+        const jikan = jikanEpisodes.find(j => j.mal_id === epNum)
+        const streaming = animeStreamingEps[i]            // positional — used for thumbnail only
+        const synopsis = animeTmdbMeta.episodeOverviews.get(epNum) ?? null
+        return {
+          episode_number: epNum,
+          title: jikan?.title || null,                    // Jikan is authoritative for titles
+          thumbnail: streaming?.thumbnail || null,
+          synopsis,
+        }
+      })
+      setSeasonDetails(generateAnimeSeasonDetails(id, total || 1, merged))
       return
     }
 
@@ -111,7 +151,7 @@ export function TitlePage() {
       .then((res) => setSeasonDetails(res))
       .catch((err) => { if (!controller.signal.aborted) setError(err instanceof Error ? err.message : 'Failed to load season.') })
     return () => controller.abort()
-  }, [details, id, mediaType, seasons, selectedSeason, isEpisodic, animeStreamingEps])
+  }, [details, id, mediaType, seasons, selectedSeason, isEpisodic, animeStreamingEps, jikanEpisodes, animeTmdbMeta])
 
   // Auto-play when ?autoplay=1 is present (from continue-watching play button)
   const autoplayParam = searchParams.get('autoplay')
@@ -142,18 +182,21 @@ export function TitlePage() {
 
   const progressKey = playback ? `${playback.mediaType}-${playback.id}-${playback.season || 0}-${playback.episode || 0}` : undefined
 
-  const logoUrl = details?.images?.logos
-    ?.slice()
-    .sort((a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0))
-    .find((l) => l.file_path)?.file_path
-    ? imageUrl(
-      details.images!.logos!
-        .slice()
-        .sort((a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0))
-        .find((l) => l.file_path)!.file_path!,
-      'w500'
-    )
-    : null
+  // For anime, prefer TMDB logos fetched via title search.
+  // For movies/TV, use the logos embedded in TMDB's MediaDetails response.
+  const logoUrl = (() => {
+    const logoList =
+      mediaType === 'anime'
+        ? animeTmdbMeta.logos
+        : (details?.images?.logos ?? [])
+
+    const best = logoList
+      .slice()
+      .sort((a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0))
+      .find(l => l.file_path)
+
+    return best ? imageUrl(best.file_path, 'w500') : null
+  })()
 
   function handlePlay(season?: number, episode?: number) {
     if (!mediaType) return

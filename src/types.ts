@@ -52,6 +52,8 @@ export interface SeasonSummary {
 }
 
 export interface MediaDetails extends MediaItem {
+  /** MyAnimeList ID — present on anime fetched from AniList */
+  idMal?: number | null
   images?: {
     logos?: Array<{
       file_path?: string | null

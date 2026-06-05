@@ -46,6 +46,7 @@ const DETAILS_QUERY = `
 query($id: Int) {
   Media(id: $id, type: ANIME) {
     id
+    idMal
     title { romaji english native }
     coverImage { extraLarge large medium }
     bannerImage
@@ -97,15 +98,17 @@ async function requestGraphql(query: string, variables: any = {}, signal?: Abort
 function mapToMediaItem(media: any): MediaItem {
   const title = media.title.english || media.title.romaji || media.title.native || 'Untitled'
   const vote_average = media.averageScore ? media.averageScore / 10 : undefined
-  const release_date = media.startDate?.year ? `${media.startDate.year}-${String(media.startDate.month || 1).padStart(2, '0')}-${String(media.startDate.day || 1).padStart(2, '0')}` : undefined
+  const release_date = media.startDate?.year
+    ? `${media.startDate.year}-${String(media.startDate.month || 1).padStart(2, '0')}-${String(media.startDate.day || 1).padStart(2, '0')}`
+    : undefined
 
   return {
     id: media.id,
     media_type: 'anime',
     title,
-    overview: media.description?.replace(/<[^>]*>?/gm, ''), // Strip HTML tags
-    poster_path: media.coverImage?.extraLarge || media.coverImage?.large, // Full URL
-    backdrop_path: media.bannerImage || media.coverImage?.extraLarge, // Full URL
+    overview: media.description?.replace(/<[^>]*>?/gm, ''),
+    poster_path: media.coverImage?.extraLarge || media.coverImage?.large,
+    backdrop_path: media.bannerImage || media.coverImage?.extraLarge,
     release_date,
     vote_average,
   }
@@ -128,82 +131,92 @@ export interface AnilistStreamingEpisode {
   site: string
 }
 
-const animeDetailsCache = new Map<string, Promise<MediaDetails & { streamingEpisodes?: AnilistStreamingEpisode[] }>>()
+const animeDetailsCache = new Map<string, Promise<MediaDetails>>()
 
-export async function fetchAnimeDetails(id: string, signal?: AbortSignal): Promise<MediaDetails & { streamingEpisodes?: AnilistStreamingEpisode[] }> {
+export async function fetchAnimeDetails(id: string, signal?: AbortSignal): Promise<MediaDetails> {
   if (animeDetailsCache.has(id)) return animeDetailsCache.get(id)!
 
-  const promise = (async () => {
+  const promise = (async (): Promise<MediaDetails> => {
     const data = await requestGraphql(DETAILS_QUERY, { id: parseInt(id, 10) }, signal)
     const media = data.Media
     const item = mapToMediaItem(media)
-    const episodesCount = media.episodes || media.streamingEpisodes?.length || 1
-    const streamingEpisodes: AnilistStreamingEpisode[] = media.streamingEpisodes ?? []
 
-    const seasonSummary = {
-      id: media.id,
-      season_number: 1,
-      name: 'Season 1',
-      episode_count: episodesCount,
-    }
+    const streamingEpisodes: AnilistStreamingEpisode[] = media.streamingEpisodes ?? []
+    const episodesCount = media.episodes || streamingEpisodes.length || 1
 
     const cast = media.characters?.edges?.map((edge: any) => ({
       id: edge.node.id,
       name: edge.node.name.full,
       character: edge.role,
       profile_path: edge.node.image?.large,
-    })) || []
+    })) ?? []
 
     const videos: any[] = []
-    if (media.trailer && media.trailer.site === 'youtube') {
+    if (media.trailer?.site === 'youtube') {
       videos.push({
         id: media.trailer.id,
         key: media.trailer.id,
         name: 'Trailer',
         site: 'YouTube',
-        type: 'Trailer'
+        type: 'Trailer',
       })
     }
 
     return {
       ...item,
+      idMal: media.idMal ?? null,
       number_of_seasons: 1,
       number_of_episodes: episodesCount,
-      genres: media.genres?.map((g: string, i: number) => ({ id: i, name: g })) || [],
-      seasons: [seasonSummary],
+      genres: media.genres?.map((g: string, i: number) => ({ id: i, name: g })) ?? [],
+      seasons: [{ id: media.id, season_number: 1, name: 'Season 1', episode_count: episodesCount }],
       credits: { cast },
       videos: { results: videos },
-      streamingEpisodes,
-    }
+      // Extra fields consumed by TitlePage — not part of the official MediaDetails type
+      // but carried through as "any extras"
+      _streamingEpisodes: streamingEpisodes,
+    } as any
   })()
 
   animeDetailsCache.set(id, promise)
   promise.catch(() => animeDetailsCache.delete(id))
-
   return promise
 }
 
+// ─── Episode list builder ─────────────────────────────────────────────────────
 
+/** One merged episode record combining all data sources */
+export interface AnimeEpisodeMeta {
+  episode_number: number
+  /** From Jikan (MAL) or AniList streaming — best available */
+  title?: string | null
+  /** From AniList streamingEpisodes (Crunchyroll/Funimation thumbnails) */
+  thumbnail?: string | null
+  /** From TMDB season data */
+  synopsis?: string | null
+}
+
+/**
+ * Build a SeasonDetails-compatible object for an anime.
+ * `episodeMeta` is the merged list from all enrichment sources.
+ */
 export function generateAnimeSeasonDetails(
   id: string,
   episodesCount: number,
-  streamingEps?: AnilistStreamingEpisode[]
+  episodeMeta?: AnimeEpisodeMeta[]
 ) {
-  // Use the larger of declared episodes vs known streaming episodes
-  const total = Math.max(episodesCount, streamingEps?.length ?? 0)
+  const metaMap = new Map(episodeMeta?.map(m => [m.episode_number, m]) ?? [])
+  const total = Math.max(episodesCount, metaMap.size)
 
   const episodes = Array.from({ length: total }, (_, i) => {
     const epNum = i + 1
-    const streamEp = streamingEps?.[i]
+    const meta = metaMap.get(epNum)
     return {
-      id: i + 1,
+      id: epNum,
       episode_number: epNum,
-      // Use real episode title if available, otherwise "Episode N"
-      name: streamEp?.title?.trim() ? streamEp.title.trim() : `Episode ${epNum}`,
-      overview: '',
+      name: meta?.title?.trim() || `Episode ${epNum}`,
+      overview: meta?.synopsis ?? '',
       runtime: 24,
-      // thumbnail is a full URL — imageUrl() handles full URLs as-is
-      still_path: streamEp?.thumbnail || null,
+      still_path: meta?.thumbnail || null,
     }
   })
 
