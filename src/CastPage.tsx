@@ -36,7 +36,7 @@ export function CastPage() {
     return () => controller.abort()
   }, [id])
 
-  if (!hasTmdbCredentials) return <div className="px-6 pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
+  if (!hasTmdbCredentials) return <div className="px-4 sm:px-6 pt-20 sm:pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
   if (!id) return <Navigate replace to="/" />
 
   const credits = details?.combined_credits?.cast ?? []
@@ -58,7 +58,7 @@ export function CastPage() {
   })
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-6 pb-16 pt-24">
+    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-16 pt-20 sm:pt-24">
       <div className="mb-8">
         <button
           type="button"

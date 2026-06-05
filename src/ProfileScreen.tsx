@@ -60,9 +60,7 @@ export function ProfileScreen() {
 
   if (!session) {
     return (
-      <div
-        style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      >
+      <div className="min-h-screen flex items-center justify-center">
         <p style={{ color: 'rgba(255,255,255,0.4)' }}>Not signed in.</p>
       </div>
     )
@@ -72,8 +70,8 @@ export function ProfileScreen() {
     savedProfile?.username || session.user.email?.split('@')[0] || 'User'
 
   return (
-    <div style={{ minHeight: '100vh', paddingTop: '7rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingBottom: '4rem' }}>
-      <div style={{ maxWidth: 480, margin: '0 auto' }}>
+    <div className="min-h-screen pt-20 sm:pt-24 px-4 sm:px-6 pb-16">
+      <div className="max-w-lg mx-auto">
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>

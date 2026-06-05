@@ -115,7 +115,7 @@ export function StatsPage() {
   const tvCount = history.filter(h => h.mediaType === 'tv').length
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-6 pb-20 pt-24 min-h-screen">
+    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-20 pt-20 sm:pt-24 min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

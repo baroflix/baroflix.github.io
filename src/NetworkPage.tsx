@@ -48,11 +48,11 @@ export function NetworkPage() {
     return () => controller.abort()
   }, [network])
 
-  if (!hasTmdbCredentials) return <div className="px-6 pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
+  if (!hasTmdbCredentials) return <div className="px-4 sm:px-6 pt-20 sm:pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
   if (!network) return <Navigate replace to="/" />
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-6 pb-16 pt-24 min-h-screen">
+    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-16 pt-20 sm:pt-24 min-h-screen">
       <div className="mb-12 flex flex-col items-start gap-8 border-b pb-8" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
         <button
           type="button"

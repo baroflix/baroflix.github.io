@@ -65,7 +65,7 @@ export default function CollectionsPage() {
   // --- List View ---
   if (activeList) {
     return (
-      <div className="pt-24 pb-32 max-w-[1600px] mx-auto px-6 lg:px-12 w-full">
+      <div className="pt-20 sm:pt-24 pb-20 max-w-screen-2xl mx-auto px-4 sm:px-6 w-full">
         <button 
           onClick={() => setActiveListId(null)}
           className="flex items-center gap-2 text-white/50 hover:text-white transition-colors mb-8"
@@ -140,7 +140,7 @@ export default function CollectionsPage() {
 
   // --- Grid View ---
   return (
-    <div className="pt-24 pb-32 max-w-[1600px] mx-auto px-6 lg:px-12 w-full">
+    <div className="pt-20 sm:pt-24 pb-20 max-w-screen-2xl mx-auto px-4 sm:px-6 w-full">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">My Collections</h1>

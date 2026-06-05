@@ -64,10 +64,10 @@ export function ComingSoonPage() {
     }
   }
 
-  if (!hasTmdbCredentials) return <div className="px-6 pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
+  if (!hasTmdbCredentials) return <div className="px-4 sm:px-6 pt-20 sm:pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-20 pt-24 min-h-screen">
+    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-20 pt-20 sm:pt-24 min-h-screen">
       {/* Header — title and tabs stack on mobile */}
       <div className="mb-8 space-y-4">
         <h1 className="text-3xl sm:text-5xl font-bold text-white" style={{ fontFamily: 'DM Serif Display, serif' }}>

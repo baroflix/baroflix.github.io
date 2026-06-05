@@ -13,7 +13,7 @@ export function SettingsPage({
   const theme = THEME_PRESETS[settings.theme]
 
   return (
-    <div className="min-h-screen pt-32 px-6 pb-16">
+    <div className="min-h-screen pt-20 sm:pt-24 px-4 sm:px-6 pb-16">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-10">

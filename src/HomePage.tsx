@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Play, ArrowRight, Settings as SettingsIcon, Star, ChevronLeft, ChevronRight, User, Menu, X } from 'lucide-react'
+import { Play, ArrowRight, Star, ChevronLeft, ChevronRight } from 'lucide-react'
 import heroFallback from './assets/hero.png'
 import { imageUrl, mediaTypeFromItem, titleFromItem, yearFromItem, hasTmdbCredentials, pickTrailer, buildVideasyUrl } from './lib/tmdb'
 import { useHomeCatalog, useFeaturedDetails, useLocalStorageState, STORAGE_KEYS, THEME_PRESETS, upsertHistory, useCustomLists, useRatings } from './hooks'
@@ -18,7 +18,6 @@ import {
   SetupNotice,
   MediaGrid,
 } from './ui'
-import { HomeSearchToggle } from './SearchOverlay'
 import { locales } from './locales'
 
 // ─── HomePage ────────────────────────────────────────────────────────────────
@@ -33,9 +32,8 @@ export function HomePage() {
   const [ratingsRaw] = useRatings()
   const [playback, setPlayback] = useState<{ mediaType: MediaKind; id: number; season?: number; episode?: number } | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const dragState = useRef<{ x: number } | null>(null)
-  
+
   const collectionsRailRef = useRef<HTMLDivElement>(null)
   const scrollCollections = (dir: 'left' | 'right') => {
     if (!collectionsRailRef.current) return
@@ -71,7 +69,6 @@ export function HomePage() {
   const activeDetails = useFeaturedDetails(activeHero)
   const lang = settings.language || 'en'
   const t = locales[lang].home
-  const navT = locales[lang].nav
 
   const heroBackdrop =
     imageUrl(activeHero?.backdrop_path, 'w1280') ||
@@ -162,9 +159,9 @@ export function HomePage() {
     const isEpisodic = type === 'tv' || type === 'anime'
     const season = isEpisodic ? 1 : undefined
     const episode = isEpisodic ? 1 : undefined
-    
+
     setPlayback({ mediaType: type, id: activeHero.id, season, episode })
-    
+
     setHistory((current) => upsertHistory(current, {
       mediaType: type,
       id: activeHero.id,
@@ -177,7 +174,7 @@ export function HomePage() {
     }))
   }
 
-  const playerUrl = playback 
+  const playerUrl = playback
     ? buildVideasyUrl(playback.mediaType, playback.id, playback.season, playback.episode, { color: THEME_PRESETS[settings.theme].accent })
     : null
 
@@ -223,165 +220,9 @@ export function HomePage() {
           }}
         />
 
-        {/* Nav row */}
-        <div className="relative z-10 mx-auto flex max-w-screen-2xl items-center justify-between px-6 py-6">
-          <div className="flex items-center gap-8">
-            <img
-                src="/1x/Asset 1.webp"
-                alt="Baroflix"
-                className="block h-10 w-auto"
-            />
-            <nav className="hidden lg:flex items-center gap-6">
-              <Link to="/" className="text-sm font-semibold text-white hover:text-white transition-colors">
-                {navT.home}
-              </Link>
-              <Link to="/browse" className="text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                {navT.browse}
-              </Link>
-              <Link to="/sports" className="text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                {navT.sports}
-              </Link>
-              <Link to="/collections" className="text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                {navT.collections}
-              </Link>
-              <Link to="/coming-soon" className="text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                {navT.comingSoon}
-              </Link>
-              <Link to="/stats" className="text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                {navT.stats}
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-2">
-            {!(/electron/i.test(navigator.userAgent)) && (
-              <Link
-                to="/download"
-                className="hidden lg:flex items-center justify-center px-4 h-10 rounded-full text-sm font-bold text-white transition-all hover:brightness-110 mr-2"
-                style={{
-                  background: 'var(--accent)',
-                  boxShadow: '0 0 20px var(--accent-dim)',
-                }}
-              >
-                {navT.downloadApp}
-              </Link>
-            )}
-            {/* Search — always visible */}
-            <HomeSearchToggle />
-            {/* Settings + Profile — desktop only */}
-            <div className="hidden lg:flex items-center gap-2">
-              <Link
-                to="/settings"
-                className="flex items-center justify-center w-10 h-10 rounded-full transition-colors"
-                style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  color: 'rgba(255,255,255,0.7)',
-                }}
-                aria-label="Settings"
-              >
-                <SettingsIcon className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/profile"
-                className="flex items-center justify-center w-10 h-10 rounded-full transition-colors"
-                style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  color: 'rgba(255,255,255,0.7)',
-                }}
-                aria-label="Profile"
-              >
-                <User className="w-4 h-4" />
-              </Link>
-            </div>
-            {/* Hamburger — mobile only */}
-            <button
-              className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full text-white/70 hover:text-white transition-colors"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
-              onClick={() => setMobileMenuOpen(o => !o)}
-              aria-label="Menu"
-            >
-              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile drawer */}
-        <div className="fixed inset-0 z-40 lg:hidden pointer-events-none" aria-hidden={!mobileMenuOpen}>
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 transition-opacity duration-300"
-            style={{ opacity: mobileMenuOpen ? 1 : 0, pointerEvents: mobileMenuOpen ? 'auto' : 'none' }}
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          {/* Panel */}
-          <nav
-            className="absolute top-0 right-0 h-full w-72 flex flex-col pt-24 pb-8 px-6 gap-1 transition-transform duration-300"
-            style={{
-              transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(100%)',
-              pointerEvents: mobileMenuOpen ? 'auto' : 'none',
-              background: 'rgba(10,10,10,0.97)',
-              backdropFilter: 'blur(20px)',
-              borderLeft: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            {[
-              { to: '/', label: navT.home },
-              { to: '/browse', label: navT.browse },
-              { to: '/sports', label: navT.sports },
-              { to: '/collections', label: navT.collections },
-              { to: '/coming-soon', label: navT.comingSoon },
-              { to: '/stats', label: navT.stats },
-            ].map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-base font-semibold text-white/70 hover:text-white transition-colors px-3 py-3 rounded-xl hover:bg-white/5"
-              >
-                {label}
-              </Link>
-            ))}
-
-            {/* Divider */}
-            <div className="my-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
-
-            {/* Settings */}
-            <Link
-              to="/settings"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 text-base font-semibold text-white/70 hover:text-white transition-colors px-3 py-3 rounded-xl hover:bg-white/5"
-            >
-              <SettingsIcon className="w-4 h-4 shrink-0" />
-              Settings
-            </Link>
-
-            {/* Profile */}
-            <Link
-              to="/profile"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 text-base font-semibold text-white/70 hover:text-white transition-colors px-3 py-3 rounded-xl hover:bg-white/5"
-            >
-              <User className="w-4 h-4 shrink-0" />
-              Profile
-            </Link>
-
-            {!(/electron/i.test(navigator.userAgent)) && (
-              <Link
-                to="/download"
-                onClick={() => setMobileMenuOpen(false)}
-                className="mt-4 flex items-center justify-center px-4 h-11 rounded-full text-sm font-bold text-white transition-all hover:brightness-110"
-                style={{ background: 'var(--accent)', boxShadow: '0 0 20px var(--accent-dim)' }}
-              >
-                {navT.downloadApp}
-              </Link>
-            )}
-          </nav>
-        </div>
-
         {/* Hero content */}
         <div
-          className="relative z-10 mx-auto flex h-[100dvh] max-w-screen-2xl w-full flex-col justify-end px-6 pb-12 sm:pb-14"
+          className="relative z-10 mx-auto flex h-[100dvh] max-w-screen-2xl w-full flex-col justify-end px-4 sm:px-6 pb-12 sm:pb-14"
           onPointerDown={handleHeroPointerDown}
           onPointerUp={handleHeroPointerUp}
           onPointerCancel={() => { dragState.current = null }}
@@ -513,7 +354,7 @@ export function HomePage() {
       </section>
 
       {/* ── Catalog Sections ───────────────────────────────────────────────── */}
-      <div className="px-6 py-12 space-y-14 max-w-screen-2xl mx-auto">
+      <div className="px-4 sm:px-6 py-12 space-y-14 max-w-screen-2xl mx-auto">
         {!hasTmdbCredentials && (
           <SetupNotice />
         )}
@@ -575,7 +416,7 @@ export function HomePage() {
                 </Link>
               ))}
               </div>
-              
+
               {/* Right arrow */}
               <button
                 type="button"
@@ -610,7 +451,7 @@ export function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="px-6 py-10 border-t text-center" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <footer className="px-4 sm:px-6 py-10 border-t text-center" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
         <p className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>
           Powered by{' '}
           <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="underline hover:text-white/50 transition-colors">

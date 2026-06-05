@@ -111,7 +111,7 @@ export function TitlePage() {
     handlePlay(selectedSeason, activeEpisode)
   }, [autoplayParam, mediaType, isEpisodic, seasonDetails, details])
 
-  if (!hasTmdbCredentials && mediaType !== 'anime') return <div className="px-6 pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
+  if (!hasTmdbCredentials && mediaType !== 'anime') return <div className="px-4 sm:px-6 pt-20 sm:pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
   if (!mediaType) return <Navigate replace to="/" />
 
   const title = details ? titleFromItem(details) : 'Loading…'
@@ -230,7 +230,7 @@ export function TitlePage() {
         <AddToCollectionModal item={details} onClose={() => setShowCollectionModal(false)} />
       )}
 
-      <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-16 pt-20">
+      <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-16 pt-20 sm:pt-24">
 
         {/* ── Back button above hero card ──────────────────────────────── */}
         <div className="mb-4">

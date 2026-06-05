@@ -11,8 +11,6 @@ import { locales } from './locales'
 
 export function Shell({ settings }: { settings: ThemeSettings }) {
   const theme = THEME_PRESETS[settings.theme]
-  const location = useLocation()
-  const isHome = location.pathname === '/'
 
   // Sync theme CSS vars to :root so body::before gradient picks them up
   useEffect(() => {
@@ -37,7 +35,7 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
         } as CSSProperties
       }
     >
-      {!isHome && <NavBar language={settings.language} />}
+      <NavBar language={settings.language} />
       {/* pb-safe ensures content isn't hidden behind iOS home indicator */}
       <main className="relative z-10 pb-[env(safe-area-inset-bottom,0px)]">
         <Outlet />
@@ -68,6 +66,11 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
     { to: '/stats', label: t.stats },
   ]
 
+  function isActive(to: string) {
+    if (to === '/') return location.pathname === '/'
+    return location.pathname.startsWith(to)
+  }
+
   return (
     <>
       <header
@@ -78,21 +81,26 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           backdropFilter: 'blur(12px)',
         }}
       >
-        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 sm:px-6 py-4 sm:py-6 gap-4">
+        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 sm:px-6 py-4 sm:py-5 gap-4">
           <div className="flex items-center gap-8">
             {/* Logo */}
             <Link to="/" className="no-bg-hover shrink-0">
               <img
-                  src="/1x/Asset 1.webp"
-                  alt="Baroflix"
-                  className="block h-10 w-auto"
+                src="/1x/Asset 1.webp"
+                alt="Baroflix"
+                className="block h-9 w-auto"
               />
             </Link>
 
             {/* Left nav — desktop */}
             <nav className="hidden lg:flex items-center gap-6">
               {navLinks.map(({ to, label }) => (
-                <Link key={to} to={to} className="text-sm font-semibold text-white/70 hover:text-white transition-colors">
+                <Link
+                  key={to}
+                  to={to}
+                  className="text-sm font-semibold transition-colors"
+                  style={{ color: isActive(to) ? '#fff' : 'rgba(255,255,255,0.6)' }}
+                >
                   {label}
                 </Link>
               ))}
@@ -104,7 +112,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             {!isElectron && (
               <Link
                 to="/download"
-                className="hidden lg:flex items-center justify-center px-4 h-10 rounded-full text-sm font-bold text-white transition-all hover:brightness-110 mr-2"
+                className="hidden lg:flex items-center justify-center px-4 h-9 rounded-full text-sm font-bold text-white transition-all hover:brightness-110 mr-2"
                 style={{
                   background: 'var(--accent)',
                   boxShadow: '0 0 20px var(--accent-dim)',
@@ -119,16 +127,24 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             <div className="hidden lg:flex items-center gap-2">
               <Link
                 to="/settings"
-                className="flex items-center justify-center w-10 h-10 rounded-full text-white/70 hover:text-white transition-colors"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+                className="flex items-center justify-center w-9 h-9 rounded-full transition-colors"
+                style={{
+                  background: isActive('/settings') ? 'var(--accent-dim)' : 'rgba(255,255,255,0.08)',
+                  border: `1px solid ${isActive('/settings') ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
+                  color: isActive('/settings') ? 'var(--accent)' : 'rgba(255,255,255,0.7)',
+                }}
                 aria-label="Settings"
               >
                 <SettingsIcon className="w-4 h-4" />
               </Link>
               <Link
                 to="/profile"
-                className="flex items-center justify-center w-10 h-10 rounded-full text-white/70 hover:text-white transition-colors"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+                className="flex items-center justify-center w-9 h-9 rounded-full transition-colors"
+                style={{
+                  background: isActive('/profile') ? 'var(--accent-dim)' : 'rgba(255,255,255,0.08)',
+                  border: `1px solid ${isActive('/profile') ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
+                  color: isActive('/profile') ? 'var(--accent)' : 'rgba(255,255,255,0.7)',
+                }}
                 aria-label="Profile"
               >
                 <User className="w-4 h-4" />
@@ -137,7 +153,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
 
             {/* Hamburger — mobile only */}
             <button
-              className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full text-white/70 hover:text-white transition-colors"
+              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full text-white/70 hover:text-white transition-colors"
               style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
               onClick={() => setMobileOpen(o => !o)}
               aria-label="Menu"
@@ -162,7 +178,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
 
         {/* Panel */}
         <nav
-          className="absolute top-0 right-0 h-full w-72 flex flex-col pt-24 pb-8 px-6 gap-1 transition-transform duration-300"
+          className="absolute top-0 right-0 h-full w-72 flex flex-col pt-20 pb-8 px-5 gap-1 transition-transform duration-300"
           style={{
             transform: mobileOpen ? 'translateX(0)' : 'translateX(100%)',
             pointerEvents: mobileOpen ? 'auto' : 'none',
@@ -175,7 +191,11 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             <Link
               key={to}
               to={to}
-              className="text-base font-semibold text-white/70 hover:text-white transition-colors px-3 py-3 rounded-xl hover:bg-white/5"
+              className="text-base font-semibold transition-colors px-3 py-3 rounded-xl"
+              style={{
+                color: isActive(to) ? '#fff' : 'rgba(255,255,255,0.6)',
+                background: isActive(to) ? 'rgba(255,255,255,0.07)' : 'transparent',
+              }}
             >
               {label}
             </Link>
@@ -187,7 +207,11 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           {/* Settings */}
           <Link
             to="/settings"
-            className="flex items-center gap-3 text-base font-semibold text-white/70 hover:text-white transition-colors px-3 py-3 rounded-xl hover:bg-white/5"
+            className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl"
+            style={{
+              color: isActive('/settings') ? '#fff' : 'rgba(255,255,255,0.6)',
+              background: isActive('/settings') ? 'rgba(255,255,255,0.07)' : 'transparent',
+            }}
           >
             <SettingsIcon className="w-4 h-4 shrink-0" />
             Settings
@@ -196,7 +220,11 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           {/* Profile */}
           <Link
             to="/profile"
-            className="flex items-center gap-3 text-base font-semibold text-white/70 hover:text-white transition-colors px-3 py-3 rounded-xl hover:bg-white/5"
+            className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl"
+            style={{
+              color: isActive('/profile') ? '#fff' : 'rgba(255,255,255,0.6)',
+              background: isActive('/profile') ? 'rgba(255,255,255,0.07)' : 'transparent',
+            }}
           >
             <User className="w-4 h-4 shrink-0" />
             Profile

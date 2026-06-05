@@ -9,12 +9,11 @@ export function CollectionPage() {
   const navigate = useNavigate()
   const { details, loading, error } = useCollectionDetails(id)
 
-  if (!hasTmdbCredentials) return <div className="px-6 pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
+  if (!hasTmdbCredentials) return <div className="px-4 sm:px-6 pt-20 sm:pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
   if (!id) return <Navigate replace to="/" />
 
   const backdropSrc = imageUrl(details?.backdrop_path, 'w1280') || ''
   const parts = details?.parts?.slice().sort((a, b) => {
-    // Sort chronologically by release date
     const dateA = a.release_date ? new Date(a.release_date).getTime() : 0
     const dateB = b.release_date ? new Date(b.release_date).getTime() : 0
     return dateA - dateB
@@ -22,32 +21,12 @@ export function CollectionPage() {
 
   return (
     <>
-      {/* ── Back button ────────────────────────────────────────────────── */}
-      <div className="absolute top-28 left-0 right-0 z-50 pointer-events-none">
-        <div className="mx-auto max-w-screen-2xl px-6">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="pointer-events-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 cursor-pointer"
-          style={{
-            background: 'rgba(255,255,255,0.1)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            color: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(12px)'
-          }}
-        >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
-        </div>
-      </div>
-
       {loading ? (
-        <div className="mx-auto max-w-screen-2xl px-6 pt-24 h-screen animate-pulse text-white/50">
+        <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pt-20 sm:pt-24 h-screen animate-pulse text-white/50">
           Loading collection...
         </div>
       ) : error ? (
-        <div className="mx-auto max-w-screen-2xl px-6 pt-24">
+        <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pt-20 sm:pt-24">
           <SetupNotice compact message={error} />
         </div>
       ) : details ? (
@@ -71,8 +50,27 @@ export function CollectionPage() {
                 `,
               }}
             />
-            
-            <div className="relative z-10 mx-auto flex h-[65svh] max-w-screen-2xl w-full flex-col justify-end px-6 pb-12">
+
+            <div className="relative z-10 mx-auto flex h-[65svh] max-w-screen-2xl w-full flex-col justify-between px-4 sm:px-6 pt-20 sm:pt-24 pb-12">
+              {/* Back button sits at top of hero content */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 cursor-pointer"
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: 'rgba(255,255,255,0.85)',
+                    backdropFilter: 'blur(12px)'
+                  }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </button>
+              </div>
+
+              {/* Title block at bottom of hero */}
               <div className="max-w-3xl space-y-5">
                 <h1
                   className="text-5xl sm:text-6xl font-normal text-white"
@@ -91,7 +89,7 @@ export function CollectionPage() {
           </section>
 
           {/* ── Content ───────────────────────────────────────────────────────── */}
-          <div className="mx-auto max-w-screen-2xl px-6 py-12">
+          <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 py-12">
             <MediaGrid
               items={parts}
               loading={false}

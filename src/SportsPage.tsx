@@ -290,7 +290,7 @@ export function SportsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-16 pt-24 sm:pt-32 relative min-h-screen">
+    <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 pb-16 pt-20 sm:pt-24 relative min-h-screen">
       {/* Background glow effects */}
       <div 
         className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[150px] pointer-events-none -z-10"
