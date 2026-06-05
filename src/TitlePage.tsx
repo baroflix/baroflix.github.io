@@ -15,7 +15,7 @@ import {
   subtitleFromItem,
   yearFromItem,
 } from './lib/tmdb'
-import { fetchAnimeDetails, generateAnimeSeasonDetails } from './lib/anilist'
+import { fetchAnimeDetails, generateAnimeSeasonDetails, type AnilistStreamingEpisode } from './lib/anilist'
 import type { MediaDetails, SeasonDetails } from './types'
 import type { MediaKind } from './types'
 import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useReminders, useRatings } from './hooks'
@@ -52,6 +52,8 @@ export function TitlePage() {
   const userRatingObj = ratings[ratingKey]
   const userRating = typeof userRatingObj === 'number' ? userRatingObj : (userRatingObj?.rating || 0)
   const [showCollectionModal, setShowCollectionModal] = useState(false)
+  const [animeLang, setAnimeLang] = useState<'sub' | 'dub'>('sub')
+  const [animeStreamingEps, setAnimeStreamingEps] = useState<AnilistStreamingEpisode[]>([])
 
   const historyEntry = useMemo(() => history.find(h => h.mediaType === mediaType && h.id === Number(id)), [history, mediaType, id])
 
@@ -69,7 +71,16 @@ export function TitlePage() {
       : fetchTitleDetails(mediaType, id, controller.signal)
 
     fetcher
-      .then((res) => { if (!controller.signal.aborted) { setDetails(res); setLoading(false) } })
+      .then((res) => {
+        if (!controller.signal.aborted) {
+          setDetails(res)
+          setLoading(false)
+          // Capture real episode data from AniList
+          if (mediaType === 'anime' && (res as any).streamingEpisodes) {
+            setAnimeStreamingEps((res as any).streamingEpisodes)
+          }
+        }
+      })
       .catch((err) => {
         if (!controller.signal.aborted) {
           setError(err instanceof Error ? err.message : 'Failed to load title.')
@@ -91,7 +102,7 @@ export function TitlePage() {
     const controller = new AbortController()
 
     if (mediaType === 'anime') {
-      const res = generateAnimeSeasonDetails(id, details.number_of_episodes || 1)
+      const res = generateAnimeSeasonDetails(id, details.number_of_episodes || 1, animeStreamingEps)
       setSeasonDetails(res)
       return
     }
@@ -100,7 +111,7 @@ export function TitlePage() {
       .then((res) => setSeasonDetails(res))
       .catch((err) => { if (!controller.signal.aborted) setError(err instanceof Error ? err.message : 'Failed to load season.') })
     return () => controller.abort()
-  }, [details, id, mediaType, seasons, selectedSeason, isEpisodic])
+  }, [details, id, mediaType, seasons, selectedSeason, isEpisodic, animeStreamingEps])
 
   // Auto-play when ?autoplay=1 is present (from continue-watching play button)
   const autoplayParam = searchParams.get('autoplay')
@@ -125,6 +136,7 @@ export function TitlePage() {
   const playerUrl = playback
     ? buildVideasyUrl(playback.mediaType, playback.id, playback.season, playback.episode, {
       color: THEME_PRESETS[settings.theme].accent,
+      language: animeLang,
     })
     : null
 
@@ -371,8 +383,43 @@ export function TitlePage() {
                   style={{ background: 'var(--accent)', boxShadow: '0 0 32px var(--accent-glow)' }}
                 >
                   <Play className="w-4 h-4 fill-white" />
-                  {isEpisodic ? `Play S${activeSeason}E${activeEpisode}` : 'Play'}
+                  {mediaType === 'anime'
+                    ? `Play E${activeEpisode}`
+                    : isEpisodic
+                      ? `Play S${activeSeason}E${activeEpisode}`
+                      : 'Play'}
                 </button>
+
+                {/* Sub / Dub toggle — anime only */}
+                {mediaType === 'anime' && (
+                  <div
+                    className="inline-flex items-center rounded-full text-sm font-semibold overflow-hidden"
+                    style={{ border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)' }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setAnimeLang('sub')}
+                      className="px-4 py-2.5 transition-colors"
+                      style={{
+                        background: animeLang === 'sub' ? 'rgba(255,255,255,0.18)' : 'transparent',
+                        color: animeLang === 'sub' ? '#fff' : 'rgba(255,255,255,0.55)',
+                      }}
+                    >
+                      SUB
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAnimeLang('dub')}
+                      className="px-4 py-2.5 transition-colors"
+                      style={{
+                        background: animeLang === 'dub' ? 'rgba(255,255,255,0.18)' : 'transparent',
+                        color: animeLang === 'dub' ? '#fff' : 'rgba(255,255,255,0.55)',
+                      }}
+                    >
+                      DUB
+                    </button>
+                  </div>
+                )}
                 {details && (
                     <button
                       onClick={() => setShowCollectionModal(true)}

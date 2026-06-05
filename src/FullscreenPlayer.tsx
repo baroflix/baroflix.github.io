@@ -40,22 +40,58 @@ export function FullscreenPlayer({
     }
 
     function handleMessage(event: MessageEvent) {
-      if (typeof event.data !== 'string') return
+      const raw = event.data
+      if (typeof raw !== 'string' && typeof raw !== 'object') return
       try {
-        const payload = JSON.parse(event.data)
-        console.log('[FullscreenPlayer] postMessage:', payload)
+        const payload = typeof raw === 'string' ? JSON.parse(raw) : raw
+        if (!payload || typeof payload !== 'object') return
 
-        // ── MEDIA_DATA: videasy sends bulk progress for all titles ──────
-        if (payload?.type === 'MEDIA_DATA' && typeof payload.data === 'string') {
+        // ── animeplay.cfd events ────────────────────────────────────────
+        // { event: "time", time: number, duration: number, percent: number }
+        if (payload.event === 'time' && typeof payload.time === 'number') {
+          const ts = payload.time
+          const dur = payload.duration ?? 0
+          latestTimestamp = ts
+          if (dur > 0) latestDuration = dur
+          if (Math.abs(ts - lastSavedTime) >= 5) {
+            lastSavedTime = ts
+            if (currentKey) persistProgress(currentKey, ts, dur > 0 ? dur : undefined)
+          }
+          return
+        }
+
+        // { type: "watching-log", currentTime: number, duration: number }
+        if (payload.type === 'watching-log' && typeof payload.currentTime === 'number') {
+          const ts = payload.currentTime
+          const dur = payload.duration ?? 0
+          latestTimestamp = ts
+          if (dur > 0) latestDuration = dur
+          if (currentKey) persistProgress(currentKey, ts, dur > 0 ? dur : undefined)
+          return
+        }
+
+        // { event: "complete" } — episode finished, advance to next
+        if (payload.event === 'complete' && onEpisodeChange && currentKey) {
+          const parts = currentKey.split('-')
+          if (parts.length >= 4) {
+            const season = Number(parts[2])
+            const nextEpisode = Number(parts[3]) + 1
+            const newKey = `${parts[0]}-${parts[1]}-${season}-${nextEpisode}`
+            currentKey = newKey
+            onEpisodeChange(season, nextEpisode)
+          }
+          return
+        }
+
+        // ── Videasy MEDIA_DATA ─────────────────────────────────────────
+        if (payload.type === 'MEDIA_DATA' && typeof payload.data === 'string') {
           const allMedia: Record<string, any> = JSON.parse(payload.data)
 
-          // Derive the show-level key from our currentKey, e.g. "tv-85552" from "tv-85552-1-2"
           const parts = currentKey?.split('-')
           if (parts && parts.length >= 2) {
-            const mediaPrefix = `${parts[0]}-${parts[1]}`  // e.g. "tv-85552"
+            const mediaPrefix = `${parts[0]}-${parts[1]}`
             const entry = allMedia[mediaPrefix]
             if (entry) {
-              // --- Detect auto-advance (binge mode) ---
               if (entry.last_season_watched != null && entry.last_episode_watched != null) {
                 const newKey = `${mediaPrefix}-${entry.last_season_watched}-${entry.last_episode_watched}`
                 if (newKey !== currentKey) {
@@ -66,20 +102,16 @@ export function FullscreenPlayer({
                 }
               }
 
-              // --- Extract timestamp & duration ---
               let ts = 0
               let dur = 0
               if (parts.length >= 4) {
-                const season = parts[2]
-                const episode = parts[3]
-                const epKey = `s${season}e${episode}`
+                const epKey = `s${parts[2]}e${parts[3]}`
                 const epProgress = entry.show_progress?.[epKey]?.progress
                 if (epProgress && typeof epProgress.watched === 'number') {
                   ts = epProgress.watched
                   if (epProgress.duration) dur = epProgress.duration
                 }
               }
-              // Fallback to top-level progress
               if (ts === 0 && entry.progress?.watched != null) {
                 ts = entry.progress.watched
                 if (entry.progress.duration) dur = entry.progress.duration
@@ -98,13 +130,8 @@ export function FullscreenPlayer({
           return
         }
 
-        // ── PLAYER_EVENT: unknown structure, log for analysis ──────────
-        if (payload?.type === 'PLAYER_EVENT') {
-          console.log('[FullscreenPlayer] PLAYER_EVENT data:', JSON.stringify(payload.data, null, 2))
-        }
-
         // ── Fallback: direct timestamp object ──────────────────────────
-        if (payload && typeof payload.timestamp === 'number') {
+        if (typeof payload.timestamp === 'number') {
           latestTimestamp = payload.timestamp
           const nextKey = `${payload.type}-${payload.id}-${payload.season || 0}-${payload.episode || 0}`
 
@@ -122,8 +149,8 @@ export function FullscreenPlayer({
             persistProgress(currentKey!, payload.timestamp)
           }
         }
-      } catch (err) {
-        // Not a JSON string from the player
+      } catch {
+        // Not parseable — ignore
       }
     }
 

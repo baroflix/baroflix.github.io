@@ -63,6 +63,12 @@ query($id: Int) {
       }
     }
     trailer { id site }
+    streamingEpisodes {
+      title
+      thumbnail
+      url
+      site
+    }
   }
 }
 `
@@ -115,17 +121,25 @@ export async function searchAnime(query: string, signal?: AbortSignal): Promise<
   return data.Page.media.map(mapToMediaItem)
 }
 
-const animeDetailsCache = new Map<string, Promise<MediaDetails>>()
+export interface AnilistStreamingEpisode {
+  title: string
+  thumbnail: string
+  url: string
+  site: string
+}
 
-export async function fetchAnimeDetails(id: string, signal?: AbortSignal): Promise<MediaDetails> {
+const animeDetailsCache = new Map<string, Promise<MediaDetails & { streamingEpisodes?: AnilistStreamingEpisode[] }>>()
+
+export async function fetchAnimeDetails(id: string, signal?: AbortSignal): Promise<MediaDetails & { streamingEpisodes?: AnilistStreamingEpisode[] }> {
   if (animeDetailsCache.has(id)) return animeDetailsCache.get(id)!
 
   const promise = (async () => {
     const data = await requestGraphql(DETAILS_QUERY, { id: parseInt(id, 10) }, signal)
     const media = data.Media
     const item = mapToMediaItem(media)
-    const episodesCount = media.episodes || 1
-    
+    const episodesCount = media.episodes || media.streamingEpisodes?.length || 1
+    const streamingEpisodes: AnilistStreamingEpisode[] = media.streamingEpisodes ?? []
+
     const seasonSummary = {
       id: media.id,
       season_number: 1,
@@ -159,24 +173,39 @@ export async function fetchAnimeDetails(id: string, signal?: AbortSignal): Promi
       seasons: [seasonSummary],
       credits: { cast },
       videos: { results: videos },
+      streamingEpisodes,
     }
   })()
 
   animeDetailsCache.set(id, promise)
   promise.catch(() => animeDetailsCache.delete(id))
-  
+
   return promise
 }
 
 
-export function generateAnimeSeasonDetails(id: string, episodesCount: number) {
-  const episodes = Array.from({ length: episodesCount }, (_, i) => ({
-    id: parseInt(`${id}${i + 1}`, 10),
-    episode_number: i + 1,
-    name: `Episode ${i + 1}`,
-    overview: `Watch episode ${i + 1}`,
-    runtime: 24,
-  }))
+export function generateAnimeSeasonDetails(
+  id: string,
+  episodesCount: number,
+  streamingEps?: AnilistStreamingEpisode[]
+) {
+  // Use the larger of declared episodes vs known streaming episodes
+  const total = Math.max(episodesCount, streamingEps?.length ?? 0)
+
+  const episodes = Array.from({ length: total }, (_, i) => {
+    const epNum = i + 1
+    const streamEp = streamingEps?.[i]
+    return {
+      id: i + 1,
+      episode_number: epNum,
+      // Use real episode title if available, otherwise "Episode N"
+      name: streamEp?.title?.trim() ? streamEp.title.trim() : `Episode ${epNum}`,
+      overview: '',
+      runtime: 24,
+      // thumbnail is a full URL — imageUrl() handles full URLs as-is
+      still_path: streamEp?.thumbnail || null,
+    }
+  })
 
   return {
     id: parseInt(id, 10),
