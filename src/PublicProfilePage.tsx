@@ -298,14 +298,18 @@ export function PublicProfilePage() {
   async function handleFollowToggle() {
     if (!session?.user?.id || !profile) return
     setFollowLoading(true)
-    if (isFollowing) {
-      await unfollowUser(session.user.id, profile.id)
-      setIsFollowing(false)
-      setFollowCounts(c => ({ ...c, followers: Math.max(0, c.followers - 1) }))
-    } else {
-      await followUser(session.user.id, profile.id)
-      setIsFollowing(true)
-      setFollowCounts(c => ({ ...c, followers: c.followers + 1 }))
+    try {
+      if (isFollowing) {
+        await unfollowUser(session.user.id, profile.id)
+        setIsFollowing(false)
+        setFollowCounts(c => ({ ...c, followers: Math.max(0, c.followers - 1) }))
+      } else {
+        await followUser(session.user.id, profile.id)
+        setIsFollowing(true)
+        setFollowCounts(c => ({ ...c, followers: c.followers + 1 }))
+      }
+    } catch (err) {
+      console.error('Follow toggle failed:', err)
     }
     setFollowLoading(false)
   }

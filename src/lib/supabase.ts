@@ -167,14 +167,16 @@ export async function checkIsFollowing(followerId: string, followingId: string):
 
 /** Follow a user (followerId follows followingId) */
 export async function followUser(followerId: string, followingId: string): Promise<void> {
-  await supabase.from('follows').insert({ follower_id: followerId, following_id: followingId })
+  const { error } = await supabase.from('follows').insert({ follower_id: followerId, following_id: followingId })
+  if (error) throw error
 }
 
 /** Unfollow a user */
 export async function unfollowUser(followerId: string, followingId: string): Promise<void> {
-  await supabase.from('follows').delete()
+  const { error } = await supabase.from('follows').delete()
     .eq('follower_id', followerId)
     .eq('following_id', followingId)
+  if (error) throw error
 }
 
 const FOLLOW_PROFILE_FIELDS =
