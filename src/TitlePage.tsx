@@ -174,13 +174,21 @@ export function TitlePage() {
     return () => controller.abort()
   }, [details, id, mediaType, seasons, selectedSeason, isEpisodic, animeStreamingEps, jikanEpisodes, animeTmdbMeta])
 
-  // Auto-play when ?autoplay=1 is present (from continue-watching play button)
+  // Auto-play when ?autoplay=1 is present (from continue-watching play button).
+  // We immediately strip the param after firing so that season/detail re-loads
+  // don't re-trigger playback (which would erroneously set now_watching again).
   const autoplayParam = searchParams.get('autoplay')
   useEffect(() => {
     if (!autoplayParam || !mediaType) return
     if (isEpisodic && !seasonDetails) return
     if (!details) return
     handlePlay(selectedSeason, activeEpisode)
+    // One-shot: strip ?autoplay so changing seasons won't re-trigger this effect
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      next.delete('autoplay')
+      return next
+    }, { replace: true })
   }, [autoplayParam, mediaType, isEpisodic, seasonDetails, details])
 
   if (!hasTmdbCredentials && mediaType !== 'anime') return <div className="px-4 sm:px-6 pt-20 sm:pt-24 max-w-3xl mx-auto"><SetupNotice /></div>

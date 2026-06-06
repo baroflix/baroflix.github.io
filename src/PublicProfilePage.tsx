@@ -23,18 +23,22 @@ import { ProfileCommentsSection } from './components/CommentsSection'
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w185'
 
-/** Derives online/watching/offline status from profile fields */
+/** Derives online/watching/offline status from profile fields.
+ *  Requires a recent last_seen_at heartbeat (< 5 min) to show any active status,
+ *  so a stale now_watching (e.g. from a closed tab) never lingers on the profile. */
 function getProfileStatus(profile: ProfileWithBadges): { type: 'watching' | 'online' | 'offline'; label: string } {
-  if (profile.now_watching) {
+  const msAgo = profile.last_seen_at
+    ? Date.now() - new Date(profile.last_seen_at).getTime()
+    : Infinity
+  const isOnline = msAgo < 5 * 60 * 1000
+
+  if (isOnline && profile.now_watching) {
     const nw = profile.now_watching
     let label = `Watching ${nw.title}`
     if (nw.season && nw.episode) label += ` S${nw.season}E${nw.episode}`
     return { type: 'watching', label }
   }
-  if (profile.last_seen_at) {
-    const msAgo = Date.now() - new Date(profile.last_seen_at).getTime()
-    if (msAgo < 5 * 60 * 1000) return { type: 'online', label: 'Online' }
-  }
+  if (isOnline) return { type: 'online', label: 'Online' }
   return { type: 'offline', label: 'Offline' }
 }
 

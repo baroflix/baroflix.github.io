@@ -141,6 +141,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (incrementVisit) {
         supabase.rpc('increment_visit_count', { uid: newSession.user.id }).then()
+        // Clear any stale now_watching from a previous session (e.g. browser was closed
+        // before the TitlePage unmount cleanup could run)
+        supabase.from('profiles').update({ now_watching: null }).eq('id', newSession.user.id).then()
       }
 
       if (prof) {
