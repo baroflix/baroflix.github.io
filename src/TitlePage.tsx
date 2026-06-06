@@ -57,7 +57,7 @@ export function TitlePage() {
   const [animeLang, setAnimeLang] = useState<'sub' | 'dub'>('sub')
   const [animeStreamingEps, setAnimeStreamingEps] = useState<AnilistStreamingEpisode[]>([])
   const [jikanEpisodes, setJikanEpisodes] = useState<{ mal_id: number; title: string | null }[]>([])
-  const [animeTmdbMeta, setAnimeTmdbMeta] = useState<AnimeTmdbMeta>({ logos: [], episodeOverviews: new Map() })
+  const [animeTmdbMeta, setAnimeTmdbMeta] = useState<AnimeTmdbMeta>({ logos: [], episodeOverviews: new Map(), episodeStills: new Map() })
 
   const historyEntry = useMemo(() => history.find(h => h.mediaType === mediaType && h.id === Number(id)), [history, mediaType, id])
 
@@ -69,7 +69,7 @@ export function TitlePage() {
       setLoading(true); setError(null); setDetails(null)
       setSeasonDetails(null); setPlayback(null)
       setAnimeStreamingEps([]); setJikanEpisodes([])
-      setAnimeTmdbMeta({ logos: [], episodeOverviews: new Map() })
+      setAnimeTmdbMeta({ logos: [], episodeOverviews: new Map(), episodeStills: new Map() })
     })
 
     const fetcher = mediaType === 'anime'
@@ -136,10 +136,15 @@ export function TitlePage() {
         const jikan = jikanEpisodes.find(j => j.mal_id === epNum)
         const streaming = animeStreamingEps[i]            // positional — used for thumbnail only
         const synopsis = animeTmdbMeta.episodeOverviews.get(epNum) ?? null
+        // Thumbnail priority: AniList streamingEpisodes → TMDB season still
+        const thumbnail =
+          streaming?.thumbnail ||
+          animeTmdbMeta.episodeStills.get(epNum) ||
+          null
         return {
           episode_number: epNum,
           title: jikan?.title || null,                    // Jikan is authoritative for titles
-          thumbnail: streaming?.thumbnail || null,
+          thumbnail,
           synopsis,
         }
       })

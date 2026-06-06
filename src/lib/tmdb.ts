@@ -283,6 +283,8 @@ export interface AnimeTmdbMeta {
   logos: Array<{ file_path: string; vote_average: number }>
   /** episode_number → overview from TMDB season 1 */
   episodeOverviews: Map<number, string>
+  /** episode_number → full still image URL from TMDB season 1 */
+  episodeStills: Map<number, string>
 }
 
 const animeTmdbMetaCache = new Map<string, Promise<AnimeTmdbMeta>>()
@@ -298,7 +300,7 @@ export async function fetchAnimeTmdbMeta(
   year?: number | null,
   signal?: AbortSignal
 ): Promise<AnimeTmdbMeta> {
-  const empty: AnimeTmdbMeta = { logos: [], episodeOverviews: new Map() }
+  const empty: AnimeTmdbMeta = { logos: [], episodeOverviews: new Map(), episodeStills: new Map() }
   if (!hasTmdbCredentials) return empty
 
   const cacheKey = `${title}|${year ?? ''}`
@@ -325,7 +327,7 @@ export async function fetchAnimeTmdbMeta(
         { include_image_language: 'en,null' },
         signal
       ).catch(() => null),
-      request<{ episodes?: Array<{ episode_number: number; overview: string }> }>(
+      request<{ episodes?: Array<{ episode_number: number; overview: string; still_path: string | null }> }>(
         `/tv/${tmdbId}/season/1`,
         {},
         signal
@@ -335,13 +337,17 @@ export async function fetchAnimeTmdbMeta(
     const logos = (imagesData?.logos ?? []).filter(l => l.file_path)
 
     const episodeOverviews = new Map<number, string>()
+    const episodeStills = new Map<number, string>()
     for (const ep of season1Data?.episodes ?? []) {
       if (ep.episode_number && ep.overview) {
         episodeOverviews.set(ep.episode_number, ep.overview)
       }
+      if (ep.episode_number && ep.still_path) {
+        episodeStills.set(ep.episode_number, imageUrl(ep.still_path, 'w342'))
+      }
     }
 
-    return { logos, episodeOverviews }
+    return { logos, episodeOverviews, episodeStills }
   })()
 
   animeTmdbMetaCache.set(cacheKey, promise)
