@@ -548,7 +548,7 @@ export function upsertHistory(entries: WatchHistoryEntry[], next: WatchHistoryEn
   const filtered = entries.filter(
     (e) => !(e.mediaType === next.mediaType && e.id === next.id)
   )
-  return [next, ...filtered].slice(0, 20)
+  return [next, ...filtered].slice(0, 500)
 }
 
 export function formatDuration(minutes?: number) {
