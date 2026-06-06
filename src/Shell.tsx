@@ -52,6 +52,7 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
 function NavBar({ language }: { language?: 'en' | 'pl' }) {
   const hidden = useScrollDirection()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [theatreActive, setTheatreActive] = useState(false)
   const location = useLocation()
   const lang = language || 'en'
   const t = locales[lang].nav
@@ -59,6 +60,14 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
 
   // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
+
+  // Hide navbar when a page activates theatre mode via body class
+  useEffect(() => {
+    const sync = () => setTheatreActive(document.body.classList.contains('theatre-mode'))
+    const observer = new MutationObserver(sync)
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   const navLinks = [
     { to: '/browse', label: t.browse },
@@ -76,7 +85,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
       <header
         className="fixed top-0 left-0 right-0 z-50 transition-transform duration-300"
         style={{
-          transform: hidden ? 'translateY(-100%)' : 'translateY(0)',
+          transform: (hidden || theatreActive) ? 'translateY(-100%)' : 'translateY(0)',
           background: 'linear-gradient(180deg, rgba(8,8,8,0.96) 0%, rgba(8,8,8,0.0) 100%)',
           backdropFilter: 'blur(12px)',
         }}

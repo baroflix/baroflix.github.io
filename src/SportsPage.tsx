@@ -283,6 +283,13 @@ export function SportsPage() {
     }
   }
 
+  // Sync theatre mode → body class so the navbar can hide itself
+  useEffect(() => {
+    if (theatreMode) document.body.classList.add('theatre-mode')
+    else document.body.classList.remove('theatre-mode')
+    return () => document.body.classList.remove('theatre-mode')
+  }, [theatreMode])
+
   const handleClosePlayer = () => {
     setActiveMatch(null)
     setSelectedSource(null)
