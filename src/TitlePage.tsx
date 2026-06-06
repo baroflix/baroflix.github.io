@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Navigate, Link, useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, ArrowRight, Star, ArrowLeft, Bell, BellRing, Search, X, Plus, CheckCircle2, Circle } from 'lucide-react'
 import heroFallback from './assets/hero.png'
