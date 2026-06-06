@@ -449,6 +449,44 @@ export function TitlePage() {
                       : 'Play'}
                 </button>
 
+                {/* Mark as watched — movies only */}
+                {mediaType === 'movie' && (() => {
+                  const isWatched = history.some(h => h.mediaType === 'movie' && h.id === Number(id))
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isWatched) {
+                          setHistory(history.filter(h => !(h.mediaType === 'movie' && h.id === Number(id))))
+                        } else {
+                          setHistory(upsertHistory(history, {
+                            mediaType: 'movie',
+                            id: Number(id),
+                            title,
+                            posterPath: details?.poster_path,
+                            backdropPath: details?.backdrop_path,
+                            watchedAt: Date.now(),
+                          }))
+                        }
+                      }}
+                      className="inline-flex items-center gap-2 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold transition-all"
+                      style={isWatched ? {
+                        background: 'rgba(34,197,94,0.15)',
+                        border: '1px solid rgba(34,197,94,0.4)',
+                        color: '#4ade80',
+                      } : {
+                        background: 'rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: 'rgba(255,255,255,0.85)',
+                      }}
+                    >
+                      {isWatched
+                        ? <><CheckCircle2 className="w-4 h-4" /> Watched</>
+                        : <><Circle className="w-4 h-4" /> Mark as Watched</>}
+                    </button>
+                  )
+                })()}
+
                 {/* Sub / Dub toggle — anime only */}
                 {mediaType === 'anime' && (
                   <div
