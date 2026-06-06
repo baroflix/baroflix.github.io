@@ -502,8 +502,11 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
 // GRANT SELECT ON public.profile_comments TO anon;
 // ─────────────────────────────────────────────────────────────
 
+// No profiles join — profile_comments has two FKs pointing toward profiles
+// (profile_id direct, user_id via auth.users) which makes PostgREST pick the
+// wrong one (profile owner instead of commenter). Fetch commenter profiles separately.
 const PROFILE_COMMENT_SELECT =
-  'id, profile_id, user_id, content, created_at, profiles(username, avatar_url)'
+  'id, profile_id, user_id, content, created_at'
 
 interface ProfileCommentsSectionProps {
   profileId: string        // uuid of the profile being viewed
@@ -520,6 +523,8 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
   const listEndRef = useRef<HTMLDivElement>(null)
 
   const [badgesMap, setBadgesMap] = useState<Record<string, UserBadge[]>>({})
+  // Commenter profiles keyed by user_id (fetched separately to avoid FK ambiguity)
+  const [commenterMap, setCommenterMap] = useState<Record<string, { username: string | null; avatar_url: string | null }>>({})
   const fetchedUserIds = useRef(new Set<string>())
 
   // ── Load comments ───────────────────────────────────────────
@@ -540,12 +545,24 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
     return () => { cancelled = true }
   }, [profileId])
 
-  // ── Load badges for authors ─────────────────────────────────
+  // ── Load badges + commenter profiles for new authors ───────
   useEffect(() => {
     const newIds = comments.map(c => c.user_id).filter(id => !fetchedUserIds.current.has(id))
     if (!newIds.length) return
     newIds.forEach(id => fetchedUserIds.current.add(id))
+    // Fetch badges
     fetchBadgesForUsers(newIds).then(map => setBadgesMap(prev => ({ ...prev, ...map })))
+    // Fetch commenter profiles (by id = user_id, since profiles.id = auth.users.id)
+    supabase
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .in('id', newIds)
+      .then(({ data }) => {
+        if (!data) return
+        const map: Record<string, { username: string | null; avatar_url: string | null }> = {}
+        for (const p of data) map[p.id] = { username: p.username, avatar_url: p.avatar_url }
+        setCommenterMap(prev => ({ ...prev, ...map }))
+      })
   }, [comments]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Realtime ────────────────────────────────────────────────
@@ -643,7 +660,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginBottom: '1.5rem' }}>
           {comments.map(comment => {
-            const author = comment.profiles
+            const author = commenterMap[comment.user_id] ?? null
             const isOwn = session?.user?.id === comment.user_id
             const canDelete = isOwn || isOwner
             const displayName = author?.username || 'Anonymous'
