@@ -354,3 +354,146 @@ export async function fetchAnimeTmdbMeta(
   promise.catch(() => animeTmdbMetaCache.delete(cacheKey))
   return promise
 }
+
+// ─── Discover Catalog ─────────────────────────────────────────────────────────
+
+export type DiscoverMediaType = 'movie' | 'tv' | 'anime' | 'all'
+export type DiscoverSort = 'popularity.desc' | 'vote_average.desc' | 'newest' | 'oldest'
+
+export interface DiscoverResult {
+  results: MediaItem[]
+  totalPages: number
+  totalResults: number
+}
+
+export async function discoverCatalog(
+  params: {
+    type: DiscoverMediaType
+    query?: string
+    genreId?: number
+    sortBy?: DiscoverSort
+    page?: number
+  },
+  signal?: AbortSignal
+): Promise<DiscoverResult> {
+  const { type, query, genreId, sortBy = 'popularity.desc', page = 1 } = params
+  const hasQuery = Boolean(query?.trim())
+
+  function tmdbSortStr(t: 'movie' | 'tv'): string {
+    switch (sortBy) {
+      case 'vote_average.desc': return 'vote_average.desc'
+      case 'newest': return t === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc'
+      case 'oldest': return t === 'movie' ? 'primary_release_date.asc' : 'first_air_date.asc'
+      default: return 'popularity.desc'
+    }
+  }
+
+  // ── Search mode ─────────────────────────────────────────────────────────────
+  if (hasQuery) {
+    const q = query!.trim()
+
+    if (type === 'all') {
+      const data = await request<{ results: MediaItem[]; total_pages: number; total_results: number }>(
+        '/search/multi',
+        { query: q, include_adult: false, language: 'en-US', page },
+        signal
+      )
+      return {
+        results: uniqueMedia(data.results.filter(r => r.media_type === 'movie' || r.media_type === 'tv')),
+        totalPages: data.total_pages ?? 1,
+        totalResults: data.total_results ?? 0,
+      }
+    }
+
+    const searchType = type === 'anime' ? 'tv' : type
+    const data = await request<{ results: MediaItem[]; total_pages: number; total_results: number }>(
+      `/search/${searchType}`,
+      { query: q, include_adult: false, language: 'en-US', page },
+      signal
+    )
+    return {
+      results: uniqueMedia(data.results.map(r => ({ ...r, media_type: searchType as 'movie' | 'tv' }))),
+      totalPages: data.total_pages ?? 1,
+      totalResults: data.total_results ?? 0,
+    }
+  }
+
+  // ── Discover mode ────────────────────────────────────────────────────────────
+  if (type === 'all') {
+    const minVotes = sortBy === 'vote_average.desc'
+    const [movies, tv] = await Promise.all([
+      request<{ results: MediaItem[]; total_pages: number; total_results: number }>(
+        '/discover/movie',
+        {
+          language: 'en-US',
+          page,
+          sort_by: tmdbSortStr('movie'),
+          include_adult: false,
+          ...(minVotes ? { 'vote_count.gte': 200 } : {}),
+        },
+        signal
+      ),
+      request<{ results: MediaItem[]; total_pages: number; total_results: number }>(
+        '/discover/tv',
+        {
+          language: 'en-US',
+          page,
+          sort_by: tmdbSortStr('tv'),
+          include_adult: false,
+          ...(minVotes ? { 'vote_count.gte': 100 } : {}),
+        },
+        signal
+      ),
+    ])
+
+    const combined = [
+      ...movies.results.map(r => ({ ...r, media_type: 'movie' as const })),
+      ...tv.results.map(r => ({ ...r, media_type: 'tv' as const })),
+    ]
+    combined.sort((a, b) => {
+      if (sortBy === 'vote_average.desc') return (b.vote_average ?? 0) - (a.vote_average ?? 0)
+      if (sortBy === 'newest' || sortBy === 'oldest') {
+        const da = a.release_date || a.first_air_date || ''
+        const db = b.release_date || b.first_air_date || ''
+        return sortBy === 'newest' ? db.localeCompare(da) : da.localeCompare(db)
+      }
+      return (b.popularity ?? 0) - (a.popularity ?? 0)
+    })
+
+    return {
+      results: uniqueMedia(combined),
+      totalPages: Math.max(movies.total_pages ?? 1, tv.total_pages ?? 1),
+      totalResults: (movies.total_results ?? 0) + (tv.total_results ?? 0),
+    }
+  }
+
+  const endpoint = type === 'movie' ? '/discover/movie' : '/discover/tv'
+  const mediaT = type === 'anime' ? 'tv' : type
+
+  const discoverParams: RequestParams = {
+    language: 'en-US',
+    page,
+    sort_by: tmdbSortStr(mediaT),
+    include_adult: false,
+    ...(sortBy === 'vote_average.desc' ? { 'vote_count.gte': mediaT === 'movie' ? 200 : 100 } : {}),
+  }
+
+  if (type === 'anime') {
+    discoverParams.with_genres = genreId ?? 16 // Animation
+    discoverParams.with_origin_country = 'JP'
+  } else if (genreId) {
+    discoverParams.with_genres = genreId
+  }
+
+  const data = await request<{ results: MediaItem[]; total_pages: number; total_results: number }>(
+    endpoint,
+    discoverParams,
+    signal
+  )
+
+  return {
+    results: uniqueMedia(data.results.map(r => ({ ...r, media_type: mediaT as 'movie' | 'tv' }))),
+    totalPages: data.total_pages ?? 1,
+    totalResults: data.total_results ?? 0,
+  }
+}
