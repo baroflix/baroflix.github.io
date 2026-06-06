@@ -388,14 +388,19 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="flex gap-2 px-7 pb-4 max-w-[1200px] mx-auto w-full justify-center"
+            style={{
+              display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none',
+              WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
+              padding: '0 28px 16px',
+            }}
+            className="[&::-webkit-scrollbar]:hidden max-w-[1200px] mx-auto w-full"
           >
             {FILTERS.map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setFilter(key)}
-                className="px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-colors"
+                className="px-4 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-colors shrink-0"
                 style={{
                   background: filter === key ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
                   color: filter === key ? '#fff' : 'rgba(255,255,255,0.5)',

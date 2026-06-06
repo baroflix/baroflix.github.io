@@ -20,7 +20,7 @@ import { fetchJikanEpisodes } from './lib/jikan'
 import { fetchAnimeTmdbMeta, type AnimeTmdbMeta } from './lib/tmdb'
 import type { MediaDetails, SeasonDetails } from './types'
 import type { MediaKind } from './types'
-import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useWatchedEpisodes, writeProgressEntry, writeBulkWatched, removeBulkWatched, useReminders, useRatings } from './hooks'
+import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useWatchedEpisodes, writeProgressEntry, writeBulkWatched, removeBulkWatched, useReminders, useRatings, writeWatchedEntry } from './hooks'
 import type { WatchHistoryEntry } from './hooks'
 import { STORAGE_KEYS } from './hooks'
 import { useAuth } from './context/AuthContext'
@@ -294,6 +294,29 @@ export function TitlePage() {
             next.set('episode', String(episode))
             setSearchParams(next, { replace: true })
           }}
+          onNextEpisode={isEpisodic && playback ? () => {
+            const curSeason = playback.season ?? 1
+            const curEpisode = playback.episode ?? 1
+            const nextEp = curEpisode + 1
+            // Mark current episode as watched
+            writeWatchedEntry(`${mediaType}-${id}-${curSeason}-${curEpisode}`)
+            // Advance playback + URL
+            setPlayback(p => p ? { ...p, season: curSeason, episode: nextEp } : p)
+            setHistory(current => upsertHistory(current, {
+              mediaType: mediaType!,
+              id: Number(id),
+              title,
+              posterPath: details?.poster_path,
+              backdropPath: details?.backdrop_path,
+              season: curSeason,
+              episode: nextEp,
+              watchedAt: Date.now(),
+            }))
+            const next = new URLSearchParams(searchParams)
+            next.set('season', String(curSeason))
+            next.set('episode', String(nextEp))
+            setSearchParams(next, { replace: true })
+          } : undefined}
         />
       )}
 
