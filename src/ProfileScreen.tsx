@@ -1,4 +1,4 @@
-import { useState, type FormEvent, useEffect } from 'react'
+import { useState, type FormEvent, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft, User, Image, Save, CheckCircle, AlertTriangle,
@@ -28,7 +28,35 @@ export function ProfileScreen() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
+  // Username availability check
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const usernameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const [recentHistory, setRecentHistory] = useState<WatchHistoryEntry[]>([])
+
+  // Debounced username availability check
+  useEffect(() => {
+    const trimmed = username.trim()
+    // If unchanged from saved value, nothing to check
+    if (trimmed === (savedProfile?.username ?? '') || trimmed.length < 2) {
+      setUsernameStatus('idle')
+      return
+    }
+    setUsernameStatus('checking')
+    if (usernameCheckTimer.current) clearTimeout(usernameCheckTimer.current)
+    usernameCheckTimer.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', trimmed)
+        .neq('id', session?.user?.id ?? '')
+        .maybeSingle()
+      setUsernameStatus(data ? 'taken' : 'available')
+    }, 700)
+    return () => {
+      if (usernameCheckTimer.current) clearTimeout(usernameCheckTimer.current)
+    }
+  }, [username, savedProfile?.username, session?.user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load recent watch history for pinning
   useEffect(() => {
@@ -91,7 +119,12 @@ export function ProfileScreen() {
 
     if (error) {
       setStatus('error')
-      setErrorMsg(error.message)
+      // Postgres unique violation code 23505 → friendly message
+      if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('unique')) {
+        setErrorMsg('That username is already taken — please choose a different one.')
+      } else {
+        setErrorMsg(error.message)
+      }
     } else {
       setStatus('success')
       setSavedProfile(data as Profile)
@@ -212,15 +245,31 @@ export function ProfileScreen() {
 
           {/* Username */}
           <div>
-            <label htmlFor="profile-username" className="flex items-center gap-1.5 text-xs mb-1.5"
-              style={{ color: 'rgba(255,255,255,0.5)' }}>
-              <User size={13} /> Username
-            </label>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <label htmlFor="profile-username" className="flex items-center gap-1.5 text-xs"
+                style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <User size={13} /> Username
+              </label>
+              {/* Availability indicator */}
+              {usernameStatus === 'checking' && (
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>Checking…</span>
+              )}
+              {usernameStatus === 'available' && (
+                <span className="text-xs font-semibold" style={{ color: '#4ade80' }}>✓ Available</span>
+              )}
+              {usernameStatus === 'taken' && (
+                <span className="text-xs font-semibold" style={{ color: '#f87171' }}>✗ Already taken</span>
+              )}
+            </div>
             <input id="profile-username" type="text" value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="e.g. bartlomiej" maxLength={50}
               className="w-full px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10 }} />
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: `1px solid ${usernameStatus === 'taken' ? 'rgba(248,113,113,0.5)' : usernameStatus === 'available' ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                borderRadius: 10,
+              }} />
           </div>
 
           {/* Full name */}
@@ -324,9 +373,9 @@ export function ProfileScreen() {
             </button>
           </div>
 
-          <button id="profile-save-btn" type="submit" disabled={saving}
+          <button id="profile-save-btn" type="submit" disabled={saving || usernameStatus === 'taken'}
             className="flex items-center justify-center gap-2 mt-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity"
-            style={{ background: 'var(--accent)', opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>
+            style={{ background: 'var(--accent)', opacity: saving || usernameStatus === 'taken' ? 0.5 : 1, cursor: saving || usernameStatus === 'taken' ? 'not-allowed' : 'pointer' }}>
             <Save size={15} />
             {saving ? 'Saving…' : 'Save changes'}
           </button>
