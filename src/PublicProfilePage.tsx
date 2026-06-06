@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, User, Globe, Clock, Film, Tv, Sword, X, UserPlus, UserCheck, Flame, Radio } from 'lucide-react'
+import { ArrowLeft, User, Globe, Clock, Film, Tv, Sword, X, UserPlus, UserCheck, Flame } from 'lucide-react'
 import {
   fetchPublicProfile,
   BADGE_CONFIG,
@@ -534,20 +534,37 @@ export function PublicProfilePage() {
           {/* Top row: avatar + follow button */}
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
             {/* Avatar */}
-            <div style={{
-              width: 88, height: 88, borderRadius: '50%', flexShrink: 0,
-              background: 'rgba(255,255,255,0.08)',
-              border: '3px solid var(--bg, #080808)',
-              overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 0 2px ${theme.glow.replace(/[\d.]+\)$/, '0.5)')}`,
-            }}>
-              {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.username ?? ''}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <User size={36} style={{ color: 'rgba(255,255,255,0.3)' }} />
-              )}
-            </div>
+            {(() => {
+              const status = getProfileStatus(profile)
+              const isActive = status.type !== 'offline'
+              return (
+                <div style={{ position: 'relative', flexShrink: 0, width: 88 }}>
+                  <div style={{
+                    width: 88, height: 88, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '3px solid var(--bg, #080808)',
+                    overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: `0 0 0 2px ${theme.glow.replace(/[\d.]+\)$/, '0.5)')}`,
+                  }}>
+                    {profile.avatar_url ? (
+                      <img src={profile.avatar_url} alt={profile.username ?? ''}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <User size={36} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                    )}
+                  </div>
+                  {isActive && (
+                    <span style={{
+                      position: 'absolute', bottom: 4, left: 4,
+                      width: 14, height: 14, borderRadius: '50%',
+                      background: '#4ade80',
+                      border: '2.5px solid var(--bg, #080808)',
+                      boxShadow: '0 0 6px rgba(74,222,128,0.65)',
+                    }} />
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Follow button + mutual follows (non-owner only) */}
             {!isOwnProfile && session && (
@@ -586,32 +603,6 @@ export function PublicProfilePage() {
               </p>
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
-              {/* ── Online status ─────────────────────────────────────── */}
-              {(() => {
-                const s = getProfileStatus(profile)
-                const isActive = s.type !== 'offline'
-                const dotColor = isActive ? '#4ade80' : 'rgba(255,255,255,0.18)'
-                const labelColor = s.type === 'watching' ? '#4ade80'
-                  : s.type === 'online' ? 'rgba(255,255,255,0.7)'
-                  : 'rgba(255,255,255,0.3)'
-                return (
-                  <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{
-                      width: 7, height: 7, borderRadius: '50%', display: 'inline-block', flexShrink: 0,
-                      background: dotColor,
-                      boxShadow: isActive ? `0 0 5px rgba(74,222,128,0.55)` : 'none',
-                    }} />
-                    {s.type === 'watching' ? (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: labelColor, fontWeight: 500 }}>
-                        <Radio size={11} style={{ opacity: 0.8 }} />
-                        {s.label}
-                      </span>
-                    ) : (
-                      <span style={{ color: labelColor, fontWeight: s.type === 'online' ? 500 : 400 }}>{s.label}</span>
-                    )}
-                  </span>
-                )
-              })()}
               {profile.country && (
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <Globe size={12} style={{ opacity: 0.6 }} />
@@ -624,33 +615,18 @@ export function PublicProfilePage() {
                   Joined {memberSince}
                 </span>
               )}
-              <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: '50%', display: 'inline-block', flexShrink: 0,
-                  background: theme.accent, boxShadow: `0 0 5px ${theme.glow}`,
-                }} />
-                <span style={{ color: theme.accent, fontWeight: 600 }}>{theme.label}</span>
-              </span>
+              {watchStreak > 0 && (
+                <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, color: '#fb923c' }}>
+                  <Flame size={12} />
+                  <span style={{ fontWeight: 700 }}>{watchStreak}</span>
+                  <span style={{ color: 'rgba(251,146,60,0.6)' }}>day streak</span>
+                </span>
+              )}
             </div>
           </div>
 
-          {/* ── Streak ───────────────────────────────────────────────── */}
-          {watchStreak > 0 && (
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              marginTop: 10,
-              padding: '5px 10px', borderRadius: 10,
-              background: 'rgba(251,146,60,0.12)',
-              border: '1px solid rgba(251,146,60,0.25)',
-            }}>
-              <Flame size={14} style={{ color: '#fb923c' }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#fb923c' }}>{watchStreak}</span>
-              <span style={{ fontSize: 12, color: 'rgba(251,146,60,0.7)' }}>day streak</span>
-            </div>
-          )}
-
           {/* ── Now watching ─────────────────────────────────────────── */}
-          {profile.now_watching && (
+          {profile.now_watching && getProfileStatus(profile).type === 'watching' && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
               marginTop: 10, padding: '8px 12px', borderRadius: 12,
