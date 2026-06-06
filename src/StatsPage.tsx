@@ -96,7 +96,10 @@ export function StatsPage() {
   }, [uniqueTitles.map(u => `${u.mediaType}-${u.id}`).join(',')])
 
   // ── global totals ──────────────────────────────────────────────────────────
-  const totalSeconds = Object.values(progress).reduce((a, b) => a + b, 0)
+  // Exclude ':duration' sentinel keys written by the player — they're metadata, not time watched
+  const totalSeconds = Object.entries(progress)
+    .filter(([k]) => !k.includes(':duration'))
+    .reduce((sum, [, v]) => sum + v, 0)
   const totalMinutes = minutesFromSeconds(totalSeconds)
 
   const movieCount  = history.filter(h => h.mediaType === 'movie').length
@@ -129,15 +132,15 @@ export function StatsPage() {
     return uniqueTitles.map(entry => {
       const prefix = `${entry.mediaType}-${entry.id}-`
 
-      // total seconds for this title
+      // total seconds for this title (exclude ':duration' sentinel keys)
       const secs = Object.entries(progress)
-        .filter(([k]) => k.startsWith(prefix))
+        .filter(([k]) => k.startsWith(prefix) && !k.includes(':duration'))
         .reduce((sum, [, v]) => sum + v, 0)
 
-      // episodes watched = union of manually marked + >5 min progress
+      // episodes watched = union of manually marked + >5 min progress (exclude ':duration' sentinels)
       const byProgress = new Set(
         Object.entries(progress)
-          .filter(([k, v]) => k.startsWith(prefix) && v >= 300)
+          .filter(([k, v]) => k.startsWith(prefix) && !k.includes(':duration') && v >= 300)
           .map(([k]) => k)
       )
       const byManual = Array.from(watchedEpisodes).filter(k => k.startsWith(prefix))

@@ -20,7 +20,7 @@ import { fetchJikanEpisodes } from './lib/jikan'
 import { fetchAnimeTmdbMeta, type AnimeTmdbMeta } from './lib/tmdb'
 import type { MediaDetails, SeasonDetails } from './types'
 import type { MediaKind } from './types'
-import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useWatchedEpisodes, writeProgressEntry, useReminders, useRatings } from './hooks'
+import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useWatchedEpisodes, writeProgressEntry, writeBulkWatched, removeBulkWatched, useReminders, useRatings } from './hooks'
 import type { WatchHistoryEntry } from './hooks'
 import { STORAGE_KEYS } from './hooks'
 import { useAuth } from './context/AuthContext'
@@ -723,24 +723,27 @@ function SeasonPanel({
   const allShowWatched = allShowKeys.length > 0 && allShowKeys.every(k => watchedEpisodes.has(k))
 
   function markSeasonWatched() {
+    // Write progress first (synchronous, direct localStorage write)
     allEpisodes.forEach((ep, i) => {
-      const k = seasonEpKeys[i]
-      if (!watchedEpisodes.has(k)) onToggleWatched(k)
-      writeProgressEntry(k, (ep.runtime || defaultRuntime) * 60)
+      writeProgressEntry(seasonEpKeys[i], (ep.runtime || defaultRuntime) * 60)
     })
+    // Bulk-add to watched list in one localStorage write so stats see it immediately
+    writeBulkWatched(seasonEpKeys)
   }
   function unmarkSeasonWatched() {
-    seasonEpKeys.forEach(k => { if (watchedEpisodes.has(k)) onToggleWatched(k) })
+    removeBulkWatched(seasonEpKeys)
   }
 
   function markShowWatched() {
+    // Write progress for every episode (uses current-season runtimes; falls back to default)
     allShowKeys.forEach(k => {
-      if (!watchedEpisodes.has(k)) onToggleWatched(k)
       writeProgressEntry(k, runtimeByKey[k] ?? defaultRuntime * 60)
     })
+    // Bulk-add to watched list in one localStorage write
+    writeBulkWatched(allShowKeys)
   }
   function unmarkShowWatched() {
-    allShowKeys.forEach(k => { if (watchedEpisodes.has(k)) onToggleWatched(k) })
+    removeBulkWatched(allShowKeys)
   }
 
   return (

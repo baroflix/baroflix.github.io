@@ -251,6 +251,42 @@ export function writeWatchedEntry(key: string) {
 }
 
 /**
+ * Add many keys to the watched-episodes list in a single localStorage write.
+ * Dispatches watched-episodes-updated once so all subscribers re-sync.
+ */
+export function writeBulkWatched(keys: string[]) {
+  if (!keys.length) return
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.watchedEpisodes)
+    const current: string[] = raw ? JSON.parse(raw) : []
+    const currentSet = new Set(current)
+    const toAdd = keys.filter(k => !currentSet.has(k))
+    if (toAdd.length > 0) {
+      window.localStorage.setItem(STORAGE_KEYS.watchedEpisodes, JSON.stringify([...current, ...toAdd]))
+      window.dispatchEvent(new Event('watched-episodes-updated'))
+    }
+  } catch {}
+}
+
+/**
+ * Remove many keys from the watched-episodes list in a single localStorage write.
+ * Dispatches watched-episodes-updated once so all subscribers re-sync.
+ */
+export function removeBulkWatched(keys: string[]) {
+  if (!keys.length) return
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.watchedEpisodes)
+    const current: string[] = raw ? JSON.parse(raw) : []
+    const toRemove = new Set(keys)
+    const next = current.filter(k => !toRemove.has(k))
+    if (next.length !== current.length) {
+      window.localStorage.setItem(STORAGE_KEYS.watchedEpisodes, JSON.stringify(next))
+      window.dispatchEvent(new Event('watched-episodes-updated'))
+    }
+  } catch {}
+}
+
+/**
  * Tracks manually-marked-as-watched episodes.
  * Key format: "${mediaType}-${id}-${season}-${episodeNumber}"
  * Returns [watchedSet, toggle(key)]

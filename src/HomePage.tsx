@@ -328,9 +328,13 @@ export function HomePage() {
                       key={`dot-${item.id}`}
                       type="button"
                       onClick={() => goToHero(index)}
-                      className="h-2.5 rounded-full transition-all"
+                      className="rounded-full transition-all"
                       style={{
                         width: index === activeIndex ? 28 : 10,
+                        height: 10,
+                        padding: 0,
+                        border: 'none',
+                        flexShrink: 0,
                         background: index === activeIndex ? 'var(--accent)' : 'rgba(255,255,255,0.28)',
                         boxShadow: index === activeIndex ? '0 0 18px var(--accent-glow)' : undefined,
                       }}
