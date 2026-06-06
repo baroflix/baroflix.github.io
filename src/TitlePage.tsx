@@ -571,6 +571,17 @@ export function TitlePage() {
               progressStore={progressStore}
               watchedEpisodes={watchedEpisodes}
               onToggleWatched={toggleWatchedEpisode}
+              onAddToHistory={() => {
+                if (!mediaType) return
+                setHistory(current => upsertHistory(current, {
+                  mediaType,
+                  id: Number(id),
+                  title,
+                  posterPath: details?.poster_path,
+                  backdropPath: details?.backdrop_path,
+                  watchedAt: Date.now(),
+                }))
+              }}
               mediaType={mediaType}
               id={id}
             />
@@ -672,7 +683,7 @@ export function TitlePage() {
 
 function SeasonPanel({
   details, activeSeason, activeEpisode, seasonDetails, onSeasonChange, onEpisodeChange,
-  progressStore, watchedEpisodes, onToggleWatched, mediaType, id
+  progressStore, watchedEpisodes, onToggleWatched, onAddToHistory, mediaType, id
 }: {
   details: MediaDetails | null
   activeSeason: number
@@ -683,6 +694,8 @@ function SeasonPanel({
   progressStore: Record<string, number>
   watchedEpisodes: Set<string>
   onToggleWatched: (key: string) => void
+  /** Called whenever any episode is manually marked watched — adds title to history */
+  onAddToHistory: () => void
   mediaType: string
   id: string
 }) {
@@ -723,24 +736,22 @@ function SeasonPanel({
   const allShowWatched = allShowKeys.length > 0 && allShowKeys.every(k => watchedEpisodes.has(k))
 
   function markSeasonWatched() {
-    // Write progress first (synchronous, direct localStorage write)
     allEpisodes.forEach((ep, i) => {
       writeProgressEntry(seasonEpKeys[i], (ep.runtime || defaultRuntime) * 60)
     })
-    // Bulk-add to watched list in one localStorage write so stats see it immediately
     writeBulkWatched(seasonEpKeys)
+    onAddToHistory()
   }
   function unmarkSeasonWatched() {
     removeBulkWatched(seasonEpKeys)
   }
 
   function markShowWatched() {
-    // Write progress for every episode (uses current-season runtimes; falls back to default)
     allShowKeys.forEach(k => {
       writeProgressEntry(k, runtimeByKey[k] ?? defaultRuntime * 60)
     })
-    // Bulk-add to watched list in one localStorage write
     writeBulkWatched(allShowKeys)
+    onAddToHistory()
   }
   function unmarkShowWatched() {
     removeBulkWatched(allShowKeys)
@@ -920,6 +931,7 @@ function SeasonPanel({
                           onToggleWatched(epKey)
                           if (!isWatched) {
                             writeProgressEntry(epKey, (ep.runtime || defaultRuntime) * 60)
+                            onAddToHistory()
                           }
                         }}
                         title={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
