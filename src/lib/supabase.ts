@@ -21,7 +21,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // Badge system
 // ─────────────────────────────────────────────────────────────
 
-export type BadgeType = 'owner' | 'developer' | 'beta_tester'
+export type BadgeType =
+  | 'owner' | 'developer' | 'beta_tester'
+  | 'hours_10' | 'hours_100' | 'hours_250' | 'hours_500'
+  | 'movies_1' | 'movies_5' | 'movies_10'
+  | 'shows_1' | 'shows_5' | 'shows_10'
 
 export const BADGE_CONFIG: Record<BadgeType, {
   label: string
@@ -30,7 +34,10 @@ export const BADGE_CONFIG: Record<BadgeType, {
   border: string
   emoji: string
   priority: number
+  milestone?: true
+  description?: string
 }> = {
+  // ── Role badges ──────────────────────────────────────────────
   owner: {
     label: 'Owner',
     color: '#FFD700',
@@ -55,16 +62,138 @@ export const BADGE_CONFIG: Record<BadgeType, {
     emoji: '🧪',
     priority: 1,
   },
+  // ── Hours watched milestones ─────────────────────────────────
+  hours_10: {
+    label: '10 Hours Watched',
+    color: '#86EFAC',
+    bg: 'rgba(134,239,172,0.12)',
+    border: 'rgba(134,239,172,0.3)',
+    emoji: '🌱',
+    priority: 0,
+    milestone: true,
+    description: 'Watched 10 hours of content',
+  },
+  hours_100: {
+    label: '100 Hours Watched',
+    color: '#4ADE80',
+    bg: 'rgba(74,222,128,0.12)',
+    border: 'rgba(74,222,128,0.3)',
+    emoji: '🎯',
+    priority: 0,
+    milestone: true,
+    description: 'Watched 100 hours of content',
+  },
+  hours_250: {
+    label: '250 Hours Watched',
+    color: '#FBBF24',
+    bg: 'rgba(251,191,36,0.12)',
+    border: 'rgba(251,191,36,0.3)',
+    emoji: '🏆',
+    priority: 0,
+    milestone: true,
+    description: 'Watched 250 hours of content',
+  },
+  hours_500: {
+    label: '500 Hours Watched',
+    color: '#FB923C',
+    bg: 'rgba(251,146,60,0.12)',
+    border: 'rgba(251,146,60,0.3)',
+    emoji: '🔥',
+    priority: 0,
+    milestone: true,
+    description: 'Watched 500 hours of content',
+  },
+  // ── Movie milestones ─────────────────────────────────────────
+  movies_1: {
+    label: 'First Movie',
+    color: '#93C5FD',
+    bg: 'rgba(147,197,253,0.12)',
+    border: 'rgba(147,197,253,0.3)',
+    emoji: '🎬',
+    priority: 0,
+    milestone: true,
+    description: 'Watched your first movie',
+  },
+  movies_5: {
+    label: '5 Movies',
+    color: '#7DD3FC',
+    bg: 'rgba(125,211,252,0.12)',
+    border: 'rgba(125,211,252,0.3)',
+    emoji: '🎥',
+    priority: 0,
+    milestone: true,
+    description: 'Watched 5 movies',
+  },
+  movies_10: {
+    label: '10 Movies',
+    color: '#38BDF8',
+    bg: 'rgba(56,189,248,0.12)',
+    border: 'rgba(56,189,248,0.3)',
+    emoji: '🎦',
+    priority: 0,
+    milestone: true,
+    description: 'Watched 10 movies',
+  },
+  // ── Show milestones ──────────────────────────────────────────
+  shows_1: {
+    label: 'First Show',
+    color: '#F0ABFC',
+    bg: 'rgba(240,171,252,0.12)',
+    border: 'rgba(240,171,252,0.3)',
+    emoji: '📺',
+    priority: 0,
+    milestone: true,
+    description: 'Watched your first TV show',
+  },
+  shows_5: {
+    label: '5 Shows',
+    color: '#E879F9',
+    bg: 'rgba(232,121,249,0.12)',
+    border: 'rgba(232,121,249,0.3)',
+    emoji: '📡',
+    priority: 0,
+    milestone: true,
+    description: 'Watched 5 TV shows',
+  },
+  shows_10: {
+    label: '10 Shows',
+    color: '#D946EF',
+    bg: 'rgba(217,70,239,0.12)',
+    border: 'rgba(217,70,239,0.3)',
+    emoji: '🎭',
+    priority: 0,
+    milestone: true,
+    description: 'Watched 10 TV shows',
+  },
 }
 
-/** Returns the highest-priority badge from a list of badge objects */
+/**
+ * Returns the highest-priority ROLE badge (non-milestone) from a list of badge objects.
+ * Milestone badges are excluded so they don't appear next to usernames.
+ */
 export function getHighestBadge(badges: { badge_type: string }[]): BadgeType | null {
   if (!badges?.length) return null
   const valid = badges
     .map(b => b.badge_type as BadgeType)
-    .filter(t => t in BADGE_CONFIG)
+    .filter(t => t in BADGE_CONFIG && !BADGE_CONFIG[t].milestone)
   if (!valid.length) return null
   return valid.sort((a, b) => BADGE_CONFIG[b].priority - BADGE_CONFIG[a].priority)[0]
+}
+
+/** Award a badge to a user if they don't already have it */
+export async function awardBadge(userId: string, badgeType: BadgeType): Promise<void> {
+  // Check if already awarded
+  const { data: existing } = await supabase
+    .from('user_badges')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('badge_type', badgeType)
+    .maybeSingle()
+  if (existing) return // already has it
+  const { error } = await supabase
+    .from('user_badges')
+    .insert({ user_id: userId, badge_type: badgeType })
+  if (error) throw error
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -109,6 +238,7 @@ export interface Profile {
   is_public: boolean | null
   pinned_items: PinnedItem[] | null
   created_at: string | null
+  now_watching?: { mediaType: string; id: number; title: string; posterPath?: string | null; season?: number; episode?: number; startedAt: number } | null
 }
 
 /** Profile row with badges joined */

@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, User, Globe, Clock, Film, Tv, Sword, X, UserPlus, UserCheck } from 'lucide-react'
+import { ArrowLeft, User, Globe, Clock, Film, Tv, Sword, X, UserPlus, UserCheck, Flame } from 'lucide-react'
 import {
   fetchPublicProfile,
   BADGE_CONFIG,
@@ -16,6 +16,7 @@ import {
 import type { ProfileWithBadges, BadgeType, PinnedItem } from './lib/supabase'
 import { THEME_PRESETS } from './hooks'
 import { useAuth } from './context/AuthContext'
+import { calculateStreak, checkAndAwardMilestones } from './lib/milestones'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -275,6 +276,7 @@ export function PublicProfilePage() {
   // Follow state
   const [followCounts, setFollowCounts] = useState({ followers: 0, following: 0 })
   const [isFollowing, setIsFollowing] = useState(false)
+  const [followsMe, setFollowsMe] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
 
   // Follow list modal
@@ -297,9 +299,27 @@ export function PublicProfilePage() {
     if (!profile) return
     getFollowCounts(profile.id).then(setFollowCounts)
     if (session?.user?.id && session.user.id !== profile.id) {
-      checkIsFollowing(session.user.id, profile.id).then(setIsFollowing)
+      // Check both directions for mutual follow indicator
+      Promise.all([
+        checkIsFollowing(session.user.id, profile.id).then(setIsFollowing),
+        checkIsFollowing(profile.id, session.user.id).then(setFollowsMe),
+      ])
     }
   }, [profile?.id, session?.user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-award milestones when viewing own profile
+  useEffect(() => {
+    if (!profile || !session?.user?.id || session.user.id !== profile.id) return
+    const hist = profile.watch_history ?? []
+    const prog = profile.watch_progress ?? {}
+    const badges = profile.user_badges ?? []
+    checkAndAwardMilestones(session.user.id, hist, prog, badges).then(awarded => {
+      if (awarded.length > 0) {
+        // Refresh profile to show newly awarded badges
+        fetchPublicProfile(username!).then(data => { if (data) setProfile(data) })
+      }
+    })
+  }, [profile?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleFollowToggle() {
     if (!session?.user?.id || !profile) return
@@ -422,7 +442,9 @@ export function PublicProfilePage() {
   // ── Full profile ───────────────────────────────────────────────────────────
   const badges = profile.user_badges ?? []
   const highestBadge = getHighestBadge(badges)
+  const milestoneBadges = badges.filter(b => BADGE_CONFIG[b.badge_type as BadgeType]?.milestone)
   const stats = computeStats(profile)
+  const watchStreak = calculateStreak(profile.watch_history ?? [])
   const pinnedItems: PinnedItem[] = profile.pinned_items ?? []
   const recentHistory = [...(profile.watch_history ?? [])]
     .sort((a: any, b: any) => (b.watchedAt || 0) - (a.watchedAt || 0))
@@ -507,14 +529,25 @@ export function PublicProfilePage() {
               )}
             </div>
 
-            {/* Follow button (non-owner only) */}
+            {/* Follow button + mutual follows (non-owner only) */}
             {!isOwnProfile && session && (
-              <div style={{ paddingBottom: 4 }}>
+              <div style={{ paddingBottom: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                 <FollowButton
                   isFollowing={isFollowing}
                   loading={followLoading}
                   onClick={handleFollowToggle}
                 />
+                {followsMe && (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
+                    background: 'rgba(255,255,255,0.07)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    padding: '2px 8px', borderRadius: 999,
+                  }}>
+                    Follows you
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -554,6 +587,51 @@ export function PublicProfilePage() {
               </span>
             </div>
           </div>
+
+          {/* ── Streak ───────────────────────────────────────────────── */}
+          {watchStreak > 0 && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              marginTop: 10,
+              padding: '5px 10px', borderRadius: 10,
+              background: 'rgba(251,146,60,0.12)',
+              border: '1px solid rgba(251,146,60,0.25)',
+            }}>
+              <Flame size={14} style={{ color: '#fb923c' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#fb923c' }}>{watchStreak}</span>
+              <span style={{ fontSize: 12, color: 'rgba(251,146,60,0.7)' }}>day streak</span>
+            </div>
+          )}
+
+          {/* ── Now watching ─────────────────────────────────────────── */}
+          {profile.now_watching && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              marginTop: 10, padding: '8px 12px', borderRadius: 12,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <div style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: '#4ade80',
+                  boxShadow: '0 0 8px rgba(74,222,128,0.6)',
+                  animation: 'pulse 2s infinite',
+                }} />
+              </div>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Watching</span>
+              <Link
+                to={`/title/${profile.now_watching.mediaType}/${profile.now_watching.id}`}
+                className="no-bg-hover"
+                style={{ fontSize: 12, fontWeight: 600, color: theme.accent, textDecoration: 'none' }}
+              >
+                {profile.now_watching.title}
+                {profile.now_watching.season && profile.now_watching.episode
+                  ? ` S${profile.now_watching.season}E${profile.now_watching.episode}`
+                  : ''}
+              </Link>
+            </div>
+          )}
 
           {/* ── Followers / Following counts ─────────────────────────────── */}
           <div style={{ display: 'flex', gap: 20, marginTop: 14 }}>
@@ -649,17 +727,19 @@ export function PublicProfilePage() {
           </section>
         )}
 
-        {/* ── Badges ───────────────────────────────────────────────────────── */}
-        {badges.length > 0 && (
+        {/* ── Role Badges ──────────────────────────────────────────────────── */}
+        {badges.filter(b => !BADGE_CONFIG[b.badge_type as BadgeType]?.milestone).length > 0 && (
           <section style={{ marginBottom: 24 }}>
             <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'Inter, sans-serif' }}>
               Badges
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[...badges]
-                .sort((a, b) => BADGE_CONFIG[b.badge_type].priority - BADGE_CONFIG[a.badge_type].priority)
+                .filter(b => !BADGE_CONFIG[b.badge_type as BadgeType]?.milestone)
+                .sort((a, b) => (BADGE_CONFIG[b.badge_type as BadgeType]?.priority ?? 0) - (BADGE_CONFIG[a.badge_type as BadgeType]?.priority ?? 0))
                 .map(badge => {
-                  const cfg = BADGE_CONFIG[badge.badge_type]
+                  const cfg = BADGE_CONFIG[badge.badge_type as BadgeType]
+                  if (!cfg) return null
                   return (
                     <div key={badge.id} style={{
                       display: 'flex', alignItems: 'center', gap: 12,
@@ -672,6 +752,40 @@ export function PublicProfilePage() {
                         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif' }}>
                           Awarded {new Date(badge.awarded_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                         </div>
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+          </section>
+        )}
+
+        {/* ── Milestone Badges ─────────────────────────────────────────────── */}
+        {milestoneBadges.length > 0 && (
+          <section style={{ marginBottom: 24 }}>
+            <h2 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'Inter, sans-serif' }}>
+              Milestones
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+              {[...milestoneBadges]
+                .sort((a, b) => new Date(a.awarded_at).getTime() - new Date(b.awarded_at).getTime())
+                .map(badge => {
+                  const cfg = BADGE_CONFIG[badge.badge_type as BadgeType]
+                  if (!cfg) return null
+                  return (
+                    <div key={badge.id} style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 12px', borderRadius: 12,
+                      background: cfg.bg, border: `1px solid ${cfg.border}`,
+                    }}>
+                      <span style={{ fontSize: 20, flexShrink: 0 }}>{cfg.emoji}</span>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: cfg.color, lineHeight: 1.2 }}>{cfg.label}</div>
+                        {cfg.description && (
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1, lineHeight: 1.3 }}>
+                            {cfg.description}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )

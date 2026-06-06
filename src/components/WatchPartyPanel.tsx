@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { Users, Copy, Check, LogOut, Radio, Play } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -233,16 +234,19 @@ export function WatchPartyPanel({
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {participants.map((member) => (
                 <div key={member.user_id} className="flex items-center justify-between gap-3 text-left">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded-full overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                  <Link
+                    to={`/user/${member.username}`}
+                    className="no-bg-hover flex items-center gap-2 min-w-0 flex-1"
+                  >
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center shrink-0 hover:ring-1 hover:ring-white/20 transition-all">
                       {member.avatar_url ? (
                         <img src={member.avatar_url} alt={member.username} className="w-full h-full object-cover" />
                       ) : (
                         <Users className="w-3 h-3 text-white/40" />
                       )}
                     </div>
-                    <span className="text-xs text-white/80 font-medium truncate">{member.username}</span>
-                  </div>
+                    <span className="text-xs text-white/80 font-medium truncate hover:text-white transition-colors">{member.username}</span>
+                  </Link>
                   {member.is_host && (
                     <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/30 shrink-0">
                       Host

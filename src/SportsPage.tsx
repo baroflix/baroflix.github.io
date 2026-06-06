@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Calendar, Play, Flame, Trophy, Activity, X, Tv, RefreshCw, MessageSquare, Send, User, Maximize2, Minimize2 } from 'lucide-react'
 import { supabase } from './lib/supabase'
@@ -824,17 +825,34 @@ export function SportsPage() {
                         const avatar = msg.profiles?.avatar_url
                         return (
                           <div key={msg.id} className={`flex gap-2 items-start text-left p-1.5 rounded-xl transition-all ${isOwn ? 'bg-white/5 border border-white/5' : ''}`}>
-                            <div className="w-6 h-6 rounded-full overflow-hidden bg-white/5 border border-white/10 shrink-0 flex items-center justify-center">
-                              {avatar ? (
-                                <img src={avatar} alt={displayName} className="w-full h-full object-cover" />
-                              ) : (
+                            {msg.profiles?.username ? (
+                              <Link to={`/user/${msg.profiles.username}`} className="no-bg-hover shrink-0">
+                                <div className="w-6 h-6 rounded-full overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center hover:ring-1 hover:ring-white/20 transition-all">
+                                  {avatar ? (
+                                    <img src={avatar} alt={displayName} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <User className="w-3 h-3 text-white/30" />
+                                  )}
+                                </div>
+                              </Link>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full overflow-hidden bg-white/5 border border-white/10 shrink-0 flex items-center justify-center">
                                 <User className="w-3 h-3 text-white/30" />
-                              )}
-                            </div>
+                              </div>
+                            )}
                             <div className="min-w-0 flex-1">
                               <div className="flex items-baseline gap-1.5">
-                                <span className={`text-[11px] font-semibold truncate ${isOwn ? 'text-[var(--accent)] font-bold' : 'text-white/80'}`}>{displayName}</span>
-                                <span className="text-[8px] text-white/30">
+                                {msg.profiles?.username ? (
+                                  <Link
+                                    to={`/user/${msg.profiles.username}`}
+                                    className={`no-bg-hover text-[11px] font-semibold truncate hover:underline ${isOwn ? 'text-[var(--accent)] font-bold' : 'text-white/80'}`}
+                                  >
+                                    {displayName}
+                                  </Link>
+                                ) : (
+                                  <span className="text-[11px] font-semibold truncate text-white/50">{displayName}</span>
+                                )}
+                                <span className="text-[8px] text-white/30 shrink-0">
                                   {new Date(msg.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>

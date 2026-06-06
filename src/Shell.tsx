@@ -1,11 +1,13 @@
-import { Link, useLocation, Outlet } from 'react-router-dom'
-import { User, Menu, X, Library } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
+import { User, Menu, X, Library, BarChart2, Settings, LogOut, Activity } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { THEME_PRESETS, useScrollDirection } from './hooks'
 import type { ThemeSettings } from './hooks'
 import { HomeSearchToggle } from './SearchOverlay'
 import { locales } from './locales'
+import { useAuth } from './context/AuthContext'
 
 // ─── Shell ───────────────────────────────────────────────────────────────────
 
@@ -52,14 +54,29 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
 function NavBar({ language }: { language?: 'en' | 'pl' }) {
   const hidden = useScrollDirection()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [theatreActive, setTheatreActive] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { profile, signOut } = useAuth()
+  const profileRef = useRef<HTMLDivElement>(null)
   const lang = language || 'en'
   const t = locales[lang].nav
   const isElectron = /electron/i.test(navigator.userAgent)
 
-  // Close mobile menu on route change
-  useEffect(() => { setMobileOpen(false) }, [location.pathname])
+  // Close mobile menu and profile dropdown on route change
+  useEffect(() => { setMobileOpen(false); setProfileOpen(false) }, [location.pathname])
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false)
+      }
+    }
+    if (profileOpen) document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [profileOpen])
 
   // Hide navbar when a page activates theatre mode via body class
   useEffect(() => {
@@ -69,11 +86,53 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
     return () => observer.disconnect()
   }, [])
 
+  async function handleSignOut() {
+    setProfileOpen(false)
+    await signOut()
+    navigate('/auth')
+  }
+
   const navLinks = [
     { to: '/browse', label: t.browse },
     { to: '/sports', label: t.sports },
-    { to: '/stats', label: t.stats },
   ]
+
+  const profileMenuItems = [
+    { to: profile?.username ? `/user/${profile.username}` : '/profile', icon: User, label: 'My Profile' },
+    { to: '/feed', icon: Activity, label: 'Activity Feed' },
+    { to: '/collections', icon: Library, label: 'My Collection' },
+    { to: '/stats', icon: BarChart2, label: 'My Stats' },
+    { to: '/profile', icon: Settings, label: 'Settings' },
+  ]
+
+  /** Avatar shown in the button and dropdown header */
+  function ProfileAvatar({ size }: { size: 'sm' | 'lg' }) {
+    const dim = size === 'lg' ? 28 : 36
+    const fontSize = size === 'lg' ? 11 : 14
+    if (profile?.avatar_url) {
+      return (
+        <img
+          src={profile.avatar_url}
+          alt={profile.username ?? 'Avatar'}
+          style={{ width: dim, height: dim, borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+        />
+      )
+    }
+    if (profile?.username) {
+      return (
+        <span style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: dim, height: dim, borderRadius: '50%', flexShrink: 0,
+          background: 'var(--accent-dim)', border: '1px solid var(--accent)',
+          color: 'var(--accent)', fontSize, fontWeight: 700, lineHeight: 1,
+          fontFamily: 'Inter, sans-serif',
+        }}>
+          {profile.username[0].toUpperCase()}
+        </span>
+      )
+    }
+    return <User className={size === 'lg' ? 'w-3.5 h-3.5 opacity-50' : 'w-4 h-4'} />
+  }
 
   function isActive(to: string) {
     if (to === '/') return location.pathname === '/'
@@ -132,32 +191,88 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             )}
             {/* Search — always visible */}
             <HomeSearchToggle />
-            {/* Collections + Profile — desktop only */}
-            <div className="hidden lg:flex items-center gap-2">
-              <Link
-                to="/collections"
+            {/* Profile dropdown — desktop only */}
+            <div ref={profileRef} className="hidden lg:block relative">
+              <button
+                onClick={() => setProfileOpen(o => !o)}
                 className="flex items-center justify-center w-9 h-9 rounded-full transition-colors"
                 style={{
-                  background: isActive('/collections') ? 'var(--accent-dim)' : 'rgba(255,255,255,0.08)',
-                  border: `1px solid ${isActive('/collections') ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
-                  color: isActive('/collections') ? 'var(--accent)' : 'rgba(255,255,255,0.7)',
+                  background: profile?.avatar_url ? 'transparent'
+                    : profileOpen || isActive('/profile') || isActive('/user/') || isActive('/feed') || isActive('/collections') || isActive('/stats')
+                      ? 'var(--accent-dim)' : 'rgba(255,255,255,0.08)',
+                  border: `1px solid ${profileOpen || isActive('/profile') || isActive('/user/') || isActive('/feed') || isActive('/collections') || isActive('/stats')
+                    ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
+                  color: 'rgba(255,255,255,0.85)',
+                  overflow: profile?.avatar_url ? 'hidden' : 'visible',
+                  padding: 0,
                 }}
-                aria-label="Collections"
+                aria-label="Profile menu"
               >
-                <Library className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/profile"
-                className="flex items-center justify-center w-9 h-9 rounded-full transition-colors"
-                style={{
-                  background: isActive('/profile') ? 'var(--accent-dim)' : 'rgba(255,255,255,0.08)',
-                  border: `1px solid ${isActive('/profile') ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
-                  color: isActive('/profile') ? 'var(--accent)' : 'rgba(255,255,255,0.7)',
-                }}
-                aria-label="Profile"
-              >
-                <User className="w-4 h-4" />
-              </Link>
+                <ProfileAvatar size="lg" />
+              </button>
+
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-52 rounded-2xl overflow-hidden z-[60]"
+                    style={{
+                      background: 'rgba(14,14,14,0.98)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      backdropFilter: 'blur(24px)',
+                      boxShadow: '0 12px 48px rgba(0,0,0,0.7)',
+                    }}
+                  >
+                    {/* User info header */}
+                    {profile?.username && (
+                      <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                        <div className="flex items-center gap-2.5">
+                          <div className="shrink-0">
+                            <ProfileAvatar size="sm" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-white truncate">@{profile.username}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Menu items */}
+                    <div className="py-1.5">
+                      {profileMenuItems.map(({ to, icon: Icon, label }) => (
+                        <Link
+                          key={to + label}
+                          to={to}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors no-bg-hover"
+                          style={{ color: 'rgba(255,255,255,0.7)' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}
+                        >
+                          <Icon className="w-4 h-4 shrink-0 opacity-60" />
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+
+                    {/* Sign out */}
+                    <div className="py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors no-bg-hover"
+                        style={{ color: 'rgba(255,255,255,0.45)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#f87171' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)' }}
+                      >
+                        <LogOut className="w-4 h-4 shrink-0 opacity-60" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Hamburger — mobile only */}
@@ -213,31 +328,32 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           {/* Divider */}
           <div className="my-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
 
-          {/* Collections */}
-          <Link
-            to="/collections"
-            className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl"
-            style={{
-              color: isActive('/collections') ? '#fff' : 'rgba(255,255,255,0.6)',
-              background: isActive('/collections') ? 'rgba(255,255,255,0.07)' : 'transparent',
-            }}
-          >
-            <Library className="w-4 h-4 shrink-0" />
-            Collections
-          </Link>
+          {/* Profile section links */}
+          {profileMenuItems.map(({ to, icon: Icon, label }) => (
+            <Link
+              key={to + label}
+              to={to}
+              className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl"
+              style={{
+                color: isActive(to) ? '#fff' : 'rgba(255,255,255,0.6)',
+                background: isActive(to) ? 'rgba(255,255,255,0.07)' : 'transparent',
+              }}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              {label}
+            </Link>
+          ))}
 
-          {/* Profile */}
-          <Link
-            to="/profile"
-            className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl"
-            style={{
-              color: isActive('/profile') ? '#fff' : 'rgba(255,255,255,0.6)',
-              background: isActive('/profile') ? 'rgba(255,255,255,0.07)' : 'transparent',
-            }}
+          {/* Sign out */}
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl w-full"
+            style={{ color: 'rgba(255,255,255,0.4)', background: 'transparent' }}
           >
-            <User className="w-4 h-4 shrink-0" />
-            Profile
-          </Link>
+            <LogOut className="w-4 h-4 shrink-0" />
+            Sign Out
+          </button>
 
           {!isElectron && (
             <Link
