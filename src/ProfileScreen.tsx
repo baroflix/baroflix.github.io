@@ -40,13 +40,15 @@ export function ProfileScreen() {
 
   const [recentHistory, setRecentHistory] = useState<WatchHistoryEntry[]>([])
 
-  const [milestoneStatus, setMilestoneStatus] = useState<'idle' | 'running' | 'done'>('idle')
+  const [milestoneStatus, setMilestoneStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
   const [newBadgeCount, setNewBadgeCount] = useState(0)
+  const [milestoneError, setMilestoneError] = useState<string | null>(null)
 
   async function handleRecalculateMilestones() {
     if (!session?.user?.id || !contextProfile) return
     setMilestoneStatus('running')
     setNewBadgeCount(0)
+    setMilestoneError(null)
     try {
       const hist = contextProfile.watch_history ?? []
       const prog = contextProfile.watch_progress ?? {}
@@ -62,11 +64,13 @@ export function ProfileScreen() {
         currentBadges ?? [],
       )
       setNewBadgeCount(awarded.length)
-    } catch (err) {
-      console.error('[milestones] recalculate failed:', err)
+      setMilestoneStatus('done')
+    } catch (err: any) {
+      const msg: string = err?.message ?? String(err)
+      setMilestoneError(msg)
+      setMilestoneStatus('error')
     }
-    setMilestoneStatus('done')
-    setTimeout(() => setMilestoneStatus('idle'), 4000)
+    setTimeout(() => setMilestoneStatus('idle'), 6000)
   }
 
   useEffect(() => {
@@ -657,9 +661,15 @@ export function ProfileScreen() {
           disabled={milestoneStatus === 'running'}
           className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
           style={{
-            border: '1px solid rgba(251,191,36,0.25)',
-            background: milestoneStatus === 'done' ? 'rgba(74,222,128,0.08)' : 'rgba(251,191,36,0.07)',
-            color: milestoneStatus === 'done' ? '#86efac' : '#fcd34d',
+            border: milestoneStatus === 'error'
+              ? '1px solid rgba(239,68,68,0.3)'
+              : '1px solid rgba(251,191,36,0.25)',
+            background: milestoneStatus === 'done' ? 'rgba(74,222,128,0.08)'
+              : milestoneStatus === 'error' ? 'rgba(239,68,68,0.07)'
+              : 'rgba(251,191,36,0.07)',
+            color: milestoneStatus === 'done' ? '#86efac'
+              : milestoneStatus === 'error' ? '#fca5a5'
+              : '#fcd34d',
             cursor: milestoneStatus === 'running' ? 'not-allowed' : 'pointer',
             opacity: milestoneStatus === 'running' ? 0.7 : 1,
           }}
@@ -674,6 +684,11 @@ export function ProfileScreen() {
               <CheckCircle size={14} />
               {newBadgeCount > 0 ? `${newBadgeCount} new badge${newBadgeCount > 1 ? 's' : ''} awarded!` : 'All milestones up to date'}
             </>
+          ) : milestoneStatus === 'error' ? (
+            <>
+              <AlertTriangle size={14} />
+              Failed — check console for details
+            </>
           ) : (
             <>
               <Trophy size={14} />
@@ -681,6 +696,13 @@ export function ProfileScreen() {
             </>
           )}
         </button>
+        {milestoneStatus === 'error' && milestoneError && (
+          <p className="text-xs px-1 mt-1" style={{ color: 'rgba(252,165,165,0.7)', fontFamily: 'monospace', wordBreak: 'break-word' }}>
+            {milestoneError.includes('INSERT') || milestoneError.includes('policy')
+              ? 'RLS policy missing — run the SQL migration in Supabase (see code comments in milestones.ts).'
+              : milestoneError}
+          </p>
+        )}
 
         {/* ── Sign out ────────────────────────────────────────────────────── */}
         <button

@@ -141,10 +141,19 @@ export async function checkAndAwardMilestones(
 
   const ctx: MilestoneContext = { watchedHours, movieCount, uniqueShowIds }
 
+  // Log what we're working with to make debugging easier
+  console.info('[milestones] context:', {
+    watchedHours: watchedHours.toFixed(1),
+    movieCount,
+    uniqueShowIds,
+    existingBadgeCount: existingBadges.length,
+  })
+
   // Determine which milestone badge IDs the user already has
   const already = new Set(existingBadges.map(b => b.badge_type))
 
   const awarded: MilestoneBadgeId[] = []
+  const errors: string[] = []
 
   for (const m of MILESTONE_CHECKS) {
     if (already.has(m.id)) continue
@@ -152,10 +161,18 @@ export async function checkAndAwardMilestones(
     try {
       await awardBadge(userId, m.id)
       awarded.push(m.id)
-    } catch (err) {
-      // Silently skip — may already exist due to race condition
-      console.warn(`[milestones] could not award ${m.id}:`, err)
+      console.info(`[milestones] awarded: ${m.id}`)
+    } catch (err: any) {
+      // Surface the real Supabase error message so it's visible in the console
+      const msg = err?.message ?? String(err)
+      console.error(`[milestones] failed to award ${m.id}: ${msg}`)
+      errors.push(`${m.id}: ${msg}`)
     }
+  }
+
+  if (errors.length > 0) {
+    // Throw with a combined message so the UI can show it
+    throw new Error(errors.join(' | '))
   }
 
   return awarded
