@@ -239,6 +239,7 @@ export interface Profile {
   pinned_items: PinnedItem[] | null
   created_at: string | null
   now_watching?: { mediaType: string; id: number; title: string; posterPath?: string | null; season?: number; episode?: number; startedAt: number } | null
+  last_seen_at?: string | null
 }
 
 /** Profile row with badges joined */

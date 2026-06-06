@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, User, Globe, Clock, Film, Tv, Sword, X, UserPlus, UserCheck, Flame } from 'lucide-react'
+import { ArrowLeft, User, Globe, Clock, Film, Tv, Sword, X, UserPlus, UserCheck, Flame, Radio } from 'lucide-react'
 import {
   fetchPublicProfile,
   BADGE_CONFIG,
@@ -22,6 +22,21 @@ import { ProfileCommentsSection } from './components/CommentsSection'
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w185'
+
+/** Derives online/watching/offline status from profile fields */
+function getProfileStatus(profile: ProfileWithBadges): { type: 'watching' | 'online' | 'offline'; label: string } {
+  if (profile.now_watching) {
+    const nw = profile.now_watching
+    let label = `Watching ${nw.title}`
+    if (nw.season && nw.episode) label += ` S${nw.season}E${nw.episode}`
+    return { type: 'watching', label }
+  }
+  if (profile.last_seen_at) {
+    const msAgo = Date.now() - new Date(profile.last_seen_at).getTime()
+    if (msAgo < 5 * 60 * 1000) return { type: 'online', label: 'Online' }
+  }
+  return { type: 'offline', label: 'Offline' }
+}
 
 function countryFlag(code: string): string {
   if (!code || code.length !== 2) return ''
@@ -567,6 +582,32 @@ export function PublicProfilePage() {
               </p>
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+              {/* ── Online status ─────────────────────────────────────── */}
+              {(() => {
+                const s = getProfileStatus(profile)
+                const isActive = s.type !== 'offline'
+                const dotColor = isActive ? '#4ade80' : 'rgba(255,255,255,0.18)'
+                const labelColor = s.type === 'watching' ? '#4ade80'
+                  : s.type === 'online' ? 'rgba(255,255,255,0.7)'
+                  : 'rgba(255,255,255,0.3)'
+                return (
+                  <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{
+                      width: 7, height: 7, borderRadius: '50%', display: 'inline-block', flexShrink: 0,
+                      background: dotColor,
+                      boxShadow: isActive ? `0 0 5px rgba(74,222,128,0.55)` : 'none',
+                    }} />
+                    {s.type === 'watching' ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: labelColor, fontWeight: 500 }}>
+                        <Radio size={11} style={{ opacity: 0.8 }} />
+                        {s.label}
+                      </span>
+                    ) : (
+                      <span style={{ color: labelColor, fontWeight: s.type === 'online' ? 500 : 400 }}>{s.label}</span>
+                    )}
+                  </span>
+                )
+              })()}
               {profile.country && (
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <Globe size={12} style={{ opacity: 0.6 }} />

@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
   type ReactNode,
@@ -349,7 +350,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [session])
 
+  // Presence heartbeat: update last_seen_at every 60 s while logged in
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const userId = session.user.id
+    const beat = () => {
+      supabase.from('profiles')
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq('id', userId)
+        .then()
+    }
+    beat() // mark online immediately on login
+    const timer = setInterval(beat, 60_000)
+    return () => clearInterval(timer)
+  }, [session?.user?.id])
+
+  // Keep a ref so signOut can read the latest userId without adding session to its deps
+  const sessionUserIdRef = useRef<string | undefined>(undefined)
+  useEffect(() => { sessionUserIdRef.current = session?.user?.id }, [session?.user?.id])
+
   const signOut = useCallback(async () => {
+    // Clear now_watching before signing out so profile shows offline immediately
+    const uid = sessionUserIdRef.current
+    if (uid) {
+      supabase.from('profiles').update({ now_watching: null }).eq('id', uid).then()
+    }
     await supabase.auth.signOut()
     setSession(null)
     setProfile(null)

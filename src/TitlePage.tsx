@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, ArrowRight, Star, ArrowLeft, Bell, BellRing, Search, X, Plus, CheckCircle2, Circle } from 'lucide-react'
@@ -15,6 +15,7 @@ import {
   subtitleFromItem,
   yearFromItem,
 } from './lib/tmdb'
+import { supabase } from './lib/supabase'
 import { fetchAnimeDetails, generateAnimeSeasonDetails, type AnilistStreamingEpisode, type AnimeEpisodeMeta } from './lib/anilist'
 import { fetchJikanEpisodes } from './lib/jikan'
 import { fetchAnimeTmdbMeta, type AnimeTmdbMeta } from './lib/tmdb'
@@ -46,7 +47,19 @@ export function TitlePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [history, setHistory] = useLocalStorageState<WatchHistoryEntry[]>(STORAGE_KEYS.history, [])
-  const { settings } = useAuth()
+  const { settings, session } = useAuth()
+
+  // Ref so cleanup effect always has the latest userId without stale closure
+  const sessionIdRef = useRef<string | undefined>(undefined)
+  useEffect(() => { sessionIdRef.current = session?.user?.id }, [session?.user?.id])
+
+  // Clear now_watching when leaving this title page
+  useEffect(() => {
+    return () => {
+      const uid = sessionIdRef.current
+      if (uid) supabase.from('profiles').update({ now_watching: null }).eq('id', uid).then()
+    }
+  }, [])
   const progressStore = useProgressStore()
   const [watchedEpisodes, toggleWatchedEpisode] = useWatchedEpisodes()
   const [reminders, setReminders] = useReminders()
@@ -223,6 +236,21 @@ export function TitlePage() {
         watchedAt: Date.now(),
       })
     )
+    // Update now_watching status on profile
+    const uid = sessionIdRef.current
+    if (uid) {
+      supabase.from('profiles').update({
+        now_watching: {
+          mediaType,
+          id: Number(id),
+          title,
+          posterPath: details?.poster_path ?? null,
+          season,
+          episode,
+          startedAt: Date.now(),
+        },
+      }).eq('id', uid).then()
+    }
   }
 
   const isReminded = details ? reminders.some(r => r.id === details.id && r.mediaType === mediaType) : false
