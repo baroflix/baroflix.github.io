@@ -43,8 +43,8 @@ function CommentImage({ url }: { url: string }) {
   const [state, setState] = useState<'loading' | 'loaded' | 'error'>('loading')
   const [expanded, setExpanded] = useState(false)
   return (
-    <div style={{ marginTop: 4, maxWidth: '100%' }}>
-      {state === 'loading' && <div className="skeleton" style={{ height: 110, borderRadius: 8 }} />}
+    <div style={{ marginTop: 4, maxWidth: 480 }}>
+      {state === 'loading' && <div className="skeleton" style={{ height: 90, borderRadius: 8 }} />}
       {state === 'error' && (
         <div style={{
           padding: '6px 10px', borderRadius: 8, fontSize: 10,
@@ -60,8 +60,8 @@ function CommentImage({ url }: { url: string }) {
         onClick={() => setExpanded(e => !e)}
         style={{
           display: state === 'loaded' ? 'block' : 'none',
-          maxWidth: '100%', width: '100%',
-          maxHeight: expanded ? 360 : 150,
+          maxWidth: '100%',
+          maxHeight: expanded ? 280 : 120,
           objectFit: expanded ? 'contain' : 'cover',
           borderRadius: 8, cursor: expanded ? 'zoom-out' : 'zoom-in',
           border: '1px solid rgba(255,255,255,0.07)',
@@ -404,12 +404,12 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
               alt="Preview"
               referrerPolicy="no-referrer"
               style={{
-                maxHeight: 120, maxWidth: '100%', objectFit: 'cover',
-                borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
+                maxHeight: 80, maxWidth: 240, objectFit: 'cover',
+                borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)',
               }}
             />
           )}
-          <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'center' }}>
             {/* Mini avatar */}
             <div style={{
               width: 32, height: 32, borderRadius: '50%',
@@ -429,7 +429,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Add a comment… or paste an image/GIF link"
-              rows={2}
+              rows={1}
               maxLength={2000}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -751,12 +751,12 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
               alt="Preview"
               referrerPolicy="no-referrer"
               style={{
-                maxHeight: 120, maxWidth: '100%', objectFit: 'cover',
-                borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
+                maxHeight: 80, maxWidth: 240, objectFit: 'cover',
+                borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)',
               }}
             />
           )}
-          <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'center' }}>
             <div style={{
               width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
               background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
@@ -771,7 +771,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
               value={content}
               onChange={e => setContent(e.target.value)}
               placeholder="Leave a comment… or paste an image/GIF link"
-              rows={2}
+              rows={1}
               maxLength={2000}
               onKeyDown={e => {
                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
