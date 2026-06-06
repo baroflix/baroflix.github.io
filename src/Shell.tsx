@@ -21,7 +21,10 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
     const softAlpha = theme.glow.replace(/[\d.]+\)$/, '0.08)')
     root.style.setProperty('--accent-dim', dimAlpha)
     root.style.setProperty('--accent-soft', softAlpha)
-  }, [theme])
+    // Gate the rainbow animation — it runs on :root and causes continuous GPU
+    // repaints which crash Safari on iPad when active for non-pride themes
+    root.classList.toggle('pride-theme', settings.theme === 'pride')
+  }, [theme, settings.theme])
 
   return (
     <div
