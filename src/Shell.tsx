@@ -1,5 +1,5 @@
 import { Link, useLocation, Outlet } from 'react-router-dom'
-import { Settings as SettingsIcon, User, Menu, X } from 'lucide-react'
+import { Settings as SettingsIcon, User, Menu, X, Library } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { THEME_PRESETS, useScrollDirection } from './hooks'
@@ -58,11 +58,8 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
   const navLinks = [
-    { to: '/', label: t.home },
     { to: '/browse', label: t.browse },
     { to: '/sports', label: t.sports },
-    { to: '/collections', label: t.collections },
-    { to: '/coming-soon', label: t.comingSoon },
     { to: '/stats', label: t.stats },
   ]
 
@@ -123,7 +120,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             )}
             {/* Search — always visible */}
             <HomeSearchToggle />
-            {/* Settings + Profile — desktop only */}
+            {/* Settings + Collections + Profile — desktop only */}
             <div className="hidden lg:flex items-center gap-2">
               <Link
                 to="/settings"
@@ -136,6 +133,18 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
                 aria-label="Settings"
               >
                 <SettingsIcon className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/collections"
+                className="flex items-center justify-center w-9 h-9 rounded-full transition-colors"
+                style={{
+                  background: isActive('/collections') ? 'var(--accent-dim)' : 'rgba(255,255,255,0.08)',
+                  border: `1px solid ${isActive('/collections') ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
+                  color: isActive('/collections') ? 'var(--accent)' : 'rgba(255,255,255,0.7)',
+                }}
+                aria-label="Collections"
+              >
+                <Library className="w-4 h-4" />
               </Link>
               <Link
                 to="/profile"
@@ -215,6 +224,19 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           >
             <SettingsIcon className="w-4 h-4 shrink-0" />
             Settings
+          </Link>
+
+          {/* Collections */}
+          <Link
+            to="/collections"
+            className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl"
+            style={{
+              color: isActive('/collections') ? '#fff' : 'rgba(255,255,255,0.6)',
+              background: isActive('/collections') ? 'rgba(255,255,255,0.07)' : 'transparent',
+            }}
+          >
+            <Library className="w-4 h-4 shrink-0" />
+            Collections
           </Link>
 
           {/* Profile */}

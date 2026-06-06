@@ -6,7 +6,6 @@ import { TitlePage } from './TitlePage'
 import { CastPage } from './CastPage'
 import { BrowsePage } from './BrowsePage'
 import { StatsPage } from './StatsPage'
-import { ComingSoonPage } from './ComingSoonPage'
 import { NetworkPage } from './NetworkPage'
 import { CollectionPage } from './CollectionPage'
 import { SettingsPage } from './SettingsPage'
@@ -56,7 +55,6 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="browse" element={<BrowsePage />} />
         <Route path="stats" element={<StatsPage />} />
-        <Route path="coming-soon" element={<ComingSoonPage />} />
         <Route path="/title/:mediaType/:id" element={<TitlePage />} />
         <Route path="/person/:id" element={<CastPage />} />
         <Route path="/network/:id" element={<NetworkPage />} />
