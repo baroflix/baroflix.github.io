@@ -70,7 +70,11 @@ function BadgePill({ type, size = 'sm' }: { type: BadgeType; size?: 'sm' | 'lg' 
 // ─── PosterCard ───────────────────────────────────────────────────────────────
 
 function PosterCard({ item }: { item: PinnedItem | any }) {
-  const posterUrl = item.posterPath ? `${POSTER_BASE}${item.posterPath}` : null
+  // posterPath may be a bare path ("/abc.jpg") or a full URL already
+  const posterUrl = item.posterPath
+    ? (item.posterPath.startsWith('http') ? item.posterPath : `${POSTER_BASE}${item.posterPath}`)
+    : null
+  const [imgFailed, setImgFailed] = useState(false)
   return (
     <Link to={`/title/${item.mediaType}/${item.id}`} className="no-bg-hover"
       style={{ display: 'block', borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
@@ -78,12 +82,14 @@ function PosterCard({ item }: { item: PinnedItem | any }) {
         width: '100%', aspectRatio: '2/3',
         background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden', position: 'relative',
       }}>
-        {posterUrl ? (
+        {posterUrl && !imgFailed ? (
           <img src={posterUrl} alt={item.title}
+            onError={() => setImgFailed(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 6 }}>
             <Film size={24} style={{ color: 'rgba(255,255,255,0.2)' }} />
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '0 6px', lineHeight: 1.3 }}>{item.title}</span>
           </div>
         )}
         <div
