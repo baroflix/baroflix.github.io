@@ -1,5 +1,103 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
+
+// ─── Image-embed security helpers ────────────────────────────────────────────
+
+// Only domains whose images are safe to embed. HTTPS required.
+// Extend this list to add more trusted sources.
+const ALLOWED_EXACT_HOSTS = new Set([
+  'c.tenor.com',        // Tenor GIFs (direct media)
+  'media.tenor.com',
+  'i.imgur.com',        // Imgur direct images
+  'cdn.discordapp.com', // Discord CDN
+  'media.discordapp.net',
+  'i.redd.it',          // Reddit image CDN
+  'pbs.twimg.com',      // Twitter/X image CDN
+])
+
+const IMAGE_EXT_RE = /\.(gif|jpe?g|png|webp|avif)(\?[^#]*)?$/i
+
+function isAllowedHost(hostname: string): boolean {
+  if (ALLOWED_EXACT_HOSTS.has(hostname)) return true
+  // Giphy CDN shards: media.giphy.com, media0.giphy.com … media4.giphy.com
+  if (/^media\d*\.giphy\.com$/.test(hostname)) return true
+  return false
+}
+
+/**
+ * Returns a sanitised https URL if `raw` is an embeddable image from an
+ * allowed host, otherwise null.
+ */
+function sanitizeImageUrl(raw: string): string | null {
+  const trimmed = raw.trim()
+  if (!trimmed.startsWith('https://')) return null
+  try {
+    const url = new URL(trimmed)
+    if (url.protocol !== 'https:') return null
+    if (!isAllowedHost(url.hostname)) return null
+    if (!IMAGE_EXT_RE.test(url.pathname)) return null
+    return url.href // reconstructed — strips any malformed characters
+  } catch {
+    return null
+  }
+}
+
+/**
+ * If the entire message is a single image URL, return the sanitised URL.
+ * Mixed text + URL messages are rendered as plain text.
+ */
+function extractImageEmbed(content: string): string | null {
+  const trimmed = content.trim()
+  if (!trimmed || trimmed.includes(' ') || !trimmed.startsWith('https://')) return null
+  return sanitizeImageUrl(trimmed)
+}
+
+// ─── ChatImage ────────────────────────────────────────────────────────────────
+
+function ChatImage({ url }: { url: string }) {
+  const [imgState, setImgState] = useState<'loading' | 'loaded' | 'error'>('loading')
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div style={{ marginTop: 4, maxWidth: '100%' }}>
+      {imgState === 'loading' && (
+        <div className="skeleton" style={{ height: 110, borderRadius: 8 }} />
+      )}
+      {imgState === 'error' && (
+        <div style={{
+          padding: '6px 10px', borderRadius: 8, fontSize: 10,
+          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+          color: 'rgba(255,255,255,0.3)',
+        }}>
+          🖼 Image unavailable
+        </div>
+      )}
+      <img
+        src={url}
+        alt="Shared image"
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+        loading="lazy"
+        onLoad={() => setImgState('loaded')}
+        onError={() => setImgState('error')}
+        onClick={() => setExpanded(e => !e)}
+        style={{
+          display: imgState === 'loaded' ? 'block' : 'none',
+          maxWidth: '100%',
+          width: '100%',
+          maxHeight: expanded ? 360 : 150,
+          objectFit: expanded ? 'contain' : 'cover',
+          borderRadius: 8,
+          cursor: expanded ? 'zoom-out' : 'zoom-in',
+          border: '1px solid rgba(255,255,255,0.07)',
+          background: 'rgba(0,0,0,0.3)',
+          transition: 'max-height 0.25s ease',
+        }}
+        title={expanded ? 'Click to collapse' : 'Click to expand'}
+      />
+    </div>
+  )
+}
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Calendar, Play, Flame, Trophy, Activity, X, Tv, RefreshCw, MessageSquare, Send, User, Maximize2, Minimize2 } from 'lucide-react'
 import { supabase } from './lib/supabase'
@@ -38,6 +136,7 @@ export function SportsPage() {
     } | null
   }[]>([])
   const [chatContent, setChatContent] = useState('')
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [sendingMessage, setSendingMessage] = useState(false)
   const [chatError, setChatError] = useState<string | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -127,6 +226,11 @@ export function SportsPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages.length])
+
+  // Update image preview when the input looks like an image URL
+  useEffect(() => {
+    setImagePreview(extractImageEmbed(chatContent))
+  }, [chatContent])
 
   async function handleSendChatMessage(e: React.FormEvent) {
     e.preventDefault()
@@ -856,9 +960,13 @@ export function SportsPage() {
                                   {new Date(msg.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-white/70 leading-relaxed mt-0.5 break-words whitespace-pre-wrap">
-                                {msg.content}
-                              </p>
+                              {extractImageEmbed(msg.content) ? (
+                                <ChatImage url={extractImageEmbed(msg.content)!} />
+                              ) : (
+                                <p className="text-[11px] text-white/70 leading-relaxed mt-0.5 break-words whitespace-pre-wrap">
+                                  {msg.content}
+                                </p>
+                              )}
                             </div>
                           </div>
                         )
@@ -867,13 +975,36 @@ export function SportsPage() {
                     <div ref={chatEndRef} />
                   </div>
 
+                  {/* Image preview (shown when input contains an image URL) */}
+                  {imagePreview && (
+                    <div className="px-3 pt-2.5 pb-1 border-t border-white/5" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <p className="text-[9px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                        Image preview
+                      </p>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                        style={{
+                          maxHeight: 72,
+                          maxWidth: 128,
+                          borderRadius: 6,
+                          objectFit: 'cover',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          display: 'block',
+                        }}
+                      />
+                    </div>
+                  )}
+
                   {/* Input Form */}
-                  <form onSubmit={handleSendChatMessage} className="p-3 border-t border-white/5 bg-white/2 flex gap-2 items-center">
+                  <form onSubmit={handleSendChatMessage} className="p-3 border-t border-white/5 flex gap-2 items-center">
                     <input
                       type="text"
                       value={chatContent}
                       onChange={(e) => setChatContent(e.target.value)}
-                      placeholder={session ? "Send a message..." : "Sign in to chat"}
+                      placeholder={session ? "Send a message or paste an image URL…" : "Sign in to chat"}
                       disabled={!session || sendingMessage}
                       className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-white/20 transition-colors"
                     />
