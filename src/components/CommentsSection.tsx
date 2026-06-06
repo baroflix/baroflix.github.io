@@ -5,6 +5,76 @@ import { supabase, type Comment, type ProfileComment, type UserBadge, BADGE_CONF
 import { useAuth } from '../context/AuthContext'
 
 // ─────────────────────────────────────────────────────────────
+// Image-embed helpers (same allow-list as the live sports chat)
+// ─────────────────────────────────────────────────────────────
+const ALLOWED_IMG_HOSTS = new Set([
+  'c.tenor.com', 'media.tenor.com',
+  'i.imgur.com',
+  'cdn.discordapp.com', 'media.discordapp.net',
+  'i.redd.it',
+  'pbs.twimg.com',
+])
+const IMG_EXT_RE = /\.(gif|jpe?g|png|webp|avif)(\?[^#]*)?$/i
+
+function isAllowedImgHost(h: string) {
+  return ALLOWED_IMG_HOSTS.has(h) || /^media\d*\.giphy\.com$/.test(h)
+}
+
+function sanitizeCommentImageUrl(raw: string): string | null {
+  const t = raw.trim()
+  if (!t.startsWith('https://')) return null
+  try {
+    const u = new URL(t)
+    if (u.protocol !== 'https:') return null
+    if (!isAllowedImgHost(u.hostname)) return null
+    if (!IMG_EXT_RE.test(u.pathname)) return null
+    return u.href
+  } catch { return null }
+}
+
+/** Returns a sanitised URL when the entire content is a lone image link, else null. */
+export function extractCommentImageEmbed(content: string): string | null {
+  const t = content.trim()
+  if (!t || t.includes(' ') || !t.startsWith('https://')) return null
+  return sanitizeCommentImageUrl(t)
+}
+
+function CommentImage({ url }: { url: string }) {
+  const [state, setState] = useState<'loading' | 'loaded' | 'error'>('loading')
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <div style={{ marginTop: 4, maxWidth: '100%' }}>
+      {state === 'loading' && <div className="skeleton" style={{ height: 110, borderRadius: 8 }} />}
+      {state === 'error' && (
+        <div style={{
+          padding: '6px 10px', borderRadius: 8, fontSize: 10,
+          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+          color: 'rgba(255,255,255,0.3)',
+        }}>🖼 Image unavailable</div>
+      )}
+      <img
+        src={url} alt="Shared image"
+        referrerPolicy="no-referrer" loading="lazy"
+        onLoad={() => setState('loaded')}
+        onError={() => setState('error')}
+        onClick={() => setExpanded(e => !e)}
+        style={{
+          display: state === 'loaded' ? 'block' : 'none',
+          maxWidth: '100%', width: '100%',
+          maxHeight: expanded ? 360 : 150,
+          objectFit: expanded ? 'contain' : 'cover',
+          borderRadius: 8, cursor: expanded ? 'zoom-out' : 'zoom-in',
+          border: '1px solid rgba(255,255,255,0.07)',
+          background: 'rgba(0,0,0,0.3)',
+          transition: 'max-height 0.25s ease',
+        }}
+        title={expanded ? 'Click to collapse' : 'Click to expand'}
+      />
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────
 function timeAgo(dateStr: string): string {
@@ -285,12 +355,16 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
                       {timeAgo(comment.created_at)}
                     </span>
                   </div>
-                  <p style={{
-                    margin: 0, fontSize: '0.875rem', color: 'rgba(255,255,255,0.8)',
-                    lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                  }}>
-                    {comment.content}
-                  </p>
+                  {extractCommentImageEmbed(comment.content) ? (
+                    <CommentImage url={extractCommentImageEmbed(comment.content)!} />
+                  ) : (
+                    <p style={{
+                      margin: 0, fontSize: '0.875rem', color: 'rgba(255,255,255,0.8)',
+                      lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    }}>
+                      {comment.content}
+                    </p>
+                  )}
                 </div>
 
                 {/* Delete own comment */}
@@ -323,6 +397,18 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
           {submitError && (
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#fca5a5' }}>{submitError}</p>
           )}
+          {/* Image preview */}
+          {extractCommentImageEmbed(content) && (
+            <img
+              src={extractCommentImageEmbed(content)!}
+              alt="Preview"
+              referrerPolicy="no-referrer"
+              style={{
+                maxHeight: 120, maxWidth: '100%', objectFit: 'cover',
+                borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            />
+          )}
           <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'flex-end' }}>
             {/* Mini avatar */}
             <div style={{
@@ -342,7 +428,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
               id={`comment-input-${movieId}`}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Add a comment…"
+              placeholder="Add a comment… or paste an image/GIF link"
               rows={2}
               maxLength={2000}
               onKeyDown={(e) => {
@@ -620,12 +706,16 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
                       {timeAgo(comment.created_at)}
                     </span>
                   </div>
-                  <p style={{
-                    margin: 0, fontSize: '0.875rem', color: 'rgba(255,255,255,0.8)',
-                    lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                  }}>
-                    {comment.content}
-                  </p>
+                  {extractCommentImageEmbed(comment.content) ? (
+                    <CommentImage url={extractCommentImageEmbed(comment.content)!} />
+                  ) : (
+                    <p style={{
+                      margin: 0, fontSize: '0.875rem', color: 'rgba(255,255,255,0.8)',
+                      lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    }}>
+                      {comment.content}
+                    </p>
+                  )}
                 </div>
 
                 {/* Delete */}
@@ -654,6 +744,18 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
       {session ? (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {submitError && <p style={{ margin: 0, fontSize: '0.8rem', color: '#fca5a5' }}>{submitError}</p>}
+          {/* Image preview */}
+          {extractCommentImageEmbed(content) && (
+            <img
+              src={extractCommentImageEmbed(content)!}
+              alt="Preview"
+              referrerPolicy="no-referrer"
+              style={{
+                maxHeight: 120, maxWidth: '100%', objectFit: 'cover',
+                borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            />
+          )}
           <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'flex-end' }}>
             <div style={{
               width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
@@ -668,7 +770,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
             <textarea
               value={content}
               onChange={e => setContent(e.target.value)}
-              placeholder="Leave a comment…"
+              placeholder="Leave a comment… or paste an image/GIF link"
               rows={2}
               maxLength={2000}
               onKeyDown={e => {
