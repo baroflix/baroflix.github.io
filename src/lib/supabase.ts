@@ -259,6 +259,19 @@ export interface Comment {
   } | null
 }
 
+/** Row in public.profile_comments */
+export interface ProfileComment {
+  id: string
+  profile_id: string
+  user_id: string
+  content: string
+  created_at: string
+  profiles: {
+    username: string | null
+    avatar_url: string | null
+  } | null
+}
+
 /** Row in public.allowed_emails */
 export interface AllowedEmail {
   email: string

@@ -17,6 +17,7 @@ import type { ProfileWithBadges, BadgeType, PinnedItem } from './lib/supabase'
 import { THEME_PRESETS } from './hooks'
 import { useAuth } from './context/AuthContext'
 import { calculateStreak, checkAndAwardMilestones } from './lib/milestones'
+import { ProfileCommentsSection } from './components/CommentsSection'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -793,6 +794,9 @@ export function PublicProfilePage() {
             </div>
           </section>
         )}
+
+        {/* ── Comments ─────────────────────────────────────────────────────── */}
+        <ProfileCommentsSection profileId={profile.id} profileOwnerId={profile.id} />
 
       </div>
 

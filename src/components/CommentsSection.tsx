@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { User, Send, MessageSquare, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { supabase, type Comment, type UserBadge, BADGE_CONFIG, getHighestBadge, fetchBadgesForUsers } from '../lib/supabase'
+import { supabase, type Comment, type ProfileComment, type UserBadge, BADGE_CONFIG, getHighestBadge, fetchBadgesForUsers } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
 // ─────────────────────────────────────────────────────────────
@@ -379,6 +379,324 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
           <p style={{ margin: 0, fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)' }}>
             ⌘↵ to submit
           </p>
+        </form>
+      ) : (
+        <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)' }}>
+          Sign in to leave a comment.
+        </p>
+      )}
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// ProfileCommentsSection
+// Comments on a user's public profile page.
+// profileOwnerId: the user_id of the person whose profile is being viewed
+//   — they can delete any comment left on their page.
+//
+// SQL migration (run once in Supabase SQL editor):
+// ─────────────────────────────────────────────────────────────
+// CREATE TABLE public.profile_comments (
+//   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+//   profile_id  uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+//   user_id     uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+//   content     text NOT NULL CHECK (char_length(content) <= 2000),
+//   created_at  timestamptz NOT NULL DEFAULT now()
+// );
+// ALTER TABLE public.profile_comments ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "profile_comments readable by all"
+//   ON public.profile_comments FOR SELECT USING (true);
+// CREATE POLICY "users can post profile comments"
+//   ON public.profile_comments FOR INSERT WITH CHECK (auth.uid() = user_id);
+// CREATE POLICY "author or profile owner can delete"
+//   ON public.profile_comments FOR DELETE
+//   USING (auth.uid() = user_id OR auth.uid() = profile_id);
+// GRANT SELECT, INSERT, DELETE ON public.profile_comments TO authenticated;
+// GRANT SELECT ON public.profile_comments TO anon;
+// ─────────────────────────────────────────────────────────────
+
+const PROFILE_COMMENT_SELECT =
+  'id, profile_id, user_id, content, created_at, profiles(username, avatar_url)'
+
+interface ProfileCommentsSectionProps {
+  profileId: string        // uuid of the profile being viewed
+  profileOwnerId: string   // same value — kept explicit for clarity in the component
+}
+
+export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCommentsSectionProps) {
+  const { session, profile } = useAuth()
+  const [comments, setComments] = useState<ProfileComment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [content, setContent] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const listEndRef = useRef<HTMLDivElement>(null)
+
+  const [badgesMap, setBadgesMap] = useState<Record<string, UserBadge[]>>({})
+  const fetchedUserIds = useRef(new Set<string>())
+
+  // ── Load comments ───────────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    supabase
+      .from('profile_comments')
+      .select(PROFILE_COMMENT_SELECT)
+      .eq('profile_id', profileId)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (!cancelled) {
+          setComments((data as unknown as ProfileComment[]) ?? [])
+          setLoading(false)
+        }
+      })
+    return () => { cancelled = true }
+  }, [profileId])
+
+  // ── Load badges for authors ─────────────────────────────────
+  useEffect(() => {
+    const newIds = comments.map(c => c.user_id).filter(id => !fetchedUserIds.current.has(id))
+    if (!newIds.length) return
+    newIds.forEach(id => fetchedUserIds.current.add(id))
+    fetchBadgesForUsers(newIds).then(map => setBadgesMap(prev => ({ ...prev, ...map })))
+  }, [comments]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Realtime ────────────────────────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel(`profile_comments:${profileId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'profile_comments',
+        filter: `profile_id=eq.${profileId}`,
+      }, async (payload) => {
+        const { data } = await supabase
+          .from('profile_comments')
+          .select(PROFILE_COMMENT_SELECT)
+          .eq('id', payload.new.id)
+          .single()
+        if (data) {
+          setComments(prev => prev.some(c => c.id === data.id) ? prev : [...prev, data as unknown as ProfileComment])
+        }
+      })
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public', table: 'profile_comments',
+        filter: `profile_id=eq.${profileId}`,
+      }, (payload) => {
+        setComments(prev => prev.filter(c => c.id !== payload.old.id))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [profileId])
+
+  // Auto-scroll on new comments (skip initial load)
+  const initialised = useRef(false)
+  useEffect(() => {
+    if (!initialised.current) { if (!loading) initialised.current = true; return }
+    listEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [comments.length, loading])
+
+  // ── Submit ──────────────────────────────────────────────────
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!session || !content.trim()) return
+    setSubmitting(true)
+    setSubmitError(null)
+    const { data, error } = await supabase
+      .from('profile_comments')
+      .insert({ profile_id: profileId, user_id: session.user.id, content: content.trim() })
+      .select(PROFILE_COMMENT_SELECT)
+      .single()
+    setSubmitting(false)
+    if (error) {
+      setSubmitError(error.message)
+    } else {
+      setContent('')
+      if (data) setComments(prev => prev.some(c => c.id === data.id) ? prev : [...prev, data as unknown as ProfileComment])
+    }
+  }
+
+  // ── Delete ──────────────────────────────────────────────────
+  async function handleDelete(commentId: string) {
+    await supabase.from('profile_comments').delete().eq('id', commentId)
+    setComments(prev => prev.filter(c => c.id !== commentId))
+  }
+
+  const isOwner = session?.user?.id === profileOwnerId
+
+  // ── Render ──────────────────────────────────────────────────
+  return (
+    <section style={{
+      padding: '1.5rem', borderRadius: 20,
+      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+      marginBottom: 24,
+    }}>
+      {/* Heading */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+        <MessageSquare size={16} style={{ color: 'var(--accent)' }} />
+        <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: 'white' }}>Comments</h2>
+        {!loading && (
+          <span style={{
+            marginLeft: 4, fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)',
+            background: 'rgba(255,255,255,0.06)', padding: '1px 8px', borderRadius: 99,
+          }}>
+            {comments.length}
+          </span>
+        )}
+      </div>
+
+      {/* Comment list */}
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: '1.5rem' }}>
+          {[1, 2].map(i => <div key={i} className="skeleton" style={{ height: 64, borderRadius: 12 }} />)}
+        </div>
+      ) : comments.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '2rem 0', color: 'rgba(255,255,255,0.25)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+          No comments yet. Be the first!
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginBottom: '1.5rem' }}>
+          {comments.map(comment => {
+            const author = comment.profiles
+            const isOwn = session?.user?.id === comment.user_id
+            const canDelete = isOwn || isOwner
+            const displayName = author?.username || 'Anonymous'
+            const badges = badgesMap[comment.user_id] ?? []
+            const highestBadge = getHighestBadge(badges)
+            const badgeCfg = highestBadge ? BADGE_CONFIG[highestBadge] : null
+
+            return (
+              <div key={comment.id} style={{
+                display: 'flex', gap: '0.75rem', alignItems: 'flex-start',
+                padding: '0.875rem', borderRadius: 12,
+                background: isOwn ? 'rgba(var(--accent-rgb,139,92,246),0.07)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${isOwn ? 'rgba(var(--accent-rgb,139,92,246),0.2)' : 'rgba(255,255,255,0.05)'}`,
+              }}>
+                {/* Avatar */}
+                <div style={{
+                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+                  overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {author?.avatar_url
+                    ? <img src={author.avatar_url} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <User size={16} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                  }
+                </div>
+
+                {/* Body */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' as const }}>
+                    {author?.username ? (
+                      <Link to={`/user/${author.username}`}
+                        style={{ fontSize: '0.82rem', fontWeight: 600, color: 'white', textDecoration: 'none' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--accent)' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'white' }}>
+                        {displayName}
+                      </Link>
+                    ) : (
+                      <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'white' }}>{displayName}</span>
+                    )}
+                    {badgeCfg && (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 3,
+                        padding: '1px 6px', borderRadius: 999,
+                        background: badgeCfg.bg, border: `1px solid ${badgeCfg.border}`,
+                        color: badgeCfg.color, fontSize: 10, fontWeight: 600, lineHeight: 1.5,
+                      }}>
+                        <span style={{ fontSize: 11 }}>{badgeCfg.emoji}</span>{badgeCfg.label}
+                      </span>
+                    )}
+                    {isOwner && !isOwn && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 999,
+                        background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                      }}>
+                        visitor
+                      </span>
+                    )}
+                    <span style={{ fontSize: '0.73rem', color: 'rgba(255,255,255,0.3)' }}>
+                      {timeAgo(comment.created_at)}
+                    </span>
+                  </div>
+                  <p style={{
+                    margin: 0, fontSize: '0.875rem', color: 'rgba(255,255,255,0.8)',
+                    lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  }}>
+                    {comment.content}
+                  </p>
+                </div>
+
+                {/* Delete */}
+                {canDelete && (
+                  <button type="button" aria-label="Delete comment"
+                    onClick={() => handleDelete(comment.id)}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'rgba(255,255,255,0.2)', padding: 4, borderRadius: 6,
+                      flexShrink: 0, display: 'flex', alignItems: 'center', transition: 'color 0.15s',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#f87171' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.2)' }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            )
+          })}
+          <div ref={listEndRef} />
+        </div>
+      )}
+
+      {/* Input */}
+      {session ? (
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {submitError && <p style={{ margin: 0, fontSize: '0.8rem', color: '#fca5a5' }}>{submitError}</p>}
+          <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'flex-end' }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+              overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {profile?.avatar_url
+                ? <img src={profile.avatar_url} alt="You" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <User size={15} style={{ color: 'rgba(255,255,255,0.3)' }} />
+              }
+            </div>
+            <textarea
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="Leave a comment…"
+              rows={2}
+              maxLength={2000}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault()
+                  handleSubmit(e as unknown as FormEvent)
+                }
+              }}
+              style={{
+                flex: 1, padding: '0.625rem 0.875rem',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 10, color: 'white', fontSize: '0.875rem',
+                resize: 'none', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5,
+              }}
+            />
+            <button type="submit" disabled={submitting || !content.trim()} style={{
+              padding: '0.625rem 1rem', borderRadius: 10, border: 'none',
+              background: 'var(--accent)', color: 'white', fontWeight: 600,
+              fontSize: '0.85rem', cursor: submitting || !content.trim() ? 'not-allowed' : 'pointer',
+              opacity: submitting || !content.trim() ? 0.45 : 1,
+              display: 'flex', alignItems: 'center', gap: '0.375rem',
+              transition: 'opacity 0.2s', flexShrink: 0,
+            }}>
+              <Send size={14} />
+              Post
+            </button>
+          </div>
+          <p style={{ margin: 0, fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)' }}>⌘↵ to submit</p>
         </form>
       ) : (
         <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)' }}>
