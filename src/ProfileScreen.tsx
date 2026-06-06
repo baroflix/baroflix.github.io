@@ -2,11 +2,11 @@ import { useState, type FormEvent, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft, User, Image, Save, CheckCircle, AlertTriangle,
-  Palette, Languages, Monitor, Globe, FileText, Pin, X, Eye, EyeOff, Trophy,
+  Palette, Languages, Monitor, Globe, FileText, Pin, X, Eye, EyeOff,
 } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
 import { supabase, type Profile, type PinnedItem } from './lib/supabase'
-import { checkAndAwardMilestones } from './lib/milestones'
+
 import { THEME_PRESETS, STORAGE_KEYS } from './hooks'
 import type { ThemeId, WatchHistoryEntry } from './hooks'
 import { locales } from './locales'
@@ -39,39 +39,6 @@ export function ProfileScreen() {
   const usernameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [recentHistory, setRecentHistory] = useState<WatchHistoryEntry[]>([])
-
-  const [milestoneStatus, setMilestoneStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
-  const [newBadgeCount, setNewBadgeCount] = useState(0)
-  const [milestoneError, setMilestoneError] = useState<string | null>(null)
-
-  async function handleRecalculateMilestones() {
-    if (!session?.user?.id || !contextProfile) return
-    setMilestoneStatus('running')
-    setNewBadgeCount(0)
-    setMilestoneError(null)
-    try {
-      const hist = contextProfile.watch_history ?? []
-      const prog = contextProfile.watch_progress ?? {}
-      // Fetch current badges fresh from DB so we don't re-award ones just added
-      const { data: currentBadges } = await supabase
-        .from('user_badges')
-        .select('id, user_id, badge_type, awarded_at')
-        .eq('user_id', session.user.id)
-      const awarded = await checkAndAwardMilestones(
-        session.user.id,
-        hist,
-        prog,
-        currentBadges ?? [],
-      )
-      setNewBadgeCount(awarded.length)
-      setMilestoneStatus('done')
-    } catch (err: any) {
-      const msg: string = err?.message ?? String(err)
-      setMilestoneError(msg)
-      setMilestoneStatus('error')
-    }
-    setTimeout(() => setMilestoneStatus('idle'), 6000)
-  }
 
   useEffect(() => {
     const trimmed = username.trim()
@@ -652,56 +619,6 @@ export function ProfileScreen() {
             </button>
 
           </form>
-        )}
-
-        {/* ── Recalculate milestone badges ────────────────────────────────── */}
-        <button
-          type="button"
-          onClick={handleRecalculateMilestones}
-          disabled={milestoneStatus === 'running'}
-          className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
-          style={{
-            border: milestoneStatus === 'error'
-              ? '1px solid rgba(239,68,68,0.3)'
-              : '1px solid rgba(251,191,36,0.25)',
-            background: milestoneStatus === 'done' ? 'rgba(74,222,128,0.08)'
-              : milestoneStatus === 'error' ? 'rgba(239,68,68,0.07)'
-              : 'rgba(251,191,36,0.07)',
-            color: milestoneStatus === 'done' ? '#86efac'
-              : milestoneStatus === 'error' ? '#fca5a5'
-              : '#fcd34d',
-            cursor: milestoneStatus === 'running' ? 'not-allowed' : 'pointer',
-            opacity: milestoneStatus === 'running' ? 0.7 : 1,
-          }}
-        >
-          {milestoneStatus === 'running' ? (
-            <>
-              <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
-              Checking milestones…
-            </>
-          ) : milestoneStatus === 'done' ? (
-            <>
-              <CheckCircle size={14} />
-              {newBadgeCount > 0 ? `${newBadgeCount} new badge${newBadgeCount > 1 ? 's' : ''} awarded!` : 'All milestones up to date'}
-            </>
-          ) : milestoneStatus === 'error' ? (
-            <>
-              <AlertTriangle size={14} />
-              Failed — check console for details
-            </>
-          ) : (
-            <>
-              <Trophy size={14} />
-              Recalculate Milestone Badges
-            </>
-          )}
-        </button>
-        {milestoneStatus === 'error' && milestoneError && (
-          <p className="text-xs px-1 mt-1" style={{ color: 'rgba(252,165,165,0.7)', fontFamily: 'monospace', wordBreak: 'break-word' }}>
-            {milestoneError.includes('INSERT') || milestoneError.includes('policy')
-              ? 'RLS policy missing — run the SQL migration in Supabase (see code comments in milestones.ts).'
-              : milestoneError}
-          </p>
         )}
 
         {/* ── Sign out ────────────────────────────────────────────────────── */}
