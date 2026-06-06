@@ -123,6 +123,7 @@ export function StatsPage() {
 
   // ── per-title stats ────────────────────────────────────────────────────────
   const [sortKey, setSortKey] = useState<SortKey>('time')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'movie' | 'tv' | 'anime'>('all')
 
   const titleRows = useMemo(() => {
     return uniqueTitles.map(entry => {
@@ -170,12 +171,13 @@ export function StatsPage() {
   }, [uniqueTitles, progress, watchedEpisodes, detailsMap])
 
   const sortedRows = useMemo(() => {
-    return [...titleRows].sort((a, b) => {
+    const filtered = typeFilter === 'all' ? titleRows : titleRows.filter(r => r.mediaType === typeFilter)
+    return filtered.sort((a, b) => {
       if (sortKey === 'name') return a.title.localeCompare(b.title)
       if (sortKey === 'completion') return (b.completion ?? -1) - (a.completion ?? -1)
       return b.secs - a.secs   // time
     })
-  }, [titleRows, sortKey])
+  }, [titleRows, sortKey, typeFilter])
 
   // ── UI ─────────────────────────────────────────────────────────────────────
   return (
@@ -252,11 +254,12 @@ export function StatsPage() {
 
       {/* ── Watched Titles list ─────────────────────────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mb-12">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        {/* Header row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h2 className="text-2xl font-bold text-white">
             Watched Titles
             <span className="ml-3 text-base font-normal" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              {uniqueTitles.length} title{uniqueTitles.length !== 1 ? 's' : ''}
+              {sortedRows.length}{typeFilter !== 'all' ? ` / ${uniqueTitles.length}` : ''} title{sortedRows.length !== 1 ? 's' : ''}
             </span>
           </h2>
 
@@ -284,12 +287,35 @@ export function StatsPage() {
           </div>
         </div>
 
+        {/* Type filter pills */}
+        <div className="flex gap-2 flex-wrap mb-4">
+          {([
+            { key: 'all',   label: 'All' },
+            { key: 'movie', label: 'Movies' },
+            { key: 'tv',    label: 'TV Shows' },
+            { key: 'anime', label: 'Anime' },
+          ] as const).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setTypeFilter(key)}
+              className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
+              style={{
+                background: typeFilter === key ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
+                color: typeFilter === key ? '#fff' : 'rgba(255,255,255,0.5)',
+                border: `1px solid ${typeFilter === key ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}`,
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         {sortedRows.length === 0 ? (
           <div className="py-16 text-center rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <p className="text-white/40">Start watching something to see your stats here!</p>
+            <p className="text-white/40">{uniqueTitles.length === 0 ? 'Start watching something to see your stats here!' : `No ${typeFilter === 'all' ? '' : typeFilter + ' '}titles yet.`}</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-y-auto pr-1" style={{ maxHeight: 520 }}>
             {sortedRows.map((row, idx) => {
               const linkTo = `/title/${row.mediaType}/${row.id}`
               const posterSrc = row.posterPath
