@@ -215,6 +215,25 @@ export function useProgressStore() {
 }
 
 /**
+ * Write a single progress entry directly to localStorage and fire the
+ * progress-updated event so all live useProgressStore subscribers update.
+ * Pass seconds=0 to remove the entry entirely.
+ */
+export function writeProgressEntry(key: string, seconds: number) {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.progress)
+    const current: Record<string, number> = raw ? JSON.parse(raw) : {}
+    if (seconds <= 0) {
+      delete current[key]
+    } else {
+      current[key] = seconds
+    }
+    window.localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(current))
+    window.dispatchEvent(new Event('progress-updated'))
+  } catch {}
+}
+
+/**
  * Tracks manually-marked-as-watched episodes.
  * Key format: "${mediaType}-${id}-${season}-${episodeNumber}"
  * Returns [watchedSet, toggle(key)]

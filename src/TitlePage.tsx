@@ -20,7 +20,7 @@ import { fetchJikanEpisodes } from './lib/jikan'
 import { fetchAnimeTmdbMeta, type AnimeTmdbMeta } from './lib/tmdb'
 import type { MediaDetails, SeasonDetails } from './types'
 import type { MediaKind } from './types'
-import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useWatchedEpisodes, useReminders, useRatings } from './hooks'
+import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useWatchedEpisodes, writeProgressEntry, useReminders, useRatings } from './hooks'
 import type { WatchHistoryEntry } from './hooks'
 import { STORAGE_KEYS } from './hooks'
 import { useAuth } from './context/AuthContext'
@@ -703,11 +703,19 @@ function SeasonPanel({
   const seasonEpKeys = allEpisodes.map(ep => `${mediaType}-${id}-${activeSeason}-${ep.episode_number}`)
   const allSeasonWatched = seasonEpKeys.length > 0 && seasonEpKeys.every(k => watchedEpisodes.has(k))
 
+  const defaultRuntime = mediaType === 'anime' ? 24 : 45
+
   function markSeasonWatched() {
-    seasonEpKeys.forEach(k => { if (!watchedEpisodes.has(k)) onToggleWatched(k) })
+    allEpisodes.forEach((ep, i) => {
+      const k = seasonEpKeys[i]
+      if (!watchedEpisodes.has(k)) onToggleWatched(k)
+      // Always write full progress so time stats are accurate
+      writeProgressEntry(k, (ep.runtime || defaultRuntime) * 60)
+    })
   }
   function unmarkSeasonWatched() {
     seasonEpKeys.forEach(k => { if (watchedEpisodes.has(k)) onToggleWatched(k) })
+    // Leave playback progress intact — don't erase real watch data
   }
 
   return (
@@ -860,7 +868,15 @@ function SeasonPanel({
                       {/* Mark-as-watched toggle — always visible, left of progress */}
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); onToggleWatched(epKey) }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleWatched(epKey)
+                          if (!isWatched) {
+                            // Marking as watched → record full runtime so stats pick it up
+                            writeProgressEntry(epKey, (ep.runtime || defaultRuntime) * 60)
+                          }
+                          // Unmarking: leave playback progress intact
+                        }}
                         title={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
                         className="flex items-center justify-center transition-colors hover:opacity-80"
                         style={{ color: isWatched ? 'var(--accent)' : 'rgba(255,255,255,0.25)' }}
