@@ -136,6 +136,82 @@ export interface AllowedEmail {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Follow system
+// ─────────────────────────────────────────────────────────────
+
+/** Row in public.follows */
+export interface Follow {
+  follower_id: string
+  following_id: string
+  created_at: string
+}
+
+/** Returns { followers, following } counts for a user */
+export async function getFollowCounts(userId: string): Promise<{ followers: number; following: number }> {
+  const [followerRes, followingRes] = await Promise.all([
+    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', userId),
+    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId),
+  ])
+  return { followers: followerRes.count ?? 0, following: followingRes.count ?? 0 }
+}
+
+/** Check if followerId is following followingId */
+export async function checkIsFollowing(followerId: string, followingId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('follows')
+    .select('follower_id')
+    .eq('follower_id', followerId)
+    .eq('following_id', followingId)
+    .maybeSingle()
+  return !!data
+}
+
+/** Follow a user (followerId follows followingId) */
+export async function followUser(followerId: string, followingId: string): Promise<void> {
+  await supabase.from('follows').insert({ follower_id: followerId, following_id: followingId })
+}
+
+/** Unfollow a user */
+export async function unfollowUser(followerId: string, followingId: string): Promise<void> {
+  await supabase.from('follows').delete()
+    .eq('follower_id', followerId)
+    .eq('following_id', followingId)
+}
+
+const FOLLOW_PROFILE_FIELDS =
+  'id, username, avatar_url, full_name, country, is_public, user_badges(badge_type, awarded_at)'
+
+/** Returns list of profiles that follow userId */
+export async function getFollowersList(userId: string): Promise<ProfileWithBadges[]> {
+  const { data: rows } = await supabase
+    .from('follows')
+    .select('follower_id')
+    .eq('following_id', userId)
+  if (!rows?.length) return []
+  const ids = rows.map((r: any) => r.follower_id)
+  const { data } = await supabase
+    .from('profiles')
+    .select(FOLLOW_PROFILE_FIELDS)
+    .in('id', ids)
+  return (data ?? []) as unknown as ProfileWithBadges[]
+}
+
+/** Returns list of profiles that userId is following */
+export async function getFollowingList(userId: string): Promise<ProfileWithBadges[]> {
+  const { data: rows } = await supabase
+    .from('follows')
+    .select('following_id')
+    .eq('follower_id', userId)
+  if (!rows?.length) return []
+  const ids = rows.map((r: any) => r.following_id)
+  const { data } = await supabase
+    .from('profiles')
+    .select(FOLLOW_PROFILE_FIELDS)
+    .in('id', ids)
+  return (data ?? []) as unknown as ProfileWithBadges[]
+}
+
+// ─────────────────────────────────────────────────────────────
 // Profile query helpers
 // ─────────────────────────────────────────────────────────────
 

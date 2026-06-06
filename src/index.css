@@ -180,6 +180,11 @@ img {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Spinner for loading states */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 
 
 /* ─── Utility Classes ──────────────────────────────────────────────────────── */
