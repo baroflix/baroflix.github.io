@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Star, ArrowRight, Play, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import heroFallback from './assets/hero.png'
@@ -536,10 +536,12 @@ export function PlayerFrame({ src, title }: { src: string; title: string }) {
 // ─── Back Button ─────────────────────────────────────────────────────────────
 
 export function BackButton() {
+  const navigate = useNavigate()
   return (
-    <Link
-      to="/"
-      className="inline-flex items-center gap-2 px-4 py-2 text-sm transition-colors"
+    <button
+      type="button"
+      onClick={() => navigate(-1)}
+      className="inline-flex items-center gap-2 px-4 py-2 text-sm transition-colors cursor-pointer"
       style={{
         borderRadius: 999,
         background: 'rgba(255,255,255,0.07)',
@@ -549,6 +551,6 @@ export function BackButton() {
     >
       <ArrowRight className="w-3.5 h-3.5 rotate-180" />
       Back
-    </Link>
+    </button>
   )
 }
