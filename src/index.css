@@ -77,6 +77,8 @@ body {
   background-color: var(--bg);
   color: var(--text-primary);
   overflow-x: hidden;
+  /* Prevent pull-to-refresh on mobile (iOS Safari / Android Chrome) */
+  overscroll-behavior-y: contain;
 }
 
 /* Subtle noise texture — gives depth to dark surfaces */

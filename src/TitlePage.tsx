@@ -364,8 +364,8 @@ export function TitlePage() {
                 <img
                   src={logoUrl}
                   alt={title}
-                  className="max-h-24 w-auto object-contain drop-shadow-2xl sm:max-h-28"
-                  style={{ maxWidth: 360, alignSelf: 'flex-start' }}
+                  className="max-h-12 sm:max-h-20 w-auto object-contain drop-shadow-2xl"
+                  style={{ maxWidth: 300, alignSelf: 'flex-start' }}
                 />
               ) : (
                 <h1
@@ -832,7 +832,7 @@ function SeasonPanel({
       </div>
 
       {/* Episode list */}
-      <div className="grid gap-3 lg:grid-cols-2" style={{ maxHeight: 520, overflowY: 'auto', paddingRight: 4 }}>
+      <div className="grid gap-2 sm:gap-3 lg:grid-cols-2" style={{ maxHeight: 520, overflowY: 'auto', paddingRight: 4 }}>
         {filteredEpisodes.map((ep) => {
           const epKey = `${mediaType}-${id}-${activeSeason}-${ep.episode_number}`
           const isActive = ep.episode_number === activeEpisode
@@ -846,10 +846,9 @@ function SeasonPanel({
           return (
             <div
               key={ep.id}
-              className="text-left transition-all cursor-pointer"
+              className="text-left transition-all cursor-pointer p-2 sm:p-3"
               style={{
-                borderRadius: 14,
-                padding: 12,
+                borderRadius: 12,
                 background: isWatched
                   ? 'rgba(var(--accent-rgb,139,92,246),0.08)'
                   : isActive
@@ -869,11 +868,11 @@ function SeasonPanel({
               }}
               onClick={() => onEpisodeChange(ep.episode_number)}
             >
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 {/* Thumbnail */}
                 <div
                   className="shrink-0 overflow-hidden relative"
-                  style={{ width: 'clamp(72px, 20vw, 128px)', aspectRatio: '16/9', borderRadius: 8, background: 'rgba(255,255,255,0.06)' }}
+                  style={{ width: 'clamp(60px, 17vw, 128px)', aspectRatio: '16/9', borderRadius: 7, background: 'rgba(255,255,255,0.06)' }}
                 >
                   {ep.still_path ? (
                     <img src={imageUrl(ep.still_path, 'w342')} alt={ep.name} className="w-full h-full object-cover" loading="lazy" />
@@ -886,7 +885,7 @@ function SeasonPanel({
                   {/* Watched overlay on thumbnail */}
                   {isWatched && (
                     <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}>
-                      <CheckCircle2 className="w-6 h-6" style={{ color: 'var(--accent)' }} />
+                      <CheckCircle2 className="w-5 h-5" style={{ color: 'var(--accent)' }} />
                     </div>
                   )}
 
@@ -906,13 +905,13 @@ function SeasonPanel({
 
                 {/* Text content */}
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-[10px] uppercase tracking-widest shrink-0" style={{ color: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.35)' }}>
+                  <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                    <span className="text-[9px] sm:text-[10px] uppercase tracking-widest shrink-0" style={{ color: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.35)' }}>
                       E{ep.episode_number}
                     </span>
 
                     {/* Right-side meta: checkmark · progress · runtime */}
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                       {/* Mark-as-watched toggle — always visible, left of progress */}
                       <button
                         type="button"
@@ -920,14 +919,12 @@ function SeasonPanel({
                           e.stopPropagation()
                           onToggleWatched(epKey)
                           if (!isWatched) {
-                            // Marking as watched → record full runtime so stats pick it up
                             writeProgressEntry(epKey, (ep.runtime || defaultRuntime) * 60)
                           }
-                          // Unmarking: leave playback progress intact
                         }}
                         title={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
                         className="flex items-center justify-center transition-colors hover:opacity-80"
-                        style={{ color: isWatched ? 'var(--accent)' : 'rgba(255,255,255,0.25)' }}
+                        style={{ color: isWatched ? 'var(--accent)' : 'rgba(255,255,255,0.25)', minHeight: 0 }}
                       >
                         {isWatched
                           ? <CheckCircle2 className="w-3.5 h-3.5" />
@@ -936,19 +933,19 @@ function SeasonPanel({
                       </button>
 
                       {isWatched && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Watched</span>
+                        <span className="hidden sm:inline text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Watched</span>
                       )}
                       {!isWatched && hasProgress && (
                         <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
                           {Math.round(progressPercent)}%
                         </span>
                       )}
-                      {ep.runtime && <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{ep.runtime}m</span>}
+                      {ep.runtime && <span className="text-[9px] sm:text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{ep.runtime}m</span>}
                     </div>
                   </div>
 
-                  <div className="text-sm font-semibold text-white mb-1 truncate" style={{ opacity: isWatched ? 0.6 : 1 }}>{ep.name}</div>
-                  <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  <div className="text-xs sm:text-sm font-semibold text-white mb-0.5 truncate" style={{ opacity: isWatched ? 0.6 : 1 }}>{ep.name}</div>
+                  <p className="hidden sm:block text-xs leading-relaxed line-clamp-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
                     {ep.overview || 'No synopsis available.'}
                   </p>
                 </div>

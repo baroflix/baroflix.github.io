@@ -332,6 +332,7 @@ export function HomePage() {
                       style={{
                         width: index === activeIndex ? 28 : 10,
                         height: 10,
+                        minHeight: 0,
                         padding: 0,
                         border: 'none',
                         flexShrink: 0,
