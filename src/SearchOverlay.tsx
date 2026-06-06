@@ -34,7 +34,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
 
   const homeState = useHomeCatalog(urlQuery)
   const results = urlQuery.trim().length >= 2 ? homeState.searchResults : homeState.recommendations
-  const [filter, setFilter] = useState<'all' | 'movie' | 'tv'>('all')
+  const [filter, setFilter] = useState<'all' | 'movie' | 'tv' | 'anime'>('all')
   const [isFocused, setIsFocused] = useState(false)
   const location = useLocation()
   
@@ -193,19 +193,24 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
             transition={{ duration: 0.3, delay: 0.1 }}
             className="flex gap-2 px-7 pb-4 max-w-[1200px] mx-auto w-full justify-center"
           >
-            {(['all', 'movie', 'tv'] as const).map(f => (
+            {([
+              { key: 'all',   label: 'All' },
+              { key: 'movie', label: 'Movies' },
+              { key: 'tv',    label: 'TV Shows' },
+              { key: 'anime', label: 'Anime' },
+            ] as const).map(({ key, label }) => (
               <button
-                key={f}
+                key={key}
                 type="button"
-                onClick={() => setFilter(f)}
+                onClick={() => setFilter(key)}
                 className="px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-colors"
                 style={{
-                  background: filter === f ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
-                  color: filter === f ? '#fff' : 'rgba(255,255,255,0.5)',
-                  border: `1px solid ${filter === f ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}`
+                  background: filter === key ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
+                  color: filter === key ? '#fff' : 'rgba(255,255,255,0.5)',
+                  border: `1px solid ${filter === key ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}`
                 }}
               >
-                {f === 'all' ? 'All' : f === 'movie' ? 'Movies' : 'TV Shows'}
+                {label}
               </button>
             ))}
           </motion.div>
@@ -227,7 +232,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
               </p>
             ) : (
               <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, marginBottom: 16 }}>
-                Trending right now
+                {filter === 'anime' ? 'Trending anime' : 'Trending right now'}
               </p>
             )}
             <MediaGrid
