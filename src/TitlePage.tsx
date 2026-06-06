@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, Link, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, ArrowRight, Star, ArrowLeft, Bell, BellRing, Search, X, Plus } from 'lucide-react'
+import { Play, ArrowRight, Star, ArrowLeft, Bell, BellRing, Search, X, Plus, CheckCircle2, Circle } from 'lucide-react'
 import heroFallback from './assets/hero.png'
 import {
   buildVideasyUrl,
@@ -20,7 +20,7 @@ import { fetchJikanEpisodes } from './lib/jikan'
 import { fetchAnimeTmdbMeta, type AnimeTmdbMeta } from './lib/tmdb'
 import type { MediaDetails, SeasonDetails } from './types'
 import type { MediaKind } from './types'
-import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useReminders, useRatings } from './hooks'
+import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber, upsertHistory, THEME_PRESETS, useProgressStore, useWatchedEpisodes, useReminders, useRatings } from './hooks'
 import type { WatchHistoryEntry } from './hooks'
 import { STORAGE_KEYS } from './hooks'
 import { useAuth } from './context/AuthContext'
@@ -47,6 +47,7 @@ export function TitlePage() {
   const [history, setHistory] = useLocalStorageState<WatchHistoryEntry[]>(STORAGE_KEYS.history, [])
   const { settings } = useAuth()
   const progressStore = useProgressStore()
+  const [watchedEpisodes, toggleWatchedEpisode] = useWatchedEpisodes()
   const [reminders, setReminders] = useReminders()
   const [ratings, setRatings] = useRatings()
   
@@ -568,6 +569,8 @@ export function TitlePage() {
                 handlePlay(activeSeason, n)
               }}
               progressStore={progressStore}
+              watchedEpisodes={watchedEpisodes}
+              onToggleWatched={toggleWatchedEpisode}
               mediaType={mediaType}
               id={id}
             />
@@ -668,7 +671,8 @@ export function TitlePage() {
 // ─── SeasonPanel ─────────────────────────────────────────────────────────────
 
 function SeasonPanel({
-  details, activeSeason, activeEpisode, seasonDetails, onSeasonChange, onEpisodeChange, progressStore, mediaType, id
+  details, activeSeason, activeEpisode, seasonDetails, onSeasonChange, onEpisodeChange,
+  progressStore, watchedEpisodes, onToggleWatched, mediaType, id
 }: {
   details: MediaDetails | null
   activeSeason: number
@@ -677,6 +681,8 @@ function SeasonPanel({
   onSeasonChange: (n: number) => void
   onEpisodeChange: (n: number) => void
   progressStore: Record<string, number>
+  watchedEpisodes: Set<string>
+  onToggleWatched: (key: string) => void
   mediaType: string
   id: string
 }) {
@@ -693,9 +699,40 @@ function SeasonPanel({
     )
   }, [seasonDetails?.episodes, episodeQuery])
 
+  const allEpisodes = seasonDetails?.episodes ?? []
+  const seasonEpKeys = allEpisodes.map(ep => `${mediaType}-${id}-${activeSeason}-${ep.episode_number}`)
+  const allSeasonWatched = seasonEpKeys.length > 0 && seasonEpKeys.every(k => watchedEpisodes.has(k))
+
+  function markSeasonWatched() {
+    seasonEpKeys.forEach(k => { if (!watchedEpisodes.has(k)) onToggleWatched(k) })
+  }
+  function unmarkSeasonWatched() {
+    seasonEpKeys.forEach(k => { if (watchedEpisodes.has(k)) onToggleWatched(k) })
+  }
+
   return (
     <div>
-      <h2 className="text-lg font-semibold text-white mb-4">Episodes</h2>
+      {/* Header row: "Episodes" label + season-level watched button */}
+      <div className="flex items-center justify-between mb-4 gap-4">
+        <h2 className="text-lg font-semibold text-white">Episodes</h2>
+        {allEpisodes.length > 0 && (
+          <button
+            type="button"
+            onClick={allSeasonWatched ? unmarkSeasonWatched : markSeasonWatched}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0"
+            style={{
+              background: allSeasonWatched ? 'rgba(var(--accent-rgb,139,92,246),0.15)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${allSeasonWatched ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
+              color: allSeasonWatched ? 'var(--accent)' : 'rgba(255,255,255,0.55)',
+            }}
+          >
+            {allSeasonWatched
+              ? <><CheckCircle2 className="w-3.5 h-3.5" /> Season watched</>
+              : <><Circle className="w-3.5 h-3.5" /> Mark season watched</>
+            }
+          </button>
+        )}
+      </div>
 
       {/* Season tabs & Search bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
@@ -741,36 +778,46 @@ function SeasonPanel({
       {/* Episode list */}
       <div className="grid gap-3 lg:grid-cols-2" style={{ maxHeight: 520, overflowY: 'auto', paddingRight: 4 }}>
         {filteredEpisodes.map((ep) => {
+          const epKey = `${mediaType}-${id}-${activeSeason}-${ep.episode_number}`
           const isActive = ep.episode_number === activeEpisode
-          const watchedSeconds = progressStore[`${mediaType}-${id}-${activeSeason}-${ep.episode_number}`] || 0
+          const isWatched = watchedEpisodes.has(epKey)
+          const watchedSeconds = progressStore[epKey] || 0
           const runtimeMinutes = ep.runtime || (mediaType === 'anime' ? 24 : 45)
           const pct = (watchedSeconds / (runtimeMinutes * 60)) * 100
           const progressPercent = Math.min(100, pct)
           const hasProgress = watchedSeconds > 0
 
           return (
-            <button
+            <div
               key={ep.id}
-              type="button"
-              onClick={() => onEpisodeChange(ep.episode_number)}
-              className="text-left transition-all"
+              className="relative text-left transition-all group/ep"
               style={{
                 borderRadius: 14,
                 padding: 12,
-                background: isActive
-                  ? 'var(--accent-dim)'
-                  : hasProgress
-                    ? 'rgba(var(--accent-rgb, 139,92,246),0.06)'
-                    : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${
-                  isActive
-                    ? 'var(--accent)'
+                background: isWatched
+                  ? 'rgba(var(--accent-rgb,139,92,246),0.08)'
+                  : isActive
+                    ? 'var(--accent-dim)'
                     : hasProgress
-                      ? 'rgba(var(--accent-rgb, 139,92,246),0.2)'
-                      : 'rgba(255,255,255,0.07)'
+                      ? 'rgba(var(--accent-rgb, 139,92,246),0.06)'
+                      : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${
+                  isWatched
+                    ? 'rgba(var(--accent-rgb,139,92,246),0.3)'
+                    : isActive
+                      ? 'var(--accent)'
+                      : hasProgress
+                        ? 'rgba(var(--accent-rgb, 139,92,246),0.2)'
+                        : 'rgba(255,255,255,0.07)'
                 }`,
               }}
             >
+              {/* Clickable play area */}
+              <button
+                type="button"
+                onClick={() => onEpisodeChange(ep.episode_number)}
+                className="text-left w-full"
+              >
               <div className="flex gap-3">
                 <div
                   className="shrink-0 overflow-hidden relative"
@@ -784,7 +831,14 @@ function SeasonPanel({
                     </div>
                   )}
 
-                  {hasProgress && (
+                  {/* Watched overlay on thumbnail */}
+                  {isWatched && (
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}>
+                      <CheckCircle2 className="w-6 h-6" style={{ color: 'var(--accent)' }} />
+                    </div>
+                  )}
+
+                  {hasProgress && !isWatched && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
                       <div
                         className="h-full rounded-full transition-all"
@@ -803,7 +857,10 @@ function SeasonPanel({
                       E{ep.episode_number}
                     </span>
                     <div className="flex items-center gap-2">
-                      {hasProgress && (
+                      {isWatched && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Watched</span>
+                      )}
+                      {!isWatched && hasProgress && (
                         <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
                           {Math.round(progressPercent)}%
                         </span>
@@ -811,14 +868,29 @@ function SeasonPanel({
                       {ep.runtime && <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{ep.runtime}m</span>}
                     </div>
                   </div>
-                  <div className="text-sm font-semibold text-white mb-1 truncate">{ep.name}</div>
+                  <div className="text-sm font-semibold text-white mb-1 truncate" style={{ opacity: isWatched ? 0.6 : 1 }}>{ep.name}</div>
 
                   <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
                     {ep.overview || 'No synopsis available.'}
                   </p>
                 </div>
               </div>
-            </button>
+              </button>
+
+              {/* Mark-as-watched toggle — absolute top-right */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onToggleWatched(epKey) }}
+                title={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
+                className="absolute top-2 right-2 transition-all opacity-0 group-hover/ep:opacity-100 focus:opacity-100"
+                style={{ color: isWatched ? 'var(--accent)' : 'rgba(255,255,255,0.35)' }}
+              >
+                {isWatched
+                  ? <CheckCircle2 className="w-4 h-4" />
+                  : <Circle className="w-4 h-4" />
+                }
+              </button>
+            </div>
           )
         })}
         {filteredEpisodes.length === 0 && (seasonDetails?.episodes ?? []).length > 0 && (

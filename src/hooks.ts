@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import type { MediaDetails, MediaItem, MediaKind, CollectionDetails } from './types'
 import {
   fetchRecommendations,
@@ -91,6 +91,7 @@ export const STORAGE_KEYS = {
   reminders: 'baroflix.reminders',
   ratings: 'baroflix.ratings',
   customLists: 'baroflix.custom_lists',
+  watchedEpisodes: 'baroflix.watched_episodes',
 } as const
 
 export const THEME_PRESETS: Record<ThemeId, { label: string; accent: string; glow: string; surface: string }> = {
@@ -211,6 +212,20 @@ export function useProgressStore() {
   }, [setProgress])
 
   return progress
+}
+
+/**
+ * Tracks manually-marked-as-watched episodes.
+ * Key format: "${mediaType}-${id}-${season}-${episodeNumber}"
+ * Returns [watchedSet, toggle(key)]
+ */
+export function useWatchedEpisodes() {
+  const [watched, setWatched] = useLocalStorageState<string[]>(STORAGE_KEYS.watchedEpisodes, [])
+  const watchedSet = useMemo(() => new Set(watched), [watched])
+  const toggle = useCallback((key: string) => {
+    setWatched(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+  }, [setWatched])
+  return [watchedSet, toggle] as const
 }
 
 export function useReminders() {
