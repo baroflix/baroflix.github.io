@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, Link, useParams, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Play, ArrowRight, Star, ArrowLeft, Bell, BellRing, Search, X, Plus } from 'lucide-react'
 import heroFallback from './assets/hero.png'
 import {
@@ -58,6 +58,7 @@ export function TitlePage() {
   const [animeStreamingEps, setAnimeStreamingEps] = useState<AnilistStreamingEpisode[]>([])
   const [jikanEpisodes, setJikanEpisodes] = useState<{ mal_id: number; title: string | null }[]>([])
   const [animeTmdbMeta, setAnimeTmdbMeta] = useState<AnimeTmdbMeta>({ logos: [], episodeOverviews: new Map(), episodeStills: new Map() })
+  const [posterOpen, setPosterOpen] = useState(false)
 
   const historyEntry = useMemo(() => history.find(h => h.mediaType === mediaType && h.id === Number(id)), [history, mediaType, id])
 
@@ -173,6 +174,7 @@ export function TitlePage() {
   const title = details ? titleFromItem(details) : 'Loading…'
   const backdropSrc = imageUrl(details?.backdrop_path, 'w1280') || heroFallback
   const posterSrc = imageUrl(details?.poster_path, 'w780') || heroFallback
+  const posterOriginalSrc = imageUrl(details?.poster_path, 'original') || posterSrc
   const trailer = pickTrailer(details?.videos)
   const cast = (details?.credits?.cast ?? []).slice(0, 12)
   const activeSeason = selectedSeason ?? 1
@@ -267,6 +269,14 @@ export function TitlePage() {
       document.title = 'baroflix';
     };
   }, []);
+
+  // Close poster lightbox on Escape
+  useEffect(() => {
+    if (!posterOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setPosterOpen(false) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [posterOpen]);
 
   return (
     <>
@@ -510,21 +520,25 @@ export function TitlePage() {
             </div>
 
             {/* ── Right: poster ─────────────────────────────────────────── */}
-            <div
-              className="hidden sm:block shrink-0 self-center overflow-hidden shadow-2xl"
+            <button
+              className="hidden sm:block shrink-0 self-center overflow-hidden shadow-2xl cursor-pointer group focus:outline-none"
               style={{
                 width: 180,
                 aspectRatio: '2/3',
                 borderRadius: 14,
                 border: '1px solid rgba(255,255,255,0.12)',
+                background: 'transparent',
+                padding: 0,
               }}
+              onClick={() => details && setPosterOpen(true)}
+              aria-label="View full poster"
             >
               <img
                 src={posterSrc}
                 alt={title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-            </div>
+            </button>
           </div>
         </motion.div>
 
@@ -609,6 +623,43 @@ export function TitlePage() {
           {id && <CommentsSection movieId={id} />}
         </div>
       </div>
+
+      {/* ── Poster lightbox ────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {posterOpen && (
+          <motion.div
+            key="poster-lightbox"
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setPosterOpen(false)}
+            style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
+          >
+            {/* Close button */}
+            <button
+              className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors z-10"
+              onClick={() => setPosterOpen(false)}
+              aria-label="Close poster"
+            >
+              <X size={28} />
+            </button>
+
+            <motion.img
+              src={posterOriginalSrc}
+              alt={title}
+              className="max-h-[90dvh] w-auto object-contain shadow-2xl"
+              style={{ borderRadius: 16, maxWidth: '90vw' }}
+              initial={{ scale: 0.88, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.88, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

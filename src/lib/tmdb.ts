@@ -93,7 +93,7 @@ export function yearFromItem(item: MediaItem) {
   return date ? new Date(date).getFullYear() : null
 }
 
-export function imageUrl(path: string | null | undefined, size: 'w342' | 'w500' | 'w780' | 'w1280' = 'w780') {
+export function imageUrl(path: string | null | undefined, size: 'w342' | 'w500' | 'w780' | 'w1280' | 'original' = 'w780') {
   if (!path) {
     return ''
   }
