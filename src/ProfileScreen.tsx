@@ -1,16 +1,13 @@
 import { useState, type FormEvent, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, User, Image, Save, CheckCircle, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, User, Image, Save, CheckCircle, AlertTriangle, Palette, Languages, Monitor } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
 import { supabase, type Profile } from './lib/supabase'
+import { THEME_PRESETS } from './hooks'
+import type { ThemeId } from './hooks'
 
-// ─────────────────────────────────────────────────────────────
-// ProfileScreen
-// Lets the signed-in user view and update their username and
-// avatar URL. Saves to public.profiles via upsert.
-// ─────────────────────────────────────────────────────────────
 export function ProfileScreen() {
-  const { session, profile: contextProfile, signOut } = useAuth()
+  const { session, profile: contextProfile, signOut, settings, updateSettings } = useAuth()
 
   const [username, setUsername] = useState(contextProfile?.username ?? '')
   const [avatarUrl, setAvatarUrl] = useState(contextProfile?.avatar_url ?? '')
@@ -19,7 +16,6 @@ export function ProfileScreen() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
-  // Sync form if context profile loads after mount
   useEffect(() => {
     if (contextProfile) {
       setUsername(contextProfile.username ?? '')
@@ -53,7 +49,6 @@ export function ProfileScreen() {
     } else {
       setStatus('success')
       setSavedProfile(data as Profile)
-      // Auto-clear success banner
       setTimeout(() => setStatus('idle'), 3000)
     }
   }
@@ -66,251 +61,195 @@ export function ProfileScreen() {
     )
   }
 
-  const displayName =
-    savedProfile?.username || session.user.email?.split('@')[0] || 'User'
+  const displayName = savedProfile?.username || session.user.email?.split('@')[0] || 'User'
+  const theme = THEME_PRESETS[settings.theme]
 
   return (
     <div className="min-h-screen pt-20 sm:pt-24 px-4 sm:px-6 pb-16">
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg mx-auto space-y-6">
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+        <div className="flex items-center gap-4 mb-2">
           <Link
             to="/"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(255,255,255,0.7)',
-              textDecoration: 'none',
-              flexShrink: 0,
-            }}
+            className="flex items-center justify-center w-9 h-9 rounded-full transition-colors shrink-0"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
           >
             <ArrowLeft size={16} />
           </Link>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.03em' }}>
-              Profile
-            </h1>
-            <p style={{ margin: 0, marginTop: 2, fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
-              {session.user.email}
-            </p>
+            <h1 className="text-2xl font-semibold text-white tracking-tight">Profile & Settings</h1>
+            <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{session.user.email}</p>
           </div>
         </div>
 
         {/* Avatar preview */}
         <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1.25rem',
-            marginBottom: '2rem',
-            padding: '1.25rem',
-            borderRadius: 16,
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
-          }}
+          className="flex items-center gap-5 p-5"
+          style={{ borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
         >
           <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
-              overflow: 'hidden',
-              background: 'rgba(255,255,255,0.08)',
-              border: '2px solid rgba(255,255,255,0.12)',
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className="shrink-0 flex items-center justify-center overflow-hidden"
+            style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(255,255,255,0.12)' }}
           >
             {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={displayName}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).style.display = 'none'
-                }}
-              />
+              <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             ) : (
               <User size={28} style={{ color: 'rgba(255,255,255,0.3)' }} />
             )}
           </div>
           <div>
-            <div style={{ fontWeight: 600, color: 'white', fontSize: '1rem' }}>{displayName}</div>
-            <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+            <div className="font-semibold text-white text-base">{displayName}</div>
+            <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
               Member since{' '}
-              {new Date(session.user.created_at).toLocaleDateString(undefined, {
-                year: 'numeric',
-                month: 'long',
-              })}
+              {new Date(session.user.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}
             </div>
           </div>
         </div>
 
         {/* Status banners */}
         {status === 'success' && (
-          <div
-            style={{
-              marginBottom: '1rem',
-              padding: '0.75rem 1rem',
-              borderRadius: 10,
-              background: 'rgba(34,197,94,0.1)',
-              border: '1px solid rgba(34,197,94,0.3)',
-              display: 'flex',
-              gap: '0.5rem',
-              alignItems: 'center',
-            }}
-          >
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl"
+            style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)' }}>
             <CheckCircle size={15} style={{ color: '#4ade80', flexShrink: 0 }} />
-            <span style={{ color: '#86efac', fontSize: '0.85rem' }}>Profile saved successfully.</span>
+            <span className="text-sm" style={{ color: '#86efac' }}>Profile saved successfully.</span>
           </div>
         )}
         {status === 'error' && (
-          <div
-            style={{
-              marginBottom: '1rem',
-              padding: '0.75rem 1rem',
-              borderRadius: 10,
-              background: 'rgba(239,68,68,0.1)',
-              border: '1px solid rgba(239,68,68,0.3)',
-              display: 'flex',
-              gap: '0.5rem',
-              alignItems: 'center',
-            }}
-          >
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl"
+            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
             <AlertTriangle size={15} style={{ color: '#f87171', flexShrink: 0 }} />
-            <span style={{ color: '#fca5a5', fontSize: '0.85rem' }}>{errorMsg}</span>
+            <span className="text-sm" style={{ color: '#fca5a5' }}>{errorMsg}</span>
           </div>
         )}
 
-        {/* Form */}
-        <form
-          onSubmit={handleSave}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            padding: '1.5rem',
-            borderRadius: 20,
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
-          }}
-        >
-          {/* Username */}
+        {/* Profile form */}
+        <form onSubmit={handleSave} className="flex flex-col gap-4 p-5"
+          style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
           <div>
-            <label
-              htmlFor="profile-username"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem' }}
-            >
-              <User size={13} />
-              Username
+            <label htmlFor="profile-username" className="flex items-center gap-1.5 text-xs mb-1.5"
+              style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <User size={13} /> Username
             </label>
-            <input
-              id="profile-username"
-              type="text"
-              value={username}
+            <input id="profile-username" type="text" value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter a display name"
-              maxLength={50}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                padding: '0.625rem 0.875rem',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 10,
-                color: 'white',
-                fontSize: '0.9rem',
-                outline: 'none',
-              }}
-            />
+              placeholder="Enter a display name" maxLength={50}
+              className="w-full px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, boxSizing: 'border-box' }} />
           </div>
 
-          {/* Avatar URL */}
           <div>
-            <label
-              htmlFor="profile-avatar"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem' }}
-            >
-              <Image size={13} />
-              Avatar URL
+            <label htmlFor="profile-avatar" className="flex items-center gap-1.5 text-xs mb-1.5"
+              style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <Image size={13} /> Avatar URL
             </label>
-            <input
-              id="profile-avatar"
-              type="url"
-              value={avatarUrl}
+            <input id="profile-avatar" type="url" value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
               placeholder="https://…"
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                padding: '0.625rem 0.875rem',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 10,
-                color: 'white',
-                fontSize: '0.9rem',
-                outline: 'none',
-              }}
-            />
+              className="w-full px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, boxSizing: 'border-box' }} />
           </div>
 
-          <button
-            id="profile-save-btn"
-            type="submit"
-            disabled={saving}
-            style={{
-              marginTop: '0.25rem',
-              padding: '0.65rem',
-              borderRadius: 10,
-              border: 'none',
-              background: 'var(--accent, #8b5cf6)',
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              opacity: saving ? 0.6 : 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              transition: 'opacity 0.2s',
-            }}
-          >
+          <button id="profile-save-btn" type="submit" disabled={saving}
+            className="flex items-center justify-center gap-2 mt-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity"
+            style={{ background: 'var(--accent)', opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>
             <Save size={15} />
             {saving ? 'Saving…' : 'Save changes'}
           </button>
         </form>
 
+        {/* ── Theme ──────────────────────────────────────────────────────────── */}
+        <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          {/* Live preview strip */}
+          <div className="flex items-center gap-3 mb-5 p-3 rounded-xl"
+            style={{
+              background: theme.glow.replace(/0\.(35|30|28)/, '0.10'),
+              border: `1px solid ${theme.glow.replace(/0\.(35|30|28)/, '0.18')}`,
+            }}>
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
+              style={{ background: theme.glow.replace(/0\.(35|30|28)/, '0.15'), color: theme.accent }}>
+              <Monitor className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-white flex items-center gap-2">
+                <Palette className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+                Theme
+              </div>
+              <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                Active: <span style={{ color: theme.accent }}>{theme.label}</span>
+              </div>
+            </div>
+            <div className="w-6 h-6 rounded-full shrink-0 animate-pulse-glow"
+              style={{ background: theme.accent, boxShadow: `0 0 12px ${theme.glow}` }} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {Object.entries(THEME_PRESETS).map(([id, preset]) => {
+              const isActive = settings.theme === id
+              return (
+                <button key={id} type="button" onClick={() => updateSettings({ theme: id as ThemeId })}
+                  className="text-left p-4 transition-all"
+                  style={{
+                    borderRadius: 14,
+                    background: isActive ? preset.glow.replace(/0\.(35|30|28)/, '0.10') : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${isActive ? preset.glow.replace(/0\.(35|30|28)/, '0.38') : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: isActive ? `0 0 24px ${preset.glow}` : 'none',
+                  }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-white">{preset.label}</span>
+                    {isActive && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                        style={{ background: preset.glow.replace(/0\.(35|30|28)/, '0.15'), color: preset.accent }}>
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <div className="h-2 rounded-full" style={{ background: preset.accent }} />
+                  <div className="h-1 rounded-full mt-1.5 opacity-40" style={{ background: preset.glow }} />
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* ── Language ───────────────────────────────────────────────────────── */}
+        <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center gap-2 mb-5">
+            <Languages className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+            <h2 className="text-base font-semibold text-white">Language</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {(['en', 'pl'] as const).map(lang => {
+              const isActive = settings.language === lang
+              return (
+                <button key={lang} type="button" onClick={() => updateSettings({ language: lang })}
+                  className="p-4 text-left transition-all"
+                  style={{
+                    borderRadius: 14,
+                    background: isActive ? theme.glow.replace(/0\.(35|30|28)/, '0.10') : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${isActive ? theme.accent + '60' : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: isActive ? `0 0 24px ${theme.glow}` : 'none',
+                  }}>
+                  <div className="font-semibold text-white">{lang === 'en' ? 'English' : 'Polski'}</div>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
         {/* Sign out */}
-        <button
-          id="profile-signout-btn"
-          type="button"
-          onClick={() => signOut()}
+        <button id="profile-signout-btn" type="button" onClick={() => signOut()}
+          className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors"
           style={{
-            marginTop: '1rem',
-            width: '100%',
-            padding: '0.65rem',
-            borderRadius: 10,
             border: '1px solid rgba(239,68,68,0.25)',
             background: 'rgba(239,68,68,0.07)',
             color: '#fca5a5',
-            fontWeight: 500,
-            fontSize: '0.875rem',
             cursor: 'pointer',
-            transition: 'background 0.2s',
-          }}
-        >
+          }}>
           Sign out
         </button>
+
       </div>
     </div>
   )

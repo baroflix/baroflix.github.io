@@ -1,5 +1,5 @@
 import { Link, useLocation, Outlet } from 'react-router-dom'
-import { Settings as SettingsIcon, User, Menu, X, Library } from 'lucide-react'
+import { User, Menu, X, Library } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { THEME_PRESETS, useScrollDirection } from './hooks'
@@ -120,20 +120,8 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             )}
             {/* Search — always visible */}
             <HomeSearchToggle />
-            {/* Settings + Collections + Profile — desktop only */}
+            {/* Collections + Profile — desktop only */}
             <div className="hidden lg:flex items-center gap-2">
-              <Link
-                to="/settings"
-                className="flex items-center justify-center w-9 h-9 rounded-full transition-colors"
-                style={{
-                  background: isActive('/settings') ? 'var(--accent-dim)' : 'rgba(255,255,255,0.08)',
-                  border: `1px solid ${isActive('/settings') ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
-                  color: isActive('/settings') ? 'var(--accent)' : 'rgba(255,255,255,0.7)',
-                }}
-                aria-label="Settings"
-              >
-                <SettingsIcon className="w-4 h-4" />
-              </Link>
               <Link
                 to="/collections"
                 className="flex items-center justify-center w-9 h-9 rounded-full transition-colors"
@@ -212,19 +200,6 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
 
           {/* Divider */}
           <div className="my-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
-
-          {/* Settings */}
-          <Link
-            to="/settings"
-            className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl"
-            style={{
-              color: isActive('/settings') ? '#fff' : 'rgba(255,255,255,0.6)',
-              background: isActive('/settings') ? 'rgba(255,255,255,0.07)' : 'transparent',
-            }}
-          >
-            <SettingsIcon className="w-4 h-4 shrink-0" />
-            Settings
-          </Link>
 
           {/* Collections */}
           <Link

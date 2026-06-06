@@ -8,7 +8,6 @@ import { BrowsePage } from './BrowsePage'
 import { StatsPage } from './StatsPage'
 import { NetworkPage } from './NetworkPage'
 import { CollectionPage } from './CollectionPage'
-import { SettingsPage } from './SettingsPage'
 import { AuthScreen } from './AuthScreen'
 import { TvLoginScreen } from './TvLoginScreen'
 import { ProfileScreen } from './ProfileScreen'
@@ -27,7 +26,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 }
 
 function App() {
-  const { settings, updateSettings } = useAuth()
+  const { settings } = useAuth()
   const { pathname } = useLocation()
 
   useEffect(() => {
@@ -60,7 +59,7 @@ function App() {
         <Route path="/network/:id" element={<NetworkPage />} />
         <Route path="/collection/:id" element={<CollectionPage />} />
         <Route path="/collections" element={<CollectionsPage />} />
-        <Route path="/settings" element={<SettingsPage settings={settings} onChange={updateSettings} />} />
+        <Route path="/settings" element={<Navigate replace to="/profile" />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/sports" element={<SportsPage />} />
         <Route path="/download" element={<DownloadPage />} />
