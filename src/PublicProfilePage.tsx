@@ -426,54 +426,56 @@ export function PublicProfilePage() {
     : null
 
   return (
-    <div className="min-h-screen" style={{ paddingBottom: 80 }}>
+    <div className="min-h-screen" style={{ paddingTop: 68, paddingBottom: 80 }}>
 
       {/* ── Banner ──────────────────────────────────────────────────────────── */}
-      <div style={{
-        position: 'relative', width: '100%', height: 220, overflow: 'hidden',
-        background: profile.banner_url
-          ? undefined
-          : `linear-gradient(135deg, ${theme.glow.replace(/[\d.]+\)$/, '0.4)')}, ${theme.glow.replace(/[\d.]+\)$/, '0.05)')})`,
-      }}>
-        {profile.banner_url && (
-          <img src={profile.banner_url} alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-        )}
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 16px' }}>
         <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(to bottom, rgba(8,8,8,0.1) 0%, rgba(8,8,8,0.7) 100%)',
-        }} />
+          position: 'relative', height: 220, overflow: 'hidden', borderRadius: 16,
+          background: profile.banner_url
+            ? undefined
+            : `linear-gradient(135deg, ${theme.glow.replace(/[\d.]+\)$/, '0.4)')}, ${theme.glow.replace(/[\d.]+\)$/, '0.05)')})`,
+        }}>
+          {profile.banner_url && (
+            <img src={profile.banner_url} alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          )}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to bottom, rgba(8,8,8,0.1) 0%, rgba(8,8,8,0.7) 100%)',
+          }} />
 
-        {/* Back */}
-        <button type="button" onClick={() => navigate(-1)} className="no-bg-hover"
-          style={{
-            position: 'absolute', top: 60, left: 16,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)',
-            color: 'rgba(255,255,255,0.8)', cursor: 'pointer', zIndex: 2,
-          }}>
-          <ArrowLeft size={15} />
-        </button>
-
-        {/* Edit own profile */}
-        {isOwnProfile && (
-          <Link to="/profile" className="no-bg-hover"
+          {/* Back */}
+          <button type="button" onClick={() => navigate(-1)} className="no-bg-hover"
             style={{
-              position: 'absolute', top: 60, right: 16,
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 12px', borderRadius: 20,
+              position: 'absolute', top: 14, left: 14,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 36, height: 36, borderRadius: '50%',
               background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)',
-              color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 600,
-              textDecoration: 'none', zIndex: 2,
+              color: 'rgba(255,255,255,0.8)', cursor: 'pointer', zIndex: 2,
             }}>
-            Edit profile
-          </Link>
-        )}
+            <ArrowLeft size={15} />
+          </button>
+
+          {/* Edit own profile */}
+          {isOwnProfile && (
+            <Link to="/profile" className="no-bg-hover"
+              style={{
+                position: 'absolute', top: 14, right: 14,
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 20,
+                background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)',
+                color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 600,
+                textDecoration: 'none', zIndex: 2,
+              }}>
+              Edit profile
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* ── Main content ─────────────────────────────────────────────────────── */}
-      <div className="max-w-2xl mx-auto px-4">
+      <div className="max-w-2xl mx-auto px-4" style={{ position: 'relative', zIndex: 1 }}>
 
         {/* ── Avatar + identity ─────────────────────────────────────────────── */}
         <div style={{ marginTop: -44, marginBottom: 20 }}>
@@ -533,6 +535,13 @@ export function PublicProfilePage() {
                   Joined {memberSince}
                 </span>
               )}
+              <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%', display: 'inline-block', flexShrink: 0,
+                  background: theme.accent, boxShadow: `0 0 5px ${theme.glow}`,
+                }} />
+                <span style={{ color: theme.accent, fontWeight: 600 }}>{theme.label}</span>
+              </span>
             </div>
           </div>
 
@@ -601,25 +610,6 @@ export function PublicProfilePage() {
             </p>
           </section>
         )}
-
-        {/* ── Theme ───────────────────────────────────────────────────────── */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '12px 16px', borderRadius: 12,
-          background: theme.glow.replace(/[\d.]+\)$/, '0.08)'),
-          border: `1px solid ${theme.glow.replace(/[\d.]+\)$/, '0.2)')}`,
-          marginBottom: 20,
-        }}>
-          <div style={{
-            width: 16, height: 16, borderRadius: '50%', background: theme.accent,
-            boxShadow: `0 0 8px ${theme.glow}`, flexShrink: 0,
-          }} />
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontFamily: 'Inter, sans-serif' }}>
-            Using the{' '}
-            <span style={{ color: theme.accent, fontWeight: 600 }}>{theme.label}</span>
-            {' '}theme
-          </span>
-        </div>
 
         {/* ── Pinned Favorites ─────────────────────────────────────────────── */}
         {pinnedItems.length > 0 && (
