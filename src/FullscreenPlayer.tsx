@@ -264,6 +264,31 @@ export function FullscreenPlayer({
                 gap: 12,
               }}
             >
+              {onNextEpisode && (
+                <button
+                  type="button"
+                  onClick={onNextEpisode}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0 14px',
+                    height: 36,
+                    borderRadius: 18,
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    flexShrink: 0,
+                    fontFamily: 'Inter, sans-serif',
+                  }}
+                >
+                  <SkipForward style={{ width: 14, height: 14 }} />
+                  Next Episode
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onClose}
@@ -316,54 +341,6 @@ export function FullscreenPlayer({
           referrerPolicy="strict-origin-when-cross-origin"
         />
 
-        {/* ── Bottom bar — Next Episode ─────────────────────────────── */}
-        <AnimatePresence>
-          {showControls && onNextEpisode && (
-            <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ opacity: 0, transition: { duration: 0.2 } }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                position: 'absolute',
-                bottom: 0, left: 0, right: 0,
-                padding: '40px 20px 16px',
-                background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%)',
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'flex-end',
-                zIndex: 10,
-                pointerEvents: 'none',
-              }}
-            >
-              <button
-                type="button"
-                onClick={onNextEpisode}
-                style={{
-                  pointerEvents: 'auto',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '10px 20px',
-                  borderRadius: 24,
-                  background: 'rgba(255,255,255,0.18)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  color: '#fff',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  letterSpacing: '0.01em',
-                  fontFamily: 'Inter, sans-serif',
-                }}
-              >
-                <SkipForward style={{ width: 16, height: 16 }} />
-                Next Episode
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   )
