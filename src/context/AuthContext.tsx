@@ -68,7 +68,7 @@ async function assertEmailAllowed(email: string): Promise<void> {
 async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url, theme, language, watch_history, watch_progress, watchlist, ratings, custom_lists, visit_count, updated_at')
+    .select('id, username, avatar_url, theme, language, watch_history, watch_progress, watchlist, ratings, custom_lists, visit_count, updated_at, full_name, country, banner_url, bio, is_public, pinned_items, created_at')
     .eq('id', userId)
     .maybeSingle()
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { User, Send, MessageSquare, Trash2 } from 'lucide-react'
-import { supabase, type Comment } from '../lib/supabase'
+import { Link } from 'react-router-dom'
+import { supabase, type Comment, BADGE_CONFIG, getHighestBadge } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
 // ─────────────────────────────────────────────────────────────
@@ -16,6 +17,9 @@ function timeAgo(dateStr: string): string {
   const days = Math.floor(hrs / 24)
   return `${days}d ago`
 }
+
+const COMMENT_SELECT =
+  'id, movie_id, user_id, content, created_at, profiles(username, avatar_url, user_badges(badge_type, awarded_at))'
 
 // ─────────────────────────────────────────────────────────────
 // CommentsSection
@@ -42,7 +46,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
       setLoading(true)
       const { data } = await supabase
         .from('comments')
-        .select('id, movie_id, user_id, content, created_at, profiles(username, avatar_url)')
+        .select(COMMENT_SELECT)
         .eq('movie_id', movieId)
         .order('created_at', { ascending: true })
 
@@ -69,16 +73,14 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
           filter: `movie_id=eq.${movieId}`,
         },
         async (payload) => {
-          // Fetch the full row with joined profile data
           const { data } = await supabase
             .from('comments')
-            .select('id, movie_id, user_id, content, created_at, profiles(username, avatar_url)')
+            .select(COMMENT_SELECT)
             .eq('id', payload.new.id)
             .single()
 
           if (data) {
             setComments((prev) => {
-              // Prevent duplication if already optimistically added
               if (prev.some((c) => c.id === data.id)) return prev
               return [...prev, data as unknown as Comment]
             })
@@ -129,7 +131,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
         user_id: session.user.id,
         content: content.trim(),
       })
-      .select('id, movie_id, user_id, content, created_at, profiles(username, avatar_url)')
+      .select(COMMENT_SELECT)
       .single()
 
     setSubmitting(false)
@@ -149,7 +151,6 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
   // ── Delete own comment ──────────────────────────────────────
   async function handleDelete(commentId: string) {
     await supabase.from('comments').delete().eq('id', commentId)
-    // Optimistic — real-time listener will remove it from state
     setComments((prev) => prev.filter((c) => c.id !== commentId))
   }
 
@@ -167,29 +168,16 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
       }}
     >
       {/* Section heading */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          marginBottom: '1.25rem',
-        }}
-      >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
         <MessageSquare size={16} style={{ color: 'var(--accent, #8b5cf6)' }} />
         <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: 'white' }}>
           Comments
         </h2>
         {!loading && (
-          <span
-            style={{
-              marginLeft: 4,
-              fontSize: '0.75rem',
-              color: 'rgba(255,255,255,0.35)',
-              background: 'rgba(255,255,255,0.06)',
-              padding: '1px 8px',
-              borderRadius: 99,
-            }}
-          >
+          <span style={{
+            marginLeft: 4, fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)',
+            background: 'rgba(255,255,255,0.06)', padding: '1px 8px', borderRadius: 99,
+          }}>
             {comments.length}
           </span>
         )}
@@ -201,14 +189,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
           Loading comments…
         </div>
       ) : comments.length === 0 ? (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '2rem 0',
-            color: 'rgba(255,255,255,0.25)',
-            fontSize: '0.85rem',
-          }}
-        >
+        <div style={{ textAlign: 'center', padding: '2rem 0', color: 'rgba(255,255,255,0.25)', fontSize: '0.85rem' }}>
           No comments yet. Be the first!
         </div>
       ) : (
@@ -217,6 +198,9 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
             const author = comment.profiles
             const isOwn = session?.user.id === comment.user_id
             const displayName = author?.username || 'Anonymous'
+            const badges = author?.user_badges ?? []
+            const highestBadge = getHighestBadge(badges)
+            const badgeCfg = highestBadge ? BADGE_CONFIG[highestBadge] : null
 
             return (
               <div
@@ -227,33 +211,20 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
                   alignItems: 'flex-start',
                   padding: '0.875rem',
                   borderRadius: 12,
-                  background: isOwn
-                    ? 'rgba(var(--accent-rgb, 139,92,246),0.07)'
-                    : 'rgba(255,255,255,0.03)',
+                  background: isOwn ? 'rgba(var(--accent-rgb, 139,92,246),0.07)' : 'rgba(255,255,255,0.03)',
                   border: `1px solid ${isOwn ? 'rgba(var(--accent-rgb,139,92,246),0.2)' : 'rgba(255,255,255,0.05)'}`,
                 }}
               >
-                {/* Avatar */}
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
+                {/* Avatar (links to profile if username exists) */}
+                <div style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+                  overflow: 'hidden', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
                   {author?.avatar_url ? (
-                    <img
-                      src={author.avatar_url}
-                      alt={displayName}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    <img src={author.avatar_url} alt={displayName}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <User size={16} style={{ color: 'rgba(255,255,255,0.3)' }} />
                   )}
@@ -261,31 +232,44 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
 
                 {/* Body */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      marginBottom: '0.25rem',
-                    }}
-                  >
-                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'white' }}>
-                      {displayName}
-                    </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
+                    {/* Username — links to public profile if available */}
+                    {author?.username ? (
+                      <Link
+                        to={`/user/${author.username}`}
+                        style={{ fontSize: '0.82rem', fontWeight: 600, color: 'white', textDecoration: 'none' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--accent)' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'white' }}
+                      >
+                        {displayName}
+                      </Link>
+                    ) : (
+                      <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'white' }}>
+                        {displayName}
+                      </span>
+                    )}
+
+                    {/* Highest badge pill */}
+                    {badgeCfg && (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 3,
+                        padding: '1px 6px', borderRadius: 999,
+                        background: badgeCfg.bg, border: `1px solid ${badgeCfg.border}`,
+                        color: badgeCfg.color, fontSize: 10, fontWeight: 600, lineHeight: 1.5,
+                      }}>
+                        <span style={{ fontSize: 11 }}>{badgeCfg.emoji}</span>
+                        {badgeCfg.label}
+                      </span>
+                    )}
+
                     <span style={{ fontSize: '0.73rem', color: 'rgba(255,255,255,0.3)' }}>
                       {timeAgo(comment.created_at)}
                     </span>
                   </div>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: '0.875rem',
-                      color: 'rgba(255,255,255,0.8)',
-                      lineHeight: 1.55,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                    }}
-                  >
+                  <p style={{
+                    margin: 0, fontSize: '0.875rem', color: 'rgba(255,255,255,0.8)',
+                    lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  }}>
                     {comment.content}
                   </p>
                 </div>
@@ -297,16 +281,9 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
                     aria-label="Delete comment"
                     onClick={() => handleDelete(comment.id)}
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'rgba(255,255,255,0.2)',
-                      padding: 4,
-                      borderRadius: 6,
-                      flexShrink: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      transition: 'color 0.15s',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'rgba(255,255,255,0.2)', padding: 4, borderRadius: 6,
+                      flexShrink: 0, display: 'flex', alignItems: 'center', transition: 'color 0.15s',
                     }}
                     onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = '#f87171')}
                     onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.2)')}
@@ -329,26 +306,14 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
           )}
           <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'flex-end' }}>
             {/* Mini avatar */}
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                overflow: 'hidden',
-                flexShrink: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+            <div style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+              overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
               {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt="You"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+                <img src={profile.avatar_url} alt="You"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <User size={15} style={{ color: 'rgba(255,255,255,0.3)' }} />
               )}
@@ -368,17 +333,10 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
                 }
               }}
               style={{
-                flex: 1,
-                padding: '0.625rem 0.875rem',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 10,
-                color: 'white',
-                fontSize: '0.875rem',
-                resize: 'none',
-                outline: 'none',
-                fontFamily: 'inherit',
-                lineHeight: 1.5,
+                flex: 1, padding: '0.625rem 0.875rem',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 10, color: 'white', fontSize: '0.875rem',
+                resize: 'none', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5,
               }}
             />
 
@@ -387,20 +345,12 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
               type="submit"
               disabled={submitting || !content.trim()}
               style={{
-                padding: '0.625rem 1rem',
-                borderRadius: 10,
-                border: 'none',
-                background: 'var(--accent, #8b5cf6)',
-                color: 'white',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                cursor: submitting || !content.trim() ? 'not-allowed' : 'pointer',
+                padding: '0.625rem 1rem', borderRadius: 10, border: 'none',
+                background: 'var(--accent, #8b5cf6)', color: 'white', fontWeight: 600,
+                fontSize: '0.85rem', cursor: submitting || !content.trim() ? 'not-allowed' : 'pointer',
                 opacity: submitting || !content.trim() ? 0.45 : 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.375rem',
-                transition: 'opacity 0.2s',
-                flexShrink: 0,
+                display: 'flex', alignItems: 'center', gap: '0.375rem',
+                transition: 'opacity 0.2s', flexShrink: 0,
               }}
             >
               <Send size={14} />

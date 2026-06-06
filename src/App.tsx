@@ -14,6 +14,7 @@ import { ProfileScreen } from './ProfileScreen'
 import CollectionsPage from './CollectionsPage'
 import { SportsPage } from './SportsPage'
 import { DownloadPage } from './DownloadPage'
+import { PublicProfilePage } from './PublicProfilePage'
 import { initSpatialNavigation } from './lib/spatial'
 import { useAuth } from './context/AuthContext'
 
@@ -63,6 +64,7 @@ function App() {
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/sports" element={<SportsPage />} />
         <Route path="/download" element={<DownloadPage />} />
+        <Route path="/user/:username" element={<PublicProfilePage />} />
         <Route path="*" element={<Navigate replace to="/" />} />
       </Route>
     </Routes>
