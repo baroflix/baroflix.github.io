@@ -705,40 +705,85 @@ function SeasonPanel({
 
   const defaultRuntime = mediaType === 'anime' ? 24 : 45
 
+  // All season summaries — used for mark-whole-show
+  const allSeasons = mediaType === 'anime'
+    ? [{ season_number: 1, episode_count: allEpisodes.length || (details?.number_of_episodes ?? 0) }]
+    : (seasons.map(s => ({ season_number: s.season_number, episode_count: s.episode_count })))
+
+  // Build a runtime lookup for episodes we've already loaded (current season)
+  const runtimeByKey: Record<string, number> = {}
+  allEpisodes.forEach(ep => {
+    runtimeByKey[`${mediaType}-${id}-${activeSeason}-${ep.episode_number}`] = (ep.runtime || defaultRuntime) * 60
+  })
+
+  // Count all keys that would belong to this show
+  const allShowKeys = allSeasons.flatMap(s =>
+    Array.from({ length: s.episode_count }, (_, i) => `${mediaType}-${id}-${s.season_number}-${i + 1}`)
+  )
+  const allShowWatched = allShowKeys.length > 0 && allShowKeys.every(k => watchedEpisodes.has(k))
+
   function markSeasonWatched() {
     allEpisodes.forEach((ep, i) => {
       const k = seasonEpKeys[i]
       if (!watchedEpisodes.has(k)) onToggleWatched(k)
-      // Always write full progress so time stats are accurate
       writeProgressEntry(k, (ep.runtime || defaultRuntime) * 60)
     })
   }
   function unmarkSeasonWatched() {
     seasonEpKeys.forEach(k => { if (watchedEpisodes.has(k)) onToggleWatched(k) })
-    // Leave playback progress intact — don't erase real watch data
+  }
+
+  function markShowWatched() {
+    allShowKeys.forEach(k => {
+      if (!watchedEpisodes.has(k)) onToggleWatched(k)
+      writeProgressEntry(k, runtimeByKey[k] ?? defaultRuntime * 60)
+    })
+  }
+  function unmarkShowWatched() {
+    allShowKeys.forEach(k => { if (watchedEpisodes.has(k)) onToggleWatched(k) })
   }
 
   return (
     <div>
-      {/* Header row: "Episodes" label + season-level watched button */}
-      <div className="flex items-center justify-between mb-4 gap-4">
+      {/* Header row: "Episodes" label + season + show watched buttons */}
+      <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
         <h2 className="text-lg font-semibold text-white">Episodes</h2>
         {allEpisodes.length > 0 && (
-          <button
-            type="button"
-            onClick={allSeasonWatched ? unmarkSeasonWatched : markSeasonWatched}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0"
-            style={{
-              background: allSeasonWatched ? 'rgba(var(--accent-rgb,139,92,246),0.15)' : 'rgba(255,255,255,0.06)',
-              border: `1px solid ${allSeasonWatched ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
-              color: allSeasonWatched ? 'var(--accent)' : 'rgba(255,255,255,0.55)',
-            }}
-          >
-            {allSeasonWatched
-              ? <><CheckCircle2 className="w-3.5 h-3.5" /> Season watched</>
-              : <><Circle className="w-3.5 h-3.5" /> Mark season watched</>
-            }
-          </button>
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {/* Mark whole show */}
+            <button
+              type="button"
+              onClick={allShowWatched ? unmarkShowWatched : markShowWatched}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+              style={{
+                background: allShowWatched ? 'rgba(var(--accent-rgb,139,92,246),0.15)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${allShowWatched ? 'var(--accent)' : 'rgba(255,255,255,0.10)'}`,
+                color: allShowWatched ? 'var(--accent)' : 'rgba(255,255,255,0.4)',
+              }}
+            >
+              {allShowWatched
+                ? <><CheckCircle2 className="w-3.5 h-3.5" /> Show watched</>
+                : <><Circle className="w-3.5 h-3.5" /> Mark show watched</>
+              }
+            </button>
+
+            {/* Mark current season */}
+            <button
+              type="button"
+              onClick={allSeasonWatched ? unmarkSeasonWatched : markSeasonWatched}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+              style={{
+                background: allSeasonWatched ? 'rgba(var(--accent-rgb,139,92,246),0.15)' : 'rgba(255,255,255,0.06)',
+                border: `1px solid ${allSeasonWatched ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
+                color: allSeasonWatched ? 'var(--accent)' : 'rgba(255,255,255,0.55)',
+              }}
+            >
+              {allSeasonWatched
+                ? <><CheckCircle2 className="w-3.5 h-3.5" /> Season watched</>
+                : <><Circle className="w-3.5 h-3.5" /> Mark season watched</>
+              }
+            </button>
+          </div>
         )}
       </div>
 
