@@ -790,7 +790,7 @@ function SeasonPanel({
           return (
             <div
               key={ep.id}
-              className="relative text-left transition-all group/ep"
+              className="text-left transition-all cursor-pointer"
               style={{
                 borderRadius: 14,
                 padding: 12,
@@ -811,14 +811,10 @@ function SeasonPanel({
                         : 'rgba(255,255,255,0.07)'
                 }`,
               }}
+              onClick={() => onEpisodeChange(ep.episode_number)}
             >
-              {/* Clickable play area */}
-              <button
-                type="button"
-                onClick={() => onEpisodeChange(ep.episode_number)}
-                className="text-left w-full"
-              >
               <div className="flex gap-3">
+                {/* Thumbnail */}
                 <div
                   className="shrink-0 overflow-hidden relative"
                   style={{ width: 'clamp(72px, 20vw, 128px)', aspectRatio: '16/9', borderRadius: 8, background: 'rgba(255,255,255,0.06)' }}
@@ -851,12 +847,30 @@ function SeasonPanel({
                     </div>
                   )}
                 </div>
+
+                {/* Text content */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-[10px] uppercase tracking-widest" style={{ color: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.35)' }}>
+                    <span className="text-[10px] uppercase tracking-widest shrink-0" style={{ color: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.35)' }}>
                       E{ep.episode_number}
                     </span>
-                    <div className="flex items-center gap-2">
+
+                    {/* Right-side meta: checkmark · progress · runtime */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Mark-as-watched toggle — always visible, left of progress */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onToggleWatched(epKey) }}
+                        title={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
+                        className="flex items-center justify-center transition-colors hover:opacity-80"
+                        style={{ color: isWatched ? 'var(--accent)' : 'rgba(255,255,255,0.25)' }}
+                      >
+                        {isWatched
+                          ? <CheckCircle2 className="w-3.5 h-3.5" />
+                          : <Circle className="w-3.5 h-3.5" />
+                        }
+                      </button>
+
                       {isWatched && (
                         <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Watched</span>
                       )}
@@ -868,28 +882,13 @@ function SeasonPanel({
                       {ep.runtime && <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{ep.runtime}m</span>}
                     </div>
                   </div>
-                  <div className="text-sm font-semibold text-white mb-1 truncate" style={{ opacity: isWatched ? 0.6 : 1 }}>{ep.name}</div>
 
+                  <div className="text-sm font-semibold text-white mb-1 truncate" style={{ opacity: isWatched ? 0.6 : 1 }}>{ep.name}</div>
                   <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
                     {ep.overview || 'No synopsis available.'}
                   </p>
                 </div>
               </div>
-              </button>
-
-              {/* Mark-as-watched toggle — absolute top-right */}
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onToggleWatched(epKey) }}
-                title={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
-                className="absolute top-2 right-2 transition-all opacity-0 group-hover/ep:opacity-100 focus:opacity-100"
-                style={{ color: isWatched ? 'var(--accent)' : 'rgba(255,255,255,0.35)' }}
-              >
-                {isWatched
-                  ? <CheckCircle2 className="w-4 h-4" />
-                  : <Circle className="w-4 h-4" />
-                }
-              </button>
             </div>
           )
         })}
