@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Calendar, Play, Flame, Trophy, Activity, X, Tv, RefreshCw, MessageSquare, Send, User } from 'lucide-react'
+import { Search, Calendar, Play, Flame, Trophy, Activity, X, Tv, RefreshCw, MessageSquare, Send, User, Maximize2, Minimize2 } from 'lucide-react'
 import { supabase } from './lib/supabase'
 import { useAuth } from './context/AuthContext'
 import {
@@ -53,6 +53,7 @@ export function SportsPage() {
   const [sortBy, setSortBy] = useState<'time-asc' | 'time-desc' | 'popular-first'>('time-asc')
   
   // Active Stream/Player state
+  const [theatreMode, setTheatreMode] = useState(false)
   const [activeMatch, setActiveMatch] = useState<APIMatch | null>(null)
   const [selectedSource, setSelectedSource] = useState<{ source: string; id: string } | null>(null)
   const [streams, setStreams] = useState<Stream[]>([])
@@ -287,6 +288,7 @@ export function SportsPage() {
     setSelectedSource(null)
     setStreams([])
     setActiveStream(null)
+    setTheatreMode(false)
   }
 
   return (
@@ -630,7 +632,7 @@ export function SportsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto"
+            className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ${theatreMode ? 'p-2' : 'items-start sm:items-center p-3 sm:p-6 overflow-y-auto'}`}
             style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)' }}
           >
             <motion.div
@@ -638,7 +640,7 @@ export function SportsPage() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 30 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-full max-w-6xl rounded-3xl overflow-hidden relative"
+              className={`w-full rounded-3xl overflow-hidden relative transition-all duration-300 ${theatreMode ? 'max-w-[98vw]' : 'max-w-6xl'}`}
               style={{
                 background: 'rgba(20,20,20,0.96)',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -646,9 +648,12 @@ export function SportsPage() {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex flex-col lg:flex-row lg:h-[680px]">
+              <div
+                className={`flex transition-all duration-300 ${theatreMode ? 'flex-row' : 'flex-col lg:flex-row lg:h-[680px]'}`}
+                style={theatreMode ? { height: 'calc(100vh - 16px)' } : undefined}
+              >
                 {/* Left Column: Player & Channels */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between lg:h-full lg:overflow-y-auto">
+                <div className={`flex-1 min-w-0 flex flex-col ${theatreMode ? 'h-full overflow-hidden' : 'justify-between lg:h-full lg:overflow-y-auto'}`}>
                   {/* Modal Header */}
                   <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/2">
                     <div className="min-w-0">
@@ -658,18 +663,39 @@ export function SportsPage() {
                       <h2 className="text-base font-bold text-white truncate mt-0.5 pr-4">{activeMatch.title}</h2>
                     </div>
                     
-                    <button
-                      onClick={handleClosePlayer}
-                      className="flex lg:hidden items-center justify-center w-8 h-8 rounded-full text-white/50 hover:text-white transition-colors"
-                      style={{ background: 'rgba(255,255,255,0.05)' }}
-                      aria-label="Close player"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* Theatre mode toggle — desktop only */}
+                      <button
+                        onClick={() => setTheatreMode(m => !m)}
+                        className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200"
+                        style={{
+                          background: theatreMode ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)',
+                          border: `1px solid ${theatreMode ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                          color: theatreMode ? '#fff' : 'rgba(255,255,255,0.55)',
+                          boxShadow: theatreMode ? '0 0 12px rgba(255,255,255,0.06)' : 'none',
+                        }}
+                        title={theatreMode ? 'Exit Theatre Mode' : 'Theatre Mode'}
+                      >
+                        {theatreMode
+                          ? <Minimize2 className="w-3.5 h-3.5" />
+                          : <Maximize2 className="w-3.5 h-3.5" />}
+                        <span>{theatreMode ? 'Exit' : 'Theatre'}</span>
+                      </button>
+
+                      {/* Mobile close */}
+                      <button
+                        onClick={handleClosePlayer}
+                        className="flex lg:hidden items-center justify-center w-8 h-8 rounded-full text-white/50 hover:text-white transition-colors"
+                        style={{ background: 'rgba(255,255,255,0.05)' }}
+                        aria-label="Close player"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Stream Video Iframe Area */}
-                  <div className="relative aspect-video bg-black flex items-center justify-center">
+                  <div className={`relative bg-black flex items-center justify-center ${theatreMode ? 'flex-1 min-h-0' : 'aspect-video'}`}>
                     {loadingStreams ? (
                       <div className="flex flex-col items-center gap-3">
                         <div className="w-10 h-10 rounded-full border-4 border-t-white border-white/10 animate-spin" style={{ borderTopColor: 'var(--accent)' }} />
@@ -694,7 +720,7 @@ export function SportsPage() {
                   </div>
 
                   {/* Source & Stream Selector Panel */}
-                  <div className="p-6 bg-white/2">
+                  <div className={`bg-white/2 shrink-0 ${theatreMode ? 'px-4 py-2.5 overflow-y-auto max-h-28' : 'p-6'}`}>
                     {/* Source Selection Tabs */}
                     {activeMatch.sources && activeMatch.sources.length > 0 && (
                       <div className="mb-4">
@@ -760,7 +786,7 @@ export function SportsPage() {
                 </div>
 
                 {/* Right Column: Chat Panel */}
-                <div className="w-full lg:w-80 lg:h-full shrink-0 border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col bg-white/1 overflow-hidden min-h-[220px] sm:min-h-[300px] lg:min-h-0">
+                <div className={`shrink-0 border-white/10 flex flex-col bg-white/1 overflow-hidden ${theatreMode ? 'w-72 xl:w-80 h-full border-l' : 'w-full lg:w-80 lg:h-full border-t lg:border-t-0 lg:border-l min-h-[220px] sm:min-h-[300px] lg:min-h-0'}`}>
                   {/* Chat Header */}
                   <div className="px-4 py-3.5 border-b border-white/5 bg-white/2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -774,7 +800,7 @@ export function SportsPage() {
                   </div>
 
                   {/* Messages list */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[180px] sm:max-h-[280px] lg:max-h-none">
+                  <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${theatreMode ? '' : 'max-h-[180px] sm:max-h-[280px] lg:max-h-none'}`}>
                     {chatError && (
                       <div className="p-2 mb-2 text-[10px] bg-red-500/15 border border-red-500/30 text-red-400 rounded-lg text-center font-sans">
                         Error: {chatError}
