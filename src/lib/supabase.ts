@@ -116,7 +116,7 @@ export type ProfileWithBadges = Profile & {
   user_badges: UserBadge[]
 }
 
-/** Row in public.comments (with joined profile + badge data) */
+/** Row in public.comments (with joined profile data — badges fetched separately) */
 export interface Comment {
   id: string
   movie_id: string
@@ -126,7 +126,6 @@ export interface Comment {
   profiles: {
     username: string | null
     avatar_url: string | null
-    user_badges: { badge_type: string; awarded_at: string }[] | null
   } | null
 }
 
@@ -179,36 +178,55 @@ export async function unfollowUser(followerId: string, followingId: string): Pro
 }
 
 const FOLLOW_PROFILE_FIELDS =
-  'id, username, avatar_url, full_name, country, is_public, user_badges(badge_type, awarded_at)'
+  'id, username, avatar_url, full_name, country, is_public'
+
+// ─────────────────────────────────────────────────────────────
+// Internal badge helper — always a flat, separate query
+// (avoids PostgREST nested-join 403 issues with user_badges RLS)
+// ─────────────────────────────────────────────────────────────
+async function fetchBadgesForIds(userIds: string[]): Promise<Record<string, UserBadge[]>> {
+  if (!userIds.length) return {}
+  const { data } = await supabase
+    .from('user_badges')
+    .select('id, user_id, badge_type, awarded_at')
+    .in('user_id', userIds)
+  const map: Record<string, UserBadge[]> = {}
+  for (const b of (data ?? []) as UserBadge[]) {
+    if (!map[b.user_id]) map[b.user_id] = []
+    map[b.user_id].push(b)
+  }
+  return map
+}
+
+/** Fetch badges for a single user (used by CommentsSection) */
+export async function fetchBadgesForUsers(userIds: string[]): Promise<Record<string, UserBadge[]>> {
+  return fetchBadgesForIds(userIds)
+}
 
 /** Returns list of profiles that follow userId */
 export async function getFollowersList(userId: string): Promise<ProfileWithBadges[]> {
   const { data: rows } = await supabase
-    .from('follows')
-    .select('follower_id')
-    .eq('following_id', userId)
+    .from('follows').select('follower_id').eq('following_id', userId)
   if (!rows?.length) return []
   const ids = rows.map((r: any) => r.follower_id)
-  const { data } = await supabase
-    .from('profiles')
-    .select(FOLLOW_PROFILE_FIELDS)
-    .in('id', ids)
-  return (data ?? []) as unknown as ProfileWithBadges[]
+  const { data: profiles } = await supabase
+    .from('profiles').select(FOLLOW_PROFILE_FIELDS).in('id', ids)
+  if (!profiles?.length) return []
+  const badgesMap = await fetchBadgesForIds(ids)
+  return profiles.map((p: any) => ({ ...p, user_badges: badgesMap[p.id] ?? [] })) as ProfileWithBadges[]
 }
 
 /** Returns list of profiles that userId is following */
 export async function getFollowingList(userId: string): Promise<ProfileWithBadges[]> {
   const { data: rows } = await supabase
-    .from('follows')
-    .select('following_id')
-    .eq('follower_id', userId)
+    .from('follows').select('following_id').eq('follower_id', userId)
   if (!rows?.length) return []
   const ids = rows.map((r: any) => r.following_id)
-  const { data } = await supabase
-    .from('profiles')
-    .select(FOLLOW_PROFILE_FIELDS)
-    .in('id', ids)
-  return (data ?? []) as unknown as ProfileWithBadges[]
+  const { data: profiles } = await supabase
+    .from('profiles').select(FOLLOW_PROFILE_FIELDS).in('id', ids)
+  if (!profiles?.length) return []
+  const badgesMap = await fetchBadgesForIds(ids)
+  return profiles.map((p: any) => ({ ...p, user_badges: badgesMap[p.id] ?? [] })) as ProfileWithBadges[]
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -219,20 +237,24 @@ export async function getFollowingList(userId: string): Promise<ProfileWithBadge
 export async function searchProfiles(query: string): Promise<ProfileWithBadges[]> {
   const { data } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url, full_name, country, is_public, theme, user_badges(badge_type, awarded_at)')
+    .select('id, username, avatar_url, full_name, country, is_public, theme')
     .ilike('username', `%${query}%`)
     .not('username', 'is', null)
     .limit(12)
-  // null is_public treated as public
-  return ((data ?? []) as any[]).filter(p => p.is_public !== false) as ProfileWithBadges[]
+  const profiles = ((data ?? []) as any[]).filter(p => p.is_public !== false)
+  if (!profiles.length) return []
+  const badgesMap = await fetchBadgesForIds(profiles.map((p: any) => p.id))
+  return profiles.map((p: any) => ({ ...p, user_badges: badgesMap[p.id] ?? [] })) as ProfileWithBadges[]
 }
 
 /** Fetch a full profile by username (for the public profile page) */
 export async function fetchPublicProfile(username: string): Promise<ProfileWithBadges | null> {
-  const { data } = await supabase
+  const { data: profile } = await supabase
     .from('profiles')
-    .select('*, user_badges(*)')
+    .select('*')
     .eq('username', username)
     .maybeSingle()
-  return (data ?? null) as ProfileWithBadges | null
+  if (!profile) return null
+  const badgesMap = await fetchBadgesForIds([profile.id])
+  return { ...profile, user_badges: badgesMap[profile.id] ?? [] } as ProfileWithBadges
 }

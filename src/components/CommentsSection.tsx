@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { User, Send, MessageSquare, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { supabase, type Comment, BADGE_CONFIG, getHighestBadge } from '../lib/supabase'
+import { supabase, type Comment, type UserBadge, BADGE_CONFIG, getHighestBadge, fetchBadgesForUsers } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
 // ─────────────────────────────────────────────────────────────
@@ -18,8 +18,10 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
+// No nested user_badges join — badges are fetched separately to avoid
+// PostgREST 403 issues when user_badges RLS isn't fully propagated
 const COMMENT_SELECT =
-  'id, movie_id, user_id, content, created_at, profiles(username, avatar_url, user_badges(badge_type, awarded_at))'
+  'id, movie_id, user_id, content, created_at, profiles(username, avatar_url)'
 
 // ─────────────────────────────────────────────────────────────
 // CommentsSection
@@ -37,6 +39,10 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const listEndRef = useRef<HTMLDivElement>(null)
+
+  // Badges fetched separately (flat query avoids nested-join 403)
+  const [badgesMap, setBadgesMap] = useState<Record<string, UserBadge[]>>({})
+  const fetchedUserIds = useRef(new Set<string>())
 
   // ── Fetch initial comments ──────────────────────────────────
   useEffect(() => {
@@ -59,6 +65,18 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
     load()
     return () => { cancelled = true }
   }, [movieId])
+
+  // ── Fetch badges for comment authors (incremental, no duplicates) ──
+  useEffect(() => {
+    const newIds = comments
+      .map(c => c.user_id)
+      .filter(id => !fetchedUserIds.current.has(id))
+    if (!newIds.length) return
+    newIds.forEach(id => fetchedUserIds.current.add(id))
+    fetchBadgesForUsers(newIds).then(map => {
+      setBadgesMap(prev => ({ ...prev, ...map }))
+    })
+  }, [comments]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Real-time subscription ──────────────────────────────────
   useEffect(() => {
@@ -198,7 +216,8 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
             const author = comment.profiles
             const isOwn = session?.user.id === comment.user_id
             const displayName = author?.username || 'Anonymous'
-            const badges = author?.user_badges ?? []
+            // Use separately-fetched badges map instead of nested join data
+            const badges = badgesMap[comment.user_id] ?? []
             const highestBadge = getHighestBadge(badges)
             const badgeCfg = highestBadge ? BADGE_CONFIG[highestBadge] : null
 
