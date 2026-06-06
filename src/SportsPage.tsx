@@ -76,7 +76,6 @@ function ChatImage({ url }: { url: string }) {
         src={url}
         alt="Shared image"
         referrerPolicy="no-referrer"
-        crossOrigin="anonymous"
         loading="lazy"
         onLoad={() => setImgState('loaded')}
         onError={() => setImgState('error')}
