@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Film, Tv, Sword, Clock, Users } from 'lucide-react'
+import { ArrowLeft, Film, Tv, Sword, Clock, Users, Bell, UserPlus, MessageSquare } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from './context/AuthContext'
 import { supabase } from './lib/supabase'
@@ -153,12 +153,97 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   )
 }
 
+// ─── Notification types ───────────────────────────────────────
+
+type NotifItem =
+  | { kind: 'follow'; username: string | null; avatar_url: string | null; created_at: string; isNew: boolean }
+  | { kind: 'comment'; username: string | null; avatar_url: string | null; content: string; created_at: string; isNew: boolean }
+
+function NotificationItem({ item }: { item: NotifItem }) {
+  const AVATAR_SIZE = 36
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+      style={{
+        background: item.isNew ? 'rgba(var(--accent-rgb,139,92,246),0.07)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${item.isNew ? 'rgba(var(--accent-rgb,139,92,246),0.18)' : 'rgba(255,255,255,0.06)'}`,
+      }}
+    >
+      {/* Avatar */}
+      <Link
+        to={item.username ? `/user/${item.username}` : '#'}
+        className="no-bg-hover shrink-0"
+        style={{ position: 'relative' }}
+      >
+        <div style={{
+          width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+          overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {item.avatar_url
+            ? <img src={item.avatar_url} alt={item.username ?? ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)' }}>👤</span>
+          }
+        </div>
+        {/* Kind icon badge */}
+        <span style={{
+          position: 'absolute', bottom: -2, right: -2,
+          width: 16, height: 16, borderRadius: '50%',
+          background: item.kind === 'follow' ? 'var(--accent)' : '#3b82f6',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: '2px solid var(--bg, #080808)',
+        }}>
+          {item.kind === 'follow'
+            ? <UserPlus size={8} style={{ color: '#fff' }} />
+            : <MessageSquare size={8} style={{ color: '#fff' }} />
+          }
+        </span>
+      </Link>
+
+      {/* Text */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {item.kind === 'follow' ? (
+          <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>
+            <Link to={`/user/${item.username}`} className="no-bg-hover" style={{ fontWeight: 600, color: '#fff' }}>
+              @{item.username ?? 'Someone'}
+            </Link>
+            {' '}started following you
+          </p>
+        ) : (
+          <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>
+            <Link to={`/user/${item.username}`} className="no-bg-hover" style={{ fontWeight: 600, color: '#fff' }}>
+              @{item.username ?? 'Someone'}
+            </Link>
+            {' '}commented on your profile:{' '}
+            <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+              "{(item as any).content?.slice(0, 60)}{(item as any).content?.length > 60 ? '…' : ''}"
+            </span>
+          </p>
+        )}
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+          {timeAgo(new Date(item.created_at).getTime())}
+        </p>
+      </div>
+
+      {/* Unread dot */}
+      {item.isNew && (
+        <span style={{
+          width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+          background: 'var(--accent)', boxShadow: '0 0 5px var(--accent-glow)',
+        }} />
+      )}
+    </motion.div>
+  )
+}
+
 // ─── ActivityFeedPage ─────────────────────────────────────────
 
 export function ActivityFeedPage() {
   const navigate = useNavigate()
   const { profile, session } = useAuth()
-  const [tab, setTab] = useState<'yours' | 'following'>('yours')
+  const [tab, setTab] = useState<'yours' | 'following' | 'notifications'>('yours')
   const [followingActivity, setFollowingActivity] = useState<{
     entry: WatchHistoryEntry
     username: string | null
@@ -167,6 +252,28 @@ export function ActivityFeedPage() {
   const [followingLoading, setFollowingLoading] = useState(false)
   const [followingLoaded, setFollowingLoaded] = useState(false)
   const fetchedRef = useRef(false)
+
+  // ── Notifications tab ─────────────────────────────────────────
+  const [notifications, setNotifications] = useState<NotifItem[]>([])
+  const [notifLoading, setNotifLoading] = useState(false)
+  const [notifLoaded, setNotifLoaded] = useState(false)
+  const notifFetchedRef = useRef(false)
+
+  // Unread count from localStorage (to highlight new items)
+  const [lastSeen, setLastSeen] = useState<string | null>(() => {
+    const uid = session?.user?.id
+    return uid ? localStorage.getItem(`baroflix_notif_seen_${uid}`) : null
+  })
+
+  // When Shell clears the badge, refresh our lastSeen so items stop being "new"
+  useEffect(() => {
+    const handler = () => {
+      const uid = session?.user?.id
+      if (uid) setLastSeen(localStorage.getItem(`baroflix_notif_seen_${uid}`))
+    }
+    window.addEventListener('baroflix:notif-cleared', handler)
+    return () => window.removeEventListener('baroflix:notif-cleared', handler)
+  }, [session?.user?.id])
 
   // Own history from profile
   const ownHistory: WatchHistoryEntry[] = [...(profile?.watch_history ?? [])]
@@ -177,6 +284,13 @@ export function ActivityFeedPage() {
     if (tab !== 'following' || followingLoaded || fetchedRef.current) return
     fetchedRef.current = true
     loadFollowingActivity()
+  }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load notifications on tab switch
+  useEffect(() => {
+    if (tab !== 'notifications' || notifLoaded || notifFetchedRef.current) return
+    notifFetchedRef.current = true
+    loadNotifications()
   }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadFollowingActivity() {
@@ -216,6 +330,63 @@ export function ActivityFeedPage() {
     setFollowingLoading(false)
   }
 
+  async function loadNotifications() {
+    const userId = session?.user?.id
+    if (!userId) return
+    setNotifLoading(true)
+    try {
+      // Recent follows received
+      const { data: followRows } = await supabase
+        .from('follows')
+        .select('follower_id, created_at')
+        .eq('following_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(40)
+
+      // Recent profile comments received
+      const { data: commentRows } = await supabase
+        .from('profile_comments')
+        .select('user_id, content, created_at')
+        .eq('profile_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(40)
+
+      // Fetch profiles for followers and commenters in one batch
+      const allIds = [
+        ...new Set([
+          ...(followRows ?? []).map((r: any) => r.follower_id),
+          ...(commentRows ?? []).map((r: any) => r.user_id),
+        ])
+      ]
+      const profileMap: Record<string, { username: string | null; avatar_url: string | null }> = {}
+      if (allIds.length) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', allIds)
+        for (const p of profiles ?? []) profileMap[p.id] = { username: p.username, avatar_url: p.avatar_url }
+      }
+
+      const items: NotifItem[] = []
+
+      for (const r of (followRows ?? [])) {
+        const p = profileMap[r.follower_id] ?? { username: null, avatar_url: null }
+        items.push({ kind: 'follow', ...p, created_at: r.created_at, isNew: lastSeen ? r.created_at > lastSeen : false })
+      }
+      for (const r of (commentRows ?? [])) {
+        const p = profileMap[r.user_id] ?? { username: null, avatar_url: null }
+        items.push({ kind: 'comment', ...p, content: r.content, created_at: r.created_at, isNew: lastSeen ? r.created_at > lastSeen : false })
+      }
+
+      items.sort((a, b) => b.created_at.localeCompare(a.created_at))
+      setNotifications(items)
+    } catch (err) {
+      console.error('[ActivityFeed] failed to load notifications:', err)
+    }
+    setNotifLoaded(true)
+    setNotifLoading(false)
+  }
+
   return (
     <div className="min-h-screen" style={{ paddingTop: 80, paddingBottom: 80 }}>
       <div className="max-w-2xl mx-auto px-4">
@@ -239,12 +410,17 @@ export function ActivityFeedPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
           <TabBtn active={tab === 'yours'} onClick={() => setTab('yours')}>
             <span className="flex items-center gap-1.5"><Clock size={13} /> Your Activity</span>
           </TabBtn>
           <TabBtn active={tab === 'following'} onClick={() => setTab('following')}>
             <span className="flex items-center gap-1.5"><Users size={13} /> Following</span>
+          </TabBtn>
+          <TabBtn active={tab === 'notifications'} onClick={() => setTab('notifications')}>
+            <span className="flex items-center gap-1.5">
+              <Bell size={13} /> Notifications
+            </span>
           </TabBtn>
         </div>
 
@@ -266,7 +442,7 @@ export function ActivityFeedPage() {
                 </div>
               )}
             </motion.div>
-          ) : (
+          ) : tab === 'following' ? (
             <motion.div key="following" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {followingLoading ? (
                 <div className="flex flex-col gap-3">
@@ -289,6 +465,28 @@ export function ActivityFeedPage() {
                       username={item.username}
                       avatarUrl={item.avatarUrl}
                     />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div key="notifications" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {notifLoading ? (
+                <div className="flex flex-col gap-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="skeleton rounded-2xl" style={{ height: 64 }} />
+                  ))}
+                </div>
+              ) : notifications.length === 0 ? (
+                <EmptyState
+                  icon="🔔"
+                  title="No notifications yet"
+                  body="You'll see new followers and profile comments here."
+                />
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {notifications.map((item, i) => (
+                    <NotificationItem key={`${item.kind}-${item.created_at}-${i}`} item={item} />
                   ))}
                 </div>
               )}

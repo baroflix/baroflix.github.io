@@ -1,6 +1,6 @@
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
 import { User, Menu, X, Library, BarChart2, Settings, LogOut, Activity } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { THEME_PRESETS, useScrollDirection } from './hooks'
@@ -8,6 +8,7 @@ import type { ThemeSettings } from './hooks'
 import { HomeSearchToggle } from './SearchOverlay'
 import { locales } from './locales'
 import { useAuth } from './context/AuthContext'
+import { supabase } from './lib/supabase'
 
 // ─── Shell ───────────────────────────────────────────────────────────────────
 
@@ -58,7 +59,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
   const [theatreActive, setTheatreActive] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { profile, signOut } = useAuth()
+  const { profile, session, signOut } = useAuth()
   const profileRef = useRef<HTMLDivElement>(null)
   const lang = language || 'en'
   const t = locales[lang].nav
@@ -85,6 +86,57 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
     observer.observe(document.body, { attributes: true, attributeFilter: ['class'] })
     return () => observer.disconnect()
   }, [])
+
+  // ── Notification badge ──────────────────────────────────────
+  const [notifCount, setNotifCount] = useState(0)
+
+  const notifKey = session?.user?.id ? `baroflix_notif_seen_${session.user.id}` : null
+
+  useEffect(() => {
+    const userId = session?.user?.id
+    if (!userId || !notifKey) { setNotifCount(0); return }
+
+    // Initialise the baseline timestamp on first visit so old events don't flood in
+    let lastSeen = localStorage.getItem(notifKey)
+    if (!lastSeen) {
+      lastSeen = new Date().toISOString()
+      localStorage.setItem(notifKey, lastSeen)
+    }
+
+    // Count unseen follows + profile comments
+    Promise.all([
+      supabase.from('follows').select('*', { count: 'exact', head: true })
+        .eq('following_id', userId).gt('created_at', lastSeen),
+      supabase.from('profile_comments').select('*', { count: 'exact', head: true })
+        .eq('profile_id', userId).gt('created_at', lastSeen),
+    ]).then(([f, c]) => setNotifCount((f.count ?? 0) + (c.count ?? 0)))
+      .catch(() => {})
+
+    // Realtime: increment badge on new follow
+    const ch1 = supabase.channel(`shell_notif_follows_${userId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'follows', filter: `following_id=eq.${userId}` },
+        () => setNotifCount(n => n + 1))
+      .subscribe()
+
+    // Realtime: increment badge on new profile comment
+    const ch2 = supabase.channel(`shell_notif_comments_${userId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profile_comments', filter: `profile_id=eq.${userId}` },
+        () => setNotifCount(n => n + 1))
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(ch1)
+      supabase.removeChannel(ch2)
+    }
+  }, [session?.user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const clearNotifications = useCallback(() => {
+    if (!notifKey) return
+    localStorage.setItem(notifKey, new Date().toISOString())
+    setNotifCount(0)
+    // Tell the ActivityFeedPage to refresh its unread state
+    window.dispatchEvent(new CustomEvent('baroflix:notif-cleared'))
+  }, [notifKey])
 
   async function handleSignOut() {
     setProfileOpen(false)
@@ -193,8 +245,21 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             <HomeSearchToggle />
             {/* Profile dropdown — desktop only */}
             <div ref={profileRef} className="hidden lg:block relative">
+              {/* Notification badge */}
+              {notifCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: -3, right: -3, zIndex: 10,
+                  minWidth: 17, height: 17, borderRadius: 999,
+                  background: '#ef4444', border: '2px solid var(--bg, #080808)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 9, fontWeight: 800, color: '#fff', padding: '0 3px',
+                  pointerEvents: 'none',
+                }}>
+                  {notifCount > 9 ? '9+' : notifCount}
+                </span>
+              )}
               <button
-                onClick={() => setProfileOpen(o => !o)}
+                onClick={() => { clearNotifications(); setProfileOpen(o => !o) }}
                 className="flex items-center justify-center w-9 h-9 rounded-full transition-colors"
                 style={{
                   background: profile?.avatar_url ? 'transparent'
@@ -203,7 +268,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
                   border: `1px solid ${profileOpen || isActive('/profile') || isActive('/user/') || isActive('/feed') || isActive('/collections') || isActive('/stats')
                     ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
                   color: 'rgba(255,255,255,0.85)',
-                  overflow: profile?.avatar_url ? 'hidden' : 'visible',
+                  overflow: 'visible',
                   padding: 0,
                 }}
                 aria-label="Profile menu"
