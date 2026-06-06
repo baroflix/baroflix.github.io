@@ -373,10 +373,16 @@ export async function discoverCatalog(
     genreId?: number
     sortBy?: DiscoverSort
     page?: number
+    /** TV: with_networks ID. Movie: with_companies ID. Ignored for 'all' / 'anime'. */
+    networkId?: number
+    /** Exact release year. Movie: primary_release_year. TV: first_air_date_year. */
+    year?: number
+    /** Minimum vote_average (0–10). Also enables a minimum vote_count for quality. */
+    minRating?: number
   },
   signal?: AbortSignal
 ): Promise<DiscoverResult> {
-  const { type, query, genreId, sortBy = 'popularity.desc', page = 1 } = params
+  const { type, query, genreId, sortBy = 'popularity.desc', page = 1, networkId, year, minRating } = params
   const hasQuery = Boolean(query?.trim())
 
   function tmdbSortStr(t: 'movie' | 'tv'): string {
@@ -385,6 +391,14 @@ export async function discoverCatalog(
       case 'newest': return t === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc'
       case 'oldest': return t === 'movie' ? 'primary_release_date.asc' : 'first_air_date.asc'
       default: return 'popularity.desc'
+    }
+  }
+
+  function ratingParams(t: 'movie' | 'tv'): RequestParams {
+    if (!minRating) return {}
+    return {
+      'vote_average.gte': minRating,
+      'vote_count.gte': t === 'movie' ? 50 : 30,
     }
   }
 
@@ -420,27 +434,28 @@ export async function discoverCatalog(
 
   // ── Discover mode ────────────────────────────────────────────────────────────
   if (type === 'all') {
-    const minVotes = sortBy === 'vote_average.desc'
     const [movies, tv] = await Promise.all([
       request<{ results: MediaItem[]; total_pages: number; total_results: number }>(
         '/discover/movie',
         {
-          language: 'en-US',
-          page,
+          language: 'en-US', page,
           sort_by: tmdbSortStr('movie'),
           include_adult: false,
-          ...(minVotes ? { 'vote_count.gte': 200 } : {}),
+          ...(year ? { primary_release_year: year } : {}),
+          ...(sortBy === 'vote_average.desc' ? { 'vote_count.gte': 200 } : {}),
+          ...ratingParams('movie'),
         },
         signal
       ),
       request<{ results: MediaItem[]; total_pages: number; total_results: number }>(
         '/discover/tv',
         {
-          language: 'en-US',
-          page,
+          language: 'en-US', page,
           sort_by: tmdbSortStr('tv'),
           include_adult: false,
-          ...(minVotes ? { 'vote_count.gte': 100 } : {}),
+          ...(year ? { first_air_date_year: year } : {}),
+          ...(sortBy === 'vote_average.desc' ? { 'vote_count.gte': 100 } : {}),
+          ...ratingParams('tv'),
         },
         signal
       ),
@@ -476,6 +491,8 @@ export async function discoverCatalog(
     sort_by: tmdbSortStr(mediaT),
     include_adult: false,
     ...(sortBy === 'vote_average.desc' ? { 'vote_count.gte': mediaT === 'movie' ? 200 : 100 } : {}),
+    ...ratingParams(mediaT),
+    ...(year ? { [mediaT === 'movie' ? 'primary_release_year' : 'first_air_date_year']: year } : {}),
   }
 
   if (type === 'anime') {
@@ -483,6 +500,11 @@ export async function discoverCatalog(
     discoverParams.with_origin_country = 'JP'
   } else if (genreId) {
     discoverParams.with_genres = genreId
+  }
+
+  if (networkId) {
+    if (type === 'tv') discoverParams.with_networks = networkId
+    else if (type === 'movie') discoverParams.with_companies = networkId
   }
 
   const data = await request<{ results: MediaItem[]; total_pages: number; total_results: number }>(

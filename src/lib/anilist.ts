@@ -2,6 +2,40 @@ import type { MediaDetails, MediaItem } from '../types'
 
 const ANILIST_API = 'https://graphql.anilist.co'
 
+export const ANILIST_GENRES = [
+  'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror',
+  'Mahou Shoujo', 'Mecha', 'Music', 'Mystery', 'Psychological',
+  'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Supernatural', 'Thriller',
+]
+
+const DISCOVER_ANIME_QUERY = `
+query($page: Int, $perPage: Int, $sort: [MediaSort], $genre: String, $year: Int, $search: String, $minScore: Int) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo { total lastPage }
+    media(
+      type: ANIME
+      isAdult: false
+      sort: $sort
+      genre: $genre
+      seasonYear: $year
+      search: $search
+      averageScore_greater: $minScore
+    ) {
+      id
+      title { romaji english native }
+      coverImage { extraLarge large }
+      bannerImage
+      averageScore
+      popularity
+      format
+      episodes
+      seasonYear
+      startDate { year month day }
+    }
+  }
+}
+`
+
 const TRENDING_QUERY = `
 query {
   Page(page: 1, perPage: 20) {
@@ -225,5 +259,44 @@ export function generateAnimeSeasonDetails(
     name: 'Season 1',
     overview: '',
     episodes,
+  }
+}
+
+// ─── Discover Anime ───────────────────────────────────────────────────────────
+
+export async function discoverAnime(
+  params: {
+    search?: string
+    genre?: string
+    sortBy?: string
+    year?: number
+    minRating?: number  // 0–10 scale, converted to 0–100 for AniList
+    page?: number
+  },
+  signal?: AbortSignal
+): Promise<{ results: MediaItem[]; totalPages: number; totalResults: number }> {
+  const { search, genre, sortBy = 'popularity.desc', year, minRating, page = 1 } = params
+
+  let aniSort: string[]
+  switch (sortBy) {
+    case 'vote_average.desc': aniSort = ['SCORE_DESC']; break
+    case 'newest':            aniSort = ['START_DATE_DESC']; break
+    case 'oldest':            aniSort = ['START_DATE']; break
+    default:                  aniSort = ['POPULARITY_DESC']
+  }
+
+  const variables: Record<string, unknown> = { page, perPage: 20, sort: aniSort }
+  if (search?.trim())  variables.search   = search.trim()
+  if (genre)           variables.genre    = genre
+  if (year)            variables.year     = year
+  if (minRating)       variables.minScore = Math.round(minRating * 10)
+
+  const data = await requestGraphql(DISCOVER_ANIME_QUERY, variables, signal)
+  const pageInfo = data.Page.pageInfo
+
+  return {
+    results: (data.Page.media as unknown[]).map(mapToMediaItem),
+    totalPages: pageInfo.lastPage ?? 1,
+    totalResults: pageInfo.total ?? 0,
   }
 }
