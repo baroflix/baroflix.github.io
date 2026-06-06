@@ -2,7 +2,7 @@ import { createPortal } from 'react-dom'
 import { useEffect, useState, useRef } from 'react'
 import { X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { STORAGE_KEYS } from './hooks'
+import { STORAGE_KEYS, writeWatchedEntry } from './hooks'
 
 // ─── FullscreenPlayer ─────────────────────────────────────────────────────────
 
@@ -26,6 +26,14 @@ export function FullscreenPlayer({
     let latestTimestamp = 0
     let latestDuration = 0
     let currentKey = progressKey
+    const markedWatched = new Set<string>()   // avoid duplicate writes per session
+
+    function maybeMarkWatched(key: string | undefined, percent: number) {
+      if (key && percent >= 0.95 && !markedWatched.has(key)) {
+        markedWatched.add(key)
+        writeWatchedEntry(key)
+      }
+    }
 
     function persistProgress(key: string, timestamp: number, duration?: number) {
       try {
@@ -57,6 +65,11 @@ export function FullscreenPlayer({
             lastSavedTime = ts
             if (currentKey) persistProgress(currentKey, ts, dur > 0 ? dur : undefined)
           }
+          // Auto-mark watched at 95% — prefer explicit percent field, fall back to ratio
+          const pct = typeof payload.percent === 'number'
+            ? payload.percent / 100
+            : dur > 0 ? ts / dur : 0
+          maybeMarkWatched(currentKey, pct)
           return
         }
 
@@ -67,18 +80,22 @@ export function FullscreenPlayer({
           latestTimestamp = ts
           if (dur > 0) latestDuration = dur
           if (currentKey) persistProgress(currentKey, ts, dur > 0 ? dur : undefined)
+          maybeMarkWatched(currentKey, dur > 0 ? ts / dur : 0)
           return
         }
 
-        // { event: "complete" } — episode finished, advance to next
-        if (payload.event === 'complete' && onEpisodeChange && currentKey) {
-          const parts = currentKey.split('-')
-          if (parts.length >= 4) {
-            const season = Number(parts[2])
-            const nextEpisode = Number(parts[3]) + 1
-            const newKey = `${parts[0]}-${parts[1]}-${season}-${nextEpisode}`
-            currentKey = newKey
-            onEpisodeChange(season, nextEpisode)
+        // { event: "complete" } — episode finished, mark watched then advance
+        if (payload.event === 'complete') {
+          maybeMarkWatched(currentKey, 1)    // completed = 100%
+          if (onEpisodeChange && currentKey) {
+            const parts = currentKey.split('-')
+            if (parts.length >= 4) {
+              const season = Number(parts[2])
+              const nextEpisode = Number(parts[3]) + 1
+              const newKey = `${parts[0]}-${parts[1]}-${season}-${nextEpisode}`
+              currentKey = newKey
+              onEpisodeChange(season, nextEpisode)
+            }
           }
           return
         }
@@ -124,6 +141,7 @@ export function FullscreenPlayer({
                   lastSavedTime = ts
                   persistProgress(currentKey!, ts, dur > 0 ? dur : undefined)
                 }
+                maybeMarkWatched(currentKey, dur > 0 ? ts / dur : 0)
               }
             }
           }
@@ -148,6 +166,7 @@ export function FullscreenPlayer({
             lastSavedTime = payload.timestamp
             persistProgress(currentKey!, payload.timestamp)
           }
+          maybeMarkWatched(currentKey, latestDuration > 0 ? latestTimestamp / latestDuration : 0)
         }
       } catch {
         // Not parseable — ignore
@@ -162,6 +181,7 @@ export function FullscreenPlayer({
       // Ensure the absolute latest timestamp is saved before unmounting!
       if (currentKey && latestTimestamp > 0) {
         persistProgress(currentKey, latestTimestamp, latestDuration > 0 ? latestDuration : undefined)
+        maybeMarkWatched(currentKey, latestDuration > 0 ? latestTimestamp / latestDuration : 0)
       }
 
       // Dispatch event on close so the underlying UI updates its progress bars

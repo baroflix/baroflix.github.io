@@ -234,12 +234,41 @@ export function writeProgressEntry(key: string, seconds: number) {
 }
 
 /**
+ * Add a key to the watched-episodes list directly in localStorage and
+ * notify all live useWatchedEpisodes subscribers. Safe to call outside React.
+ */
+export function writeWatchedEntry(key: string) {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.watchedEpisodes)
+    const current: string[] = raw ? JSON.parse(raw) : []
+    if (!current.includes(key)) {
+      current.push(key)
+      window.localStorage.setItem(STORAGE_KEYS.watchedEpisodes, JSON.stringify(current))
+      window.dispatchEvent(new Event('watched-episodes-updated'))
+    }
+  } catch {}
+}
+
+/**
  * Tracks manually-marked-as-watched episodes.
  * Key format: "${mediaType}-${id}-${season}-${episodeNumber}"
  * Returns [watchedSet, toggle(key)]
+ * Also reacts to external writeWatchedEntry() calls via the
+ * watched-episodes-updated event.
  */
 export function useWatchedEpisodes() {
   const [watched, setWatched] = useLocalStorageState<string[]>(STORAGE_KEYS.watchedEpisodes, [])
+
+  // Re-sync when the player (or any external code) writes watched entries
+  useEffect(() => {
+    const handler = () => {
+      const raw = window.localStorage.getItem(STORAGE_KEYS.watchedEpisodes)
+      if (raw) setWatched(JSON.parse(raw))
+    }
+    window.addEventListener('watched-episodes-updated', handler)
+    return () => window.removeEventListener('watched-episodes-updated', handler)
+  }, [setWatched])
+
   const watchedSet = useMemo(() => new Set(watched), [watched])
   const toggle = useCallback((key: string) => {
     setWatched(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
