@@ -1,11 +1,34 @@
 import { createPortal } from 'react-dom'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
-import { Search, X } from 'lucide-react'
+import { Search, X, Clock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useHomeCatalog } from './hooks'
+import { useHomeCatalog, STORAGE_KEYS } from './hooks'
 import { MediaGrid } from './ui'
 import { mediaTypeFromItem } from './lib/tmdb'
+
+const MAX_RECENT = 8
+
+function readRecentSearches(): string[] {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.recentSearches)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+function saveRecentSearch(query: string) {
+  const q = query.trim()
+  if (q.length < 2) return
+  const prev = readRecentSearches()
+  const next = [q, ...prev.filter(r => r.toLowerCase() !== q.toLowerCase())].slice(0, MAX_RECENT)
+  window.localStorage.setItem(STORAGE_KEYS.recentSearches, JSON.stringify(next))
+}
+
+function removeRecentSearch(query: string) {
+  const prev = readRecentSearches()
+  const next = prev.filter(r => r !== query)
+  window.localStorage.setItem(STORAGE_KEYS.recentSearches, JSON.stringify(next))
+}
 
 // ─── SearchOverlay (portal-mounted so it always sits above everything) ────────
 
@@ -37,7 +60,21 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
   const [filter, setFilter] = useState<'all' | 'movie' | 'tv' | 'anime'>('all')
   const [isFocused, setIsFocused] = useState(false)
   const location = useLocation()
-  
+  const [recentSearches, setRecentSearches] = useState<string[]>(readRecentSearches)
+
+  // Save to recent searches once the debounced query commits to the URL
+  useEffect(() => {
+    if (urlQuery.trim().length >= 2) {
+      saveRecentSearch(urlQuery)
+      setRecentSearches(readRecentSearches())
+    }
+  }, [urlQuery])
+
+  const deleteRecent = useCallback((q: string) => {
+    removeRecentSearch(q)
+    setRecentSearches(readRecentSearches())
+  }, [])
+
   // Store the initial pathname when the search overlay was opened
   const openPath = useRef(location.pathname)
 
@@ -226,6 +263,63 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
           }}
         >
           <div style={{ maxWidth: '1536px', margin: '0 auto' }}>
+            {/* Recent searches row — only shown when no active query */}
+            {urlQuery.trim().length < 2 && recentSearches.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+                  Recent searches
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {recentSearches.map(q => (
+                    <div
+                      key={q}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '6px 12px 6px 10px',
+                        borderRadius: 999,
+                        background: 'rgba(255,255,255,0.07)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)' }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)' }}
+                      onClick={() => setLocalQuery(q)}
+                    >
+                      <Clock style={{ width: 12, height: 12, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', userSelect: 'none' }}>{q}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); deleteRecent(q) }}
+                        aria-label={`Remove "${q}" from recent searches`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'rgba(255,255,255,0.35)',
+                          padding: 0,
+                          marginLeft: 2,
+                          flexShrink: 0,
+                        }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)' }}
+                      >
+                        <X style={{ width: 10, height: 10 }} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {urlQuery.trim().length >= 2 ? (
               <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, marginBottom: 16 }}>
                 {homeState.loading ? 'Searching…' : `${filteredResults.length} result${filteredResults.length !== 1 ? 's' : ''} for "${urlQuery}"`}

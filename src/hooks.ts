@@ -92,6 +92,7 @@ export const STORAGE_KEYS = {
   ratings: 'baroflix.ratings',
   customLists: 'baroflix.custom_lists',
   watchedEpisodes: 'baroflix.watched_episodes',
+  recentSearches: 'baroflix.recent_searches',
 } as const
 
 export const THEME_PRESETS: Record<ThemeId, { label: string; accent: string; glow: string; surface: string }> = {
