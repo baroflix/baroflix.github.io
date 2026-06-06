@@ -452,12 +452,14 @@ export function TitlePage() {
                 {/* Mark as watched — movies only */}
                 {mediaType === 'movie' && (() => {
                   const isWatched = history.some(h => h.mediaType === 'movie' && h.id === Number(id))
+                  const movieProgressKey = `movie-${id}-0-0`
                   return (
                     <button
                       type="button"
                       onClick={() => {
                         if (isWatched) {
                           setHistory(history.filter(h => !(h.mediaType === 'movie' && h.id === Number(id))))
+                          writeProgressEntry(movieProgressKey, 0)
                         } else {
                           setHistory(upsertHistory(history, {
                             mediaType: 'movie',
@@ -467,6 +469,9 @@ export function TitlePage() {
                             backdropPath: details?.backdrop_path,
                             watchedAt: Date.now(),
                           }))
+                          if (details?.runtime) {
+                            writeProgressEntry(movieProgressKey, details.runtime * 60)
+                          }
                         }
                       }}
                       className="inline-flex items-center gap-2 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold transition-all"
