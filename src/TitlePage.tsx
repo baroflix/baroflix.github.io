@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Navigate, Link, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, Link, useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, ArrowRight, Star, ArrowLeft, Bell, BellRing, Search, X, Plus, CheckCircle2, Circle } from 'lucide-react'
 import heroFallback from './assets/hero.png'
@@ -35,6 +35,7 @@ type PlaybackState = { mediaType: MediaKind; id: number; season?: number; episod
 
 export function TitlePage() {
   const params = useParams()
+  const navigate = useNavigate()
   const mediaType = normalizeMediaKind(params.mediaType)
   const id = params.id ?? ''
   const [searchParams, setSearchParams] = useSearchParams()
@@ -328,9 +329,10 @@ export function TitlePage() {
 
         {/* ── Back button above hero card ──────────────────────────────── */}
         <div className="mb-4">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:opacity-90"
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 cursor-pointer"
             style={{
               background: 'rgba(255,255,255,0.1)',
               border: '1px solid rgba(255,255,255,0.15)',
@@ -339,7 +341,7 @@ export function TitlePage() {
           >
             <ArrowLeft className="w-4 h-4" />
             Back
-          </Link>
+          </button>
         </div>
 
         {/* ── Single hero card ──────────────────────────────────────────── */}
