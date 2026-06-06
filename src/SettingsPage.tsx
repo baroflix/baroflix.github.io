@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, Palette, Monitor, Languages } from 'lucide-react'
 import { THEME_PRESETS } from './hooks'
 import type { ThemeSettings, ThemeId } from './hooks'
+import { locales } from './locales'
 
 export function SettingsPage({
   settings,
@@ -11,6 +12,8 @@ export function SettingsPage({
   onChange: (newSettings: Partial<ThemeSettings>) => void
 }) {
   const theme = THEME_PRESETS[settings.theme]
+  const lang = settings.language ?? 'en'
+  const t = locales[lang].settings
 
   return (
     <div className="min-h-screen pt-20 sm:pt-24 px-4 sm:px-6 pb-16">
@@ -25,8 +28,8 @@ export function SettingsPage({
             <ArrowLeft className="w-4 h-4 text-white/70" />
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold text-white tracking-tight">Settings</h1>
-            <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Themes, subtitles, and preferences</p>
+            <h1 className="text-2xl font-semibold text-white tracking-tight">{t.title}</h1>
+            <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{t.subtitle}</p>
           </div>
         </div>
 
@@ -46,9 +49,9 @@ export function SettingsPage({
             <Monitor className="w-5 h-5" />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-semibold text-white">Active Theme: {theme.label}</div>
+            <div className="text-sm font-semibold text-white">{t.activeTheme}: {theme.label}</div>
             <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              Accent <span style={{ color: theme.accent }}>{theme.accent}</span>
+              {t.accent} <span style={{ color: theme.accent }}>{theme.accent}</span>
             </div>
           </div>
           <div
@@ -65,7 +68,7 @@ export function SettingsPage({
           >
             <div className="flex items-center gap-2 mb-5">
               <Palette className="w-4 h-4" style={{ color: 'var(--accent)' }} />
-              <h2 className="text-base font-semibold text-white">Theme Preset</h2>
+              <h2 className="text-base font-semibold text-white">{t.themePreset}</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {Object.entries(THEME_PRESETS).map(([id, preset]) => {
@@ -90,7 +93,7 @@ export function SettingsPage({
                           className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                           style={{ background: preset.glow.replace(/0\.(35|30|28)/, '0.15'), color: preset.accent }}
                         >
-                          Active
+                          {t.active}
                         </span>
                       )}
                     </div>
@@ -101,7 +104,7 @@ export function SettingsPage({
               })}
             </div>
           </section>
-          
+
           {/* Language Selector */}
           <section
             className="p-5"
@@ -109,34 +112,30 @@ export function SettingsPage({
           >
             <div className="flex items-center gap-2 mb-5">
               <Languages className="w-4 h-4" style={{ color: 'var(--accent)' }} />
-              <h2 className="text-base font-semibold text-white">Language</h2>
+              <h2 className="text-base font-semibold text-white">{t.language}</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {(['en', 'pl'] as const).map(lang => {
-                const isActive = settings.language === lang
+              {(['en', 'pl'] as const).map(l => {
+                const isActive = settings.language === l
                 return (
                   <button
-                    key={lang}
-                    onClick={() => onChange({ language: lang })}
+                    key={l}
+                    onClick={() => onChange({ language: l })}
                     className="p-4 text-left transition-all"
                     style={{
                       borderRadius: 14,
-                      background: isActive ? theme.glow.replace('0.35', '0.12').replace('0.30', '0.10').replace('0.28', '0.08') : 'rgba(255,255,255,0.04)',
+                      background: isActive ? theme.glow.replace(/0\.(35|30|28)/, '0.10') : 'rgba(255,255,255,0.04)',
                       border: `1px solid ${isActive ? theme.accent + '60' : 'rgba(255,255,255,0.08)'}`,
                       boxShadow: isActive ? `0 0 24px ${theme.glow}` : 'none',
                     }}
                   >
-                    <div className="font-semibold text-white">{lang === 'en' ? 'English' : 'Polski'}</div>
+                    <div className="font-semibold text-white">{l === 'en' ? 'English' : 'Polski'}</div>
                   </button>
                 )
               })}
             </div>
           </section>
-
-
         </div>
-
-
       </div>
     </div>
   )
