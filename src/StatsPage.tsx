@@ -127,6 +127,7 @@ export function StatsPage() {
   // ── per-title stats ────────────────────────────────────────────────────────
   const [sortKey, setSortKey] = useState<SortKey>('time')
   const [typeFilter, setTypeFilter] = useState<'all' | 'movie' | 'tv' | 'anime'>('all')
+  const [showAllTitles, setShowAllTitles] = useState(false)
 
   const titleRows = useMemo(() => {
     return uniqueTitles.map(entry => {
@@ -276,7 +277,7 @@ export function StatsPage() {
             ] as const).map(({ key, label, icon }) => (
               <button
                 key={key}
-                onClick={() => setSortKey(key)}
+                onClick={() => { setSortKey(key); setShowAllTitles(false) }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                 style={{
                   background: sortKey === key ? 'var(--accent)' : 'rgba(255,255,255,0.07)',
@@ -300,7 +301,7 @@ export function StatsPage() {
           ] as const).map(({ key, label }) => (
             <button
               key={key}
-              onClick={() => setTypeFilter(key)}
+              onClick={() => { setTypeFilter(key); setShowAllTitles(false) }}
               className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
               style={{
                 background: typeFilter === key ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
@@ -318,8 +319,9 @@ export function StatsPage() {
             <p className="text-white/40">{uniqueTitles.length === 0 ? 'Start watching something to see your stats here!' : `No ${typeFilter === 'all' ? '' : typeFilter + ' '}titles yet.`}</p>
           </div>
         ) : (
-          <div className="space-y-2 overflow-y-auto pr-1" style={{ maxHeight: 520 }}>
-            {sortedRows.map((row, idx) => {
+          <>
+          <div className="space-y-2 pr-1">
+            {(showAllTitles ? sortedRows : sortedRows.slice(0, 20)).map((row, idx) => {
               const linkTo = `/title/${row.mediaType}/${row.id}`
               const posterSrc = row.posterPath
                 ? (row.posterPath.startsWith('http') ? row.posterPath : imageUrl(row.posterPath, 'w342'))
@@ -412,6 +414,22 @@ export function StatsPage() {
               )
             })}
           </div>
+          {sortedRows.length > 20 && (
+            <button
+              onClick={() => setShowAllTitles(v => !v)}
+              className="w-full mt-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'rgba(255,255,255,0.6)',
+              }}
+            >
+              {showAllTitles
+                ? 'Show less'
+                : `Show ${sortedRows.length - 20} more`}
+            </button>
+          )}
+          </>
         )}
       </motion.div>
 
