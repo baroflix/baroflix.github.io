@@ -455,20 +455,6 @@ export function HomePage() {
         </section>
       </div>
 
-      {/* Footer */}
-      <footer className="px-4 sm:px-6 py-10 border-t text-center" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          Powered by{' '}
-          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="underline hover:text-white/50 transition-colors">
-            TMDB
-          </a>
-          {' '}· Baroflix © {new Date().getFullYear()}
-          {' '}·{' '}
-          <Link to="/terms" className="underline hover:text-white/50 transition-colors">
-            Terms &amp; Conditions
-          </Link>
-        </p>
-      </footer>
     </div>
   )
 }
