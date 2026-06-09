@@ -313,18 +313,6 @@ export function FullscreenPlayer({
           )}
         </AnimatePresence>
 
-        {/* Invisible hit area to wake controls when mouse moves anywhere */}
-        <div
-          onMouseMove={wake}
-          onClick={wake}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 5,
-            pointerEvents: showControls ? 'none' : 'auto'
-          }}
-        />
-
         {/* ── iframe — takes up the full screen ──────────────────────── */}
         <iframe
           title="Video player"
