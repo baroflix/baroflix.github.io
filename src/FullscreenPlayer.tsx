@@ -324,9 +324,9 @@ export function FullscreenPlayer({
             border: 'none',
             display: 'block',
           }}
-          allow="autoplay; fullscreen; picture-in-picture"
+          allow="autoplay; fullscreen *; picture-in-picture *; encrypted-media"
           allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
+          referrerPolicy="no-referrer-when-downgrade"
         />
 
       </motion.div>
