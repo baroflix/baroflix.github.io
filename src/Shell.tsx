@@ -50,18 +50,18 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
       {/* Footer */}
       <footer
         className="relative z-10 flex items-center justify-center gap-4 py-6 px-4"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+        style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}
       >
-        <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.2)' }}>
+        <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
           &copy; {new Date().getFullYear()} Baroflix
         </span>
-        <span style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.12)', display: 'inline-block' }} />
+        <span style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.2)', display: 'inline-block' }} />
         <Link
           to="/terms"
           className="no-bg-hover transition-colors"
-          style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)' }}
+          style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)' }}
         >
           Terms &amp; Conditions
         </Link>
