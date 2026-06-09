@@ -268,6 +268,16 @@ img {
   border-radius: var(--radius-sm);
 }
 
+/* ─── Episode synopsis auto-scroll ─────────────────────────────────────────── */
+@keyframes ep-synopsis-scroll {
+  from { transform: translateY(0); }
+  to   { transform: translateY(calc(-100% + 3 * 1.625em)); }
+}
+
+.ep-synopsis-wrap:hover .ep-synopsis-text {
+  animation: ep-synopsis-scroll 3s linear 0.3s alternate infinite;
+}
+
 /* ─── Form Elements ────────────────────────────────────────────────────────── */
 select, input, textarea {
   color: inherit;
