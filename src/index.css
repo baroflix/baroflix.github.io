@@ -271,7 +271,7 @@ img {
 /* ─── Episode synopsis auto-scroll ─────────────────────────────────────────── */
 @keyframes ep-synopsis-scroll {
   from { transform: translateY(0); }
-  to   { transform: translateY(calc(-100% + 3 * 1.625em)); }
+  to   { transform: translateY(calc(-100% + 2 * 1.625em)); }
 }
 
 .ep-synopsis-wrap:hover .ep-synopsis-text {

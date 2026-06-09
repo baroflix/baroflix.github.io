@@ -1061,7 +1061,7 @@ function SeasonPanel({
                   </div>
 
                   <div className="text-xs sm:text-sm font-semibold text-white mb-0.5 truncate" style={{ opacity: isWatched ? 0.6 : 1 }}>{ep.name}</div>
-                  <div className="ep-synopsis-wrap hidden sm:block overflow-hidden" style={{ maxHeight: 'calc(3 * 1.625em)', fontSize: '0.75rem' }}>
+                  <div className="ep-synopsis-wrap hidden sm:block overflow-hidden" style={{ maxHeight: 'calc(2 * 1.625em)', fontSize: '0.75rem' }}>
                     <p className="ep-synopsis-text leading-relaxed m-0" style={{ color: 'rgba(255,255,255,0.45)' }}>
                       {ep.overview || 'No synopsis available.'}
                     </p>
