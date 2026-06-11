@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Monitor, Apple, Loader2 } from 'lucide-react'
+import { locales } from './locales'
+import { useAuth } from './context/AuthContext'
 
 function LinuxIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -92,6 +94,8 @@ export function DownloadPage() {
   const [release, setRelease] = useState<ReleaseLinks | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const { settings } = useAuth()
+  const t = locales[settings.language ?? 'en'].download
 
   useEffect(() => {
     setOs(detectOS())
@@ -116,10 +120,10 @@ export function DownloadPage() {
         {/* Heading */}
         <div className="space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-            Get Baroflix Desktop
+            {t.heading}
           </h1>
           <p className="text-lg text-white/60">
-            Enjoy a better, native experience with hardware acceleration, volume boost, and Discord Rich Presence.
+            {t.subtitle}
           </p>
           {/* Version badge */}
           {release?.version && (
@@ -130,7 +134,7 @@ export function DownloadPage() {
               className="inline-block text-xs font-semibold px-3 py-1 rounded-full transition-colors hover:bg-white/10"
               style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)' }}
             >
-              {release.version} · Release notes
+              {release.version} · {t.releaseNotes}
             </a>
           )}
         </div>
@@ -142,7 +146,7 @@ export function DownloadPage() {
           {loading ? (
             <div className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.06)' }}>
               <Loader2 className="w-5 h-5 animate-spin text-white/40" />
-              <span className="text-white/40 font-medium">Checking latest release…</span>
+              <span className="text-white/40 font-medium">{t.checking}</span>
             </div>
           ) : (
             <a
@@ -153,13 +157,13 @@ export function DownloadPage() {
               style={{ background: 'var(--accent)', boxShadow: '0 8px 32px var(--accent-dim)' }}
             >
               <PrimaryIcon className="w-6 h-6" />
-              Download for {OS_LABELS[primary]}
+              {t.downloadFor} {OS_LABELS[primary]}
             </a>
           )}
 
           {/* Other platforms */}
           <div className="pt-8 border-t border-white/10">
-            <p className="text-sm text-white/40 mb-4 font-medium uppercase tracking-wider">Other platforms</p>
+            <p className="text-sm text-white/40 mb-4 font-medium uppercase tracking-wider">{t.otherPlatforms}</p>
             <div className="flex flex-col gap-3">
               {others.map(o => {
                 const Icon = o === 'windows' ? Monitor : o === 'mac' ? Apple : LinuxIcon
@@ -174,9 +178,9 @@ export function DownloadPage() {
                     onClick={loading ? e => e.preventDefault() : undefined}
                   >
                     <Icon className="w-5 h-5" />
-                    <span>Download for {OS_LABELS[o]}</span>
+                    <span>{t.downloadFor} {OS_LABELS[o]}</span>
                     {!loading && !release?.[o] && (
-                      <span className="ml-auto text-xs text-white/30">unavailable</span>
+                      <span className="ml-auto text-xs text-white/30">{t.unavailable}</span>
                     )}
                   </a>
                 )
@@ -186,14 +190,14 @@ export function DownloadPage() {
 
           {error && (
             <p className="text-sm text-white/30">
-              Couldn't fetch release info.{' '}
+              {t.fetchError}{' '}
               <a
                 href={`https://github.com/${GITHUB_REPO}/releases/latest`}
                 target="_blank"
                 rel="noreferrer"
                 className="underline hover:text-white/60"
               >
-                Open GitHub directly →
+                {t.openGitHub}
               </a>
             </p>
           )}
