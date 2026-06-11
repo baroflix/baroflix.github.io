@@ -1,8 +1,8 @@
-import { useState, type FormEvent, useEffect, useRef } from 'react'
+import { useState, type FormEvent, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft, User, Image, Save, CheckCircle, AlertTriangle,
-  Palette, Languages, Monitor, Globe, FileText, Pin, X, Eye, EyeOff,
+  Palette, Languages, Monitor, Globe, FileText, Pin, X, Eye, EyeOff, ChevronDown,
 } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
 import { supabase, type Profile, type PinnedItem } from './lib/supabase'
@@ -12,6 +12,66 @@ import type { ThemeId, WatchHistoryEntry } from './hooks'
 import { locales } from './locales'
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w185'
+
+const LANGUAGE_OPTIONS = [
+  { code: 'en', label: 'English', flag: 'gb' },
+  { code: 'pl', label: 'Polski', flag: 'pl' },
+]
+
+function LanguageDropdown({
+  value, onChange, accentColor,
+}: { value: string; onChange: (code: string) => void; accentColor: string }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const selected = LANGUAGE_OPTIONS.find(o => o.code === value) ?? LANGUAGE_OPTIONS[0]
+
+  const onOutside = useCallback((e: MouseEvent) => {
+    if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+  }, [])
+  useEffect(() => {
+    document.addEventListener('mousedown', onOutside)
+    return () => document.removeEventListener('mousedown', onOutside)
+  }, [onOutside])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-4 py-3 transition-all"
+        style={{ borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', color: 'var(--text-primary)' }}
+      >
+        <span className={`fi fi-${selected.flag}`} style={{ width: 22, height: 16, borderRadius: 2, flexShrink: 0, display: 'inline-block' }} />
+        <span className="flex-1 text-left text-sm font-medium">{selected.label}</span>
+        <ChevronDown className="w-4 h-4 transition-transform" style={{ color: 'var(--text-tertiary)', transform: open ? 'rotate(180deg)' : 'none' }} />
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 mt-1 z-50 overflow-hidden"
+          style={{ borderRadius: 12, background: 'var(--surface-dropdown)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: 'var(--shadow-dropdown)' }}>
+          {LANGUAGE_OPTIONS.map(opt => {
+            const isActive = opt.code === value
+            return (
+              <button
+                key={opt.code}
+                type="button"
+                onClick={() => { onChange(opt.code); setOpen(false) }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors"
+                style={{
+                  background: isActive ? `${accentColor}18` : 'transparent',
+                  color: isActive ? accentColor : 'var(--text-primary)',
+                  borderLeft: isActive ? `2px solid ${accentColor}` : '2px solid transparent',
+                }}
+              >
+                <span className={`fi fi-${opt.flag}`} style={{ width: 22, height: 16, borderRadius: 2, flexShrink: 0, display: 'inline-block' }} />
+                <span className="font-medium">{opt.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function ProfileScreen() {
   const { session, profile: contextProfile, signOut, settings, updateSettings } = useAuth()
@@ -317,23 +377,11 @@ export function ProfileScreen() {
                 <Languages className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                 <h2 className="text-base font-semibold text-white">{ts.language}</h2>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                {(['en', 'pl'] as const).map(l => {
-                  const isActive = settings.language === l
-                  return (
-                    <button key={l} type="button" onClick={() => updateSettings({ language: l })}
-                      className="p-4 text-left transition-all"
-                      style={{
-                        borderRadius: 14,
-                        background: isActive ? theme.glow.replace(/0\.(35|30|28)/, '0.10') : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${isActive ? theme.accent + '60' : 'rgba(255,255,255,0.08)'}`,
-                        boxShadow: isActive ? `0 0 24px ${theme.glow}` : 'none',
-                      }}>
-                      <div className="font-semibold text-white">{l === 'en' ? 'English' : 'Polski'}</div>
-                    </button>
-                  )
-                })}
-              </div>
+              <LanguageDropdown
+                value={settings.language ?? 'en'}
+                onChange={code => updateSettings({ language: code as 'en' | 'pl' })}
+                accentColor={theme.accent}
+              />
             </section>
           </>
         )}
