@@ -23,7 +23,7 @@ export function MediaCard({ item }: { item: MediaItem }) {
       <Link
         to={link}
         className="group block overflow-hidden h-full"
-        style={{ borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}
+        style={{ borderRadius: 16, border: '1px solid var(--border)' }}
       >
         {/* Poster */}
         <div className="relative aspect-[2/3] bg-white/5 overflow-hidden">
@@ -38,7 +38,7 @@ export function MediaCard({ item }: { item: MediaItem }) {
             className="absolute inset-0"
             style={{ background: 'linear-gradient(to top, rgba(8,8,8,0.96) 0%, rgba(8,8,8,0.0) 50%)' }}
           />
-          {/* Type badge */}
+          {/* Type badge — always on dark image, keep dark bg + white text */}
           <div
             className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest"
             style={{
@@ -51,7 +51,7 @@ export function MediaCard({ item }: { item: MediaItem }) {
           >
             {kind}
           </div>
-          {/* Score */}
+          {/* Score — always on dark image */}
           {item.vote_average ? (
             <div
               className="absolute bottom-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold"
@@ -60,6 +60,7 @@ export function MediaCard({ item }: { item: MediaItem }) {
                 backdropFilter: 'blur(8px)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 999,
+                color: '#fff',
               }}
             >
               <Star className="w-2.5 h-2.5" style={{ color: '#f59e0b', fill: '#f59e0b' }} />
@@ -82,10 +83,10 @@ export function MediaCard({ item }: { item: MediaItem }) {
             </div>
           </div>
         </div>
-        {/* Info below */}
-        <div className="px-3 py-3" style={{ background: 'rgba(255,255,255,0.025)' }}>
-          <div className="text-sm font-semibold text-white truncate">{titleFromItem(item)}</div>
-          <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        {/* Info below poster — adapts to theme */}
+        <div className="px-3 py-3" style={{ background: 'var(--bg-card)' }}>
+          <div className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{titleFromItem(item)}</div>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
             {yearFromItem(item) ?? 'Now Streaming'}
           </div>
         </div>
@@ -169,7 +170,7 @@ export function ContentRail({ items, loading }: { items: MediaItem[]; loading: b
 
   return (
     <div className="relative group/rail">
-      {/* Left arrow */}
+      {/* Left arrow — dark pill works against both light and dark content */}
       <button
         type="button"
         onClick={() => scroll('left')}
@@ -260,8 +261,8 @@ export function ContinueWatchingRail({ history, onRemove }: {
           style={{
             width: 220,
             borderRadius: 14,
-            border: '1px solid rgba(255,255,255,0.07)',
-            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-card)',
           }}
         >
           <div className="relative" style={{ aspectRatio: '16/9' }}>
@@ -295,8 +296,8 @@ export function ContinueWatchingRail({ history, onRemove }: {
           </div>
           <div className="px-3 py-2.5 flex items-center gap-3">
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold text-white truncate">{item.title}</div>
-              <div className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              <div className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.title}</div>
+              <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                 {item.mediaType.toUpperCase()}
                 {item.season ? ` · S${item.season}` : ''}
                 {item.episode ? ` E${item.episode}` : ''}
@@ -343,13 +344,13 @@ export function SectionHeader({ number, title, subtitle }: { number?: string; ti
   return (
     <div className="flex items-end gap-4 mb-5">
       {number && (
-        <span className="text-4xl font-bold tabular-nums" style={{ color: 'rgba(255,255,255,0.06)', fontFamily: 'DM Serif Display, serif' }}>
+        <span className="text-4xl font-bold tabular-nums" style={{ color: 'var(--text-ghost)', fontFamily: 'DM Serif Display, serif' }}>
           {number}
         </span>
       )}
       <div>
         {subtitle && <div className="text-[11px] uppercase tracking-widest mb-1" style={{ color: 'var(--accent)' }}>{subtitle}</div>}
-        <h2 className="text-xl font-semibold text-white tracking-tight">{title}</h2>
+        <h2 className="text-xl font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>{title}</h2>
       </div>
     </div>
   )
@@ -363,9 +364,9 @@ export function Chip({ children }: { children: React.ReactNode }) {
       className="inline-block px-3 py-1 text-xs font-medium"
       style={{
         borderRadius: 999,
-        background: 'rgba(255,255,255,0.07)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        color: 'rgba(255,255,255,0.7)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        color: 'var(--text-secondary)',
       }}
     >
       {children}
@@ -379,10 +380,10 @@ export function EmptyPanel({ label, description }: { label: string; description:
   return (
     <div
       className="py-10 px-6 text-center"
-      style={{ borderRadius: 16, border: '1px dashed rgba(255,255,255,0.08)' }}
+      style={{ borderRadius: 16, border: '1px dashed var(--border)' }}
     >
-      <div className="text-base font-semibold text-white/60">{label}</div>
-      <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>{description}</p>
+      <div className="text-base font-semibold" style={{ color: 'var(--text-secondary)' }}>{label}</div>
+      <p className="mt-2 text-sm" style={{ color: 'var(--text-tertiary)' }}>{description}</p>
     </div>
   )
 }
@@ -396,7 +397,7 @@ export function SetupNotice({ compact = false, message }: { compact?: boolean; m
       style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)' }}
     >
       <div className="text-sm font-semibold mb-1" style={{ color: 'var(--accent)' }}>TMDB Setup Required</div>
-      <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
         {message ?? 'Add VITE_TMDB_API_KEY or VITE_TMDB_ACCESS_TOKEN in a .env file, then reload to unlock live posters, cast, seasons, and search.'}
       </p>
     </div>
@@ -409,10 +410,10 @@ export function FactBadge({ label, value }: { label: string; value: string }) {
   return (
     <div
       className="px-4 py-3"
-      style={{ borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+      style={{ borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border)' }}
     >
-      <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</div>
-      <div className="text-sm font-medium text-white">{value}</div>
+      <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-tertiary)' }}>{label}</div>
+      <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{value}</div>
     </div>
   )
 }
@@ -423,12 +424,14 @@ export function CastCard({ member }: { member: CastMember }) {
   return (
     <Link
       to={`/person/${member.id}`}
-      className="flex items-center gap-3 p-3 transition-colors hover:bg-white/5"
-      style={{ borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+      className="flex items-center gap-3 p-3 transition-colors"
+      style={{ borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-card-hover)' }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-card)' }}
     >
       <div
         className="shrink-0 overflow-hidden"
-        style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }}
+        style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--bg-card-hover)' }}
       >
         {member.profile_path ? (
           <img
@@ -438,14 +441,14 @@ export function CastCard({ member }: { member: CastMember }) {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: 'var(--text-secondary)' }}>
             {member.name[0]}
           </div>
         )}
       </div>
       <div className="min-w-0">
-        <div className="text-sm font-semibold text-white truncate">{member.name}</div>
-        <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{member.character ?? 'Cast'}</div>
+        <div className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{member.name}</div>
+        <div className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{member.character ?? 'Cast'}</div>
       </div>
     </Link>
   )
@@ -457,9 +460,9 @@ export function GridSkeleton({ columnsClassName = 'grid-cols-2 sm:grid-cols-3 lg
   return (
     <div className={`grid gap-3 ${columnsClassName}`}>
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div key={i} style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)' }}>
           <div className="skeleton" style={{ aspectRatio: '2/3' }} />
-          <div style={{ padding: 12, background: 'rgba(255,255,255,0.025)' }}>
+          <div style={{ padding: 12, background: 'var(--bg-card)' }}>
             <div className="skeleton h-3 rounded-full mb-2" style={{ width: '60%' }} />
             <div className="skeleton h-2.5 rounded-full" style={{ width: '40%' }} />
           </div>
@@ -478,15 +481,16 @@ export function SelectField({
 }) {
   return (
     <label className="block space-y-2">
-      <span className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</span>
+      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 text-white outline-none transition-colors"
+        className="w-full px-4 py-3 outline-none transition-colors"
         style={{
           borderRadius: 12,
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          color: 'var(--text-primary)',
         }}
       >
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -503,20 +507,20 @@ export function PlayerFrame({ src, title }: { src: string; title: string }) {
       className="overflow-hidden"
       style={{
         borderRadius: 20,
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: '1px solid var(--border)',
         boxShadow: '0 0 80px var(--accent-glow), 0 32px 80px rgba(0,0,0,0.7)',
       }}
     >
       <div
         className="flex items-center gap-3 px-5 py-3 border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)' }}
+        style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}
       >
         <div className="flex gap-1.5">
           <div className="w-3 h-3 rounded-full" style={{ background: '#ff5f57' }} />
           <div className="w-3 h-3 rounded-full" style={{ background: '#ffbd2e' }} />
           <div className="w-3 h-3 rounded-full" style={{ background: '#28ca41' }} />
         </div>
-        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{title}</span>
+        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{title}</span>
       </div>
       <div style={{ background: '#000' }}>
         <iframe
@@ -544,9 +548,9 @@ export function BackButton() {
       className="inline-flex items-center gap-2 px-4 py-2 text-sm transition-colors cursor-pointer"
       style={{
         borderRadius: 999,
-        background: 'rgba(255,255,255,0.07)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        color: 'rgba(255,255,255,0.7)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        color: 'var(--text-secondary)',
       }}
     >
       <ArrowRight className="w-3.5 h-3.5 rotate-180" />

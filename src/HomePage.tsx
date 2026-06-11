@@ -195,7 +195,7 @@ export function HomePage() {
       )}
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section
-        className="relative overflow-hidden"
+        className="hero-section relative overflow-hidden"
         style={{ minHeight: '100dvh' }}
       >
         {/* Ken Burns backdrop */}
@@ -399,8 +399,8 @@ export function HomePage() {
                     width: 220,
                     aspectRatio: '2/3',
                     borderRadius: 14,
-                    border: '1px solid rgba(255,255,255,0.07)',
-                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid var(--border)',
+                    background: 'var(--bg-card)',
                   }}
                 >
                   {list.coverImage ? (
@@ -408,13 +408,14 @@ export function HomePage() {
                   ) : list.items[0]?.posterPath ? (
                     <img src={imageUrl(list.items[0].posterPath, 'w342')} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 backdrop-blur-2xl p-4 text-center border border-white/10">
-                       <span className="text-4xl font-black text-white/20 mb-2">{list.name.charAt(0).toUpperCase()}</span>
-                       <span className="text-xs font-semibold text-white/40 uppercase tracking-widest break-words w-full line-clamp-2">{list.name}</span>
+                    <div className="w-full h-full flex flex-col items-center justify-center backdrop-blur-2xl p-4 text-center" style={{ background: 'var(--bg-card-hover)', border: '1px solid var(--border)' }}>
+                       <span className="text-4xl font-black mb-2" style={{ color: 'var(--text-ghost)' }}>{list.name.charAt(0).toUpperCase()}</span>
+                       <span className="text-xs font-semibold uppercase tracking-widest break-words w-full line-clamp-2" style={{ color: 'var(--text-tertiary)' }}>{list.name}</span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                  {/* Dark overlay — text inside kept white via .dark-overlay */}
+                  <div className="dark-overlay absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
+                  <div className="dark-overlay absolute bottom-0 left-0 right-0 p-4">
                     <h3 className="font-bold text-white text-lg leading-tight truncate drop-shadow-md">{list.name}</h3>
                     <p className="text-xs text-white/60 font-medium drop-shadow-sm mt-0.5">{list.items.length} items</p>
                   </div>

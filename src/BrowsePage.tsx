@@ -122,12 +122,12 @@ function CollectionCard({ id, fallbackTitle }: { id: number; fallbackTitle: stri
     <Link
       to={`/collection/${id}`}
       className="group relative overflow-hidden block transition-transform hover:-translate-y-1"
-      style={{ aspectRatio: '16/9', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)' }}
+      style={{ aspectRatio: '16/9', borderRadius: 20, border: '1px solid var(--border)' }}
     >
       {image ? (
         <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
       ) : (
-        <div className="w-full h-full" style={{ background: 'rgba(255,255,255,0.05)' }} />
+        <div className="w-full h-full" style={{ background: 'var(--bg-card)' }} />
       )}
       <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,8,8,0.95), transparent 70%)' }} />
       <div className="absolute bottom-5 left-5 right-5">
@@ -167,7 +167,7 @@ function FilterDropdown({
 
   return (
     <div ref={ref} className="space-y-1.5">
-      <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
+      <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-tertiary)' }}>
         {label}
       </p>
       <div className="relative">
@@ -176,15 +176,15 @@ function FilterDropdown({
           onClick={() => setOpen(o => !o)}
           className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-sm transition-colors"
           style={{
-            background: open ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.05)',
-            border: `1px solid ${open ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.09)'}`,
-            color: value ? '#fff' : 'rgba(255,255,255,0.38)',
+            background: open ? 'var(--bg-card-hover)' : 'var(--bg-card)',
+            border: `1px solid ${open ? 'var(--border-hover)' : 'var(--border)'}`,
+            color: value ? 'var(--text-primary)' : 'var(--text-tertiary)',
           }}
         >
           <span className="truncate text-left">{selected.label}</span>
           <ChevronDown
             className="shrink-0 transition-transform duration-200"
-            style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.4)', transform: open ? 'rotate(180deg)' : 'none' }}
+            style={{ width: 13, height: 13, color: 'var(--text-secondary)', transform: open ? 'rotate(180deg)' : 'none' }}
           />
         </button>
 
@@ -205,10 +205,10 @@ function FilterDropdown({
                 maxHeight: 220,
                 overflowY: 'auto',
                 borderRadius: 12,
-                background: 'rgba(16,16,16,0.98)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'var(--surface-dropdown)',
+                border: '1px solid var(--border)',
                 backdropFilter: 'blur(24px)',
-                boxShadow: '0 12px 48px rgba(0,0,0,0.7)',
+                boxShadow: 'var(--shadow-dropdown)',
                 scrollbarWidth: 'none',
               }}
             >
@@ -220,13 +220,13 @@ function FilterDropdown({
                     type="button"
                     onClick={() => { onChange(opt.value); setOpen(false) }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors hover:bg-white/5"
-                    style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.5)', background: isActive ? 'rgba(255,255,255,0.07)' : 'transparent' }}
+                    style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)', background: isActive ? 'var(--bg-card)' : 'transparent' }}
                   >
                     <span
                       className="shrink-0 rounded-full"
                       style={{
                         width: 6, height: 6,
-                        background: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.2)',
+                        background: isActive ? 'var(--accent)' : 'var(--border)',
                         boxShadow: isActive ? '0 0 6px var(--accent-glow)' : 'none',
                       }}
                     />
@@ -291,7 +291,7 @@ function FilterPanelContent({
     <div className="space-y-5">
       {/* Type */}
       <div className="space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
+        <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-tertiary)' }}>
           Type
         </p>
         <div className="grid grid-cols-2 gap-1.5">
@@ -304,7 +304,7 @@ function FilterPanelContent({
               style={
                 type === opt.value
                   ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 0 12px var(--accent-glow)' }
-                  : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }
+                  : { background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }
               }
             >
               {opt.label}
@@ -343,7 +343,7 @@ function FilterPanelContent({
           type="button"
           onClick={onClearAll}
           className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs transition-colors hover:bg-white/5"
-          style={{ color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.07)' }}
+          style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
         >
           <RotateCcw style={{ width: 11, height: 11 }} />
           Clear Filters
@@ -594,7 +594,7 @@ export function BrowsePage() {
       {/* ── Discover (sidebar + content) ────────────────────────────────── */}
       <section>
         <div className="flex items-center gap-2 mb-6">
-          <SlidersHorizontal className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.4)' }} />
+          <SlidersHorizontal className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
           <h2 className="text-xl font-semibold text-white">Discover</h2>
           {d.hasActiveFilters && (
             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'var(--accent)', color: '#fff' }}>
@@ -610,7 +610,7 @@ export function BrowsePage() {
             className="hidden lg:block shrink-0 w-52 xl:w-56 sticky self-start"
             style={{ top: '6rem' }}
           >
-            <div className="rounded-2xl p-4 space-y-1" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="rounded-2xl p-4 space-y-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <FilterPanelContent {...filterProps} />
             </div>
           </aside>
@@ -620,21 +620,21 @@ export function BrowsePage() {
 
             {/* Search bar */}
             <div className="relative mb-4">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.3)' }} />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 14, height: 14, color: 'var(--text-tertiary)' }} />
               <input
                 value={d.rawQuery}
                 onChange={e => d.setRawQuery(e.target.value)}
                 placeholder="Search movies, shows, anime..."
-                className="w-full pl-10 pr-9 py-2.5 rounded-xl text-sm text-white placeholder:text-white/25 outline-none transition-colors"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                onFocus={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)')}
-                onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}
+                className="w-full pl-10 pr-9 py-2.5 rounded-xl text-sm outline-none transition-colors"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                onFocus={e => (e.currentTarget.style.borderColor = 'var(--border-hover)')}
+                onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
               />
               <AnimatePresence>
                 {d.rawQuery && (
                   <motion.button initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.12 }}
                     type="button" onClick={() => d.setRawQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full" style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}>
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full" style={{ background: 'var(--bg-card-hover)', color: 'var(--text-secondary)' }}>
                     <X style={{ width: 11, height: 11 }} />
                   </motion.button>
                 )}
@@ -649,9 +649,9 @@ export function BrowsePage() {
                   onClick={() => setMobileFiltersOpen(o => !o)}
                   className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-colors"
                   style={{
-                    background: mobileFiltersOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.06)',
-                    border: `1px solid ${mobileFiltersOpen ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.09)'}`,
-                    color: 'rgba(255,255,255,0.7)',
+                    background: mobileFiltersOpen ? 'var(--bg-card-hover)' : 'var(--bg-card)',
+                    border: `1px solid ${mobileFiltersOpen ? 'var(--border-hover)' : 'var(--border)'}`,
+                    color: 'var(--text-secondary)',
                   }}
                 >
                   <SlidersHorizontal style={{ width: 13, height: 13 }} />
@@ -664,7 +664,7 @@ export function BrowsePage() {
                   <ChevronDown style={{ width: 13, height: 13, transform: mobileFiltersOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                 </button>
                 {!d.loading && d.totalResults > 0 && (
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                     {d.totalResults.toLocaleString()} results
                   </span>
                 )}
@@ -679,7 +679,7 @@ export function BrowsePage() {
                     transition={{ duration: 0.22 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-3 rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div className="mt-3 rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                       <FilterPanelContent {...filterProps} />
                     </div>
                   </motion.div>
@@ -690,7 +690,7 @@ export function BrowsePage() {
             {/* Desktop results count */}
             <AnimatePresence>
               {!d.loading && d.totalResults > 0 && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hidden lg:block text-xs mb-4" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hidden lg:block text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
                   {d.totalResults.toLocaleString()} results
                 </motion.p>
               )}
@@ -724,7 +724,7 @@ export function BrowsePage() {
                       onClick={d.loadMore}
                       disabled={d.loadingMore}
                       className="flex items-center gap-2 px-8 py-2.5 rounded-full text-sm font-medium transition-all disabled:opacity-50 cursor-pointer"
-                      style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.65)' }}
+                      style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
                     >
                       {d.loadingMore ? (
                         <>

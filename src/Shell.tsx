@@ -45,6 +45,7 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
     root.style.setProperty('--shadow-card',     isLight
       ? '0 2px 16px rgba(0,0,0,0.10), 0 0 0 1px var(--border)'
       : '0 2px 16px rgba(0,0,0,0.5),  0 0 0 1px var(--border)')
+    root.style.setProperty('--text-ghost',      isLight ? 'rgba(0,0,0,0.08)'  : 'rgba(255,255,255,0.06)')
 
     root.classList.toggle('light-theme', isLight)
   }, [theme, settings.theme])
@@ -64,7 +65,7 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
     >
       <NavBar language={settings.language} />
       {/* pb-safe ensures content isn't hidden behind iOS home indicator */}
-      <main className="relative z-10 pb-[env(safe-area-inset-bottom,0px)]">
+      <main className="relative z-10 pb-[env(safe-area-inset-bottom,0px)] page-content">
         <Outlet />
       </main>
 

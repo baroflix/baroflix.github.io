@@ -55,23 +55,53 @@
 }
 
 /* ─── Light theme (Lapis) ───────────────────────────────────────────────────── */
-/* Design tokens are overridden via JS in Shell.tsx; this block handles elements
-   that use hardcoded rgba(255,255,255,…) text/bg values in inner pages. */
+/* Design tokens are overridden via JS in Shell.tsx.
+   This block handles Tailwind utility classes and patterns that can't be
+   changed via CSS variables because they use hardcoded values. */
 :root.light-theme {
   color-scheme: light;
 }
 
-/* Cards / panels that use hardcoded dark fills */
+/* Cards / panels */
 .light-theme .glass {
   background: rgba(255,255,255,0.75);
   border-color: rgba(0,0,0,0.09);
 }
 
-/* Hardcoded rgba(255,255,255,0.x) text in page components → dark */
-.light-theme h1, .light-theme h2, .light-theme h3,
-.light-theme h4, .light-theme h5, .light-theme h6 {
-  color: #0d1117;
-}
+/* ── Tailwind text-white / opacity variants inside page content ── */
+/* The hero section is excluded via .hero-section so white text on
+   dark backdrops is preserved. */
+.light-theme .page-content .text-white { color: var(--text-primary) !important; }
+.light-theme .page-content .text-white\/90 { color: var(--text-primary) !important; }
+.light-theme .page-content .text-white\/80 { color: var(--text-secondary) !important; }
+.light-theme .page-content .text-white\/70 { color: var(--text-secondary) !important; }
+.light-theme .page-content .text-white\/60 { color: var(--text-secondary) !important; }
+.light-theme .page-content .text-white\/50 { color: var(--text-secondary) !important; }
+.light-theme .page-content .text-white\/40 { color: var(--text-tertiary) !important; }
+.light-theme .page-content .text-white\/30 { color: var(--text-tertiary) !important; }
+.light-theme .page-content .text-white\/20 { color: var(--text-tertiary) !important; }
+
+/* Restore white inside the hero (dark backdrop) */
+.light-theme .hero-section .text-white,
+.light-theme .hero-section .text-white\/90,
+.light-theme .hero-section .text-white\/80,
+.light-theme .hero-section .text-white\/70,
+.light-theme .hero-section .text-white\/60,
+.light-theme .hero-section .text-white\/50,
+.light-theme .hero-section .text-white\/40 { color: inherit !important; }
+
+/* Restore white inside dark-overlay collection cards */
+.light-theme .dark-overlay .text-white,
+.light-theme .dark-overlay .text-white\/60,
+.light-theme .dark-overlay .text-white\/40 { color: inherit !important; }
+
+/* Tailwind bg-white/X → use card bg in light mode for panels */
+.light-theme .page-content .bg-white\/5 { background: var(--bg-card) !important; }
+.light-theme .page-content .bg-white\/10 { background: var(--bg-card-hover) !important; }
+
+/* Borders */
+.light-theme .page-content .border-white\/10 { border-color: var(--border) !important; }
+.light-theme .page-content .border-white\/20 { border-color: var(--border-hover) !important; }
 
 /* ─── Reset & Base ─────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
