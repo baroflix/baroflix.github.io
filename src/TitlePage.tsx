@@ -25,6 +25,7 @@ import { useLocalStorageState, formatDuration, formatMoney, parsePositiveNumber,
 import type { WatchHistoryEntry } from './hooks'
 import { STORAGE_KEYS } from './hooks'
 import { useAuth } from './context/AuthContext'
+import { locales } from './locales'
 import { Chip, FactBadge, CastCard, SetupNotice, EmptyPanel, MediaGrid } from './ui'
 import { StarRating, AddToCollectionModal } from './components/CollectionsUi'
 import { FullscreenPlayer } from './FullscreenPlayer'
@@ -48,6 +49,8 @@ export function TitlePage() {
   const [error, setError] = useState<string | null>(null)
   const [history, setHistory] = useLocalStorageState<WatchHistoryEntry[]>(STORAGE_KEYS.history, [])
   const { settings, session } = useAuth()
+  const t = locales[settings.language ?? 'en'].titlePage
+  const tc = locales[settings.language ?? 'en'].common
 
   // Ref so cleanup effect always has the latest userId without stale closure
   const sessionIdRef = useRef<string | undefined>(undefined)
@@ -376,7 +379,7 @@ export function TitlePage() {
             }}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            {tc.back}
           </button>
         </div>
 
@@ -437,7 +440,7 @@ export function TitlePage() {
                     textShadow: '0 4px 32px rgba(0,0,0,0.7)',
                   }}
                 >
-                  {loading ? 'Loading…' : title}
+                  {loading ? tc.loading : title}
                 </h1>
               )}
 
@@ -475,7 +478,7 @@ export function TitlePage() {
                   <Chip>{String(yearFromItem(details ?? { id: 0 }))}</Chip>
                 )}
                 {isEpisodic && details?.number_of_seasons && (
-                  <Chip>{details.number_of_seasons} Season{details.number_of_seasons > 1 ? 's' : ''}</Chip>
+                  <Chip>{details.number_of_seasons} {t.facts.seasons}</Chip>
                 )}
                 {mediaType === 'movie' && details?.runtime && (
                   <Chip>{formatDuration(details.runtime)}</Chip>
@@ -488,7 +491,7 @@ export function TitlePage() {
                 className="max-w-xl text-sm sm:text-base leading-relaxed line-clamp-3"
                 style={{ color: 'rgba(255,255,255,0.65)' }}
               >
-                {details?.overview ?? (loading ? '' : 'No overview available.')}
+                {details?.overview ?? (loading ? '' : t.noOverview)}
               </p>
 
               {/* CTAs */}
@@ -504,10 +507,10 @@ export function TitlePage() {
                 >
                   <Play className="w-4 h-4 fill-white" />
                   {mediaType === 'anime'
-                    ? `Play E${activeEpisode}`
+                    ? `${t.play} E${activeEpisode}`
                     : isEpisodic
-                      ? `Play S${activeSeason}E${activeEpisode}`
-                      : 'Play'}
+                      ? `${t.play} S${activeSeason}E${activeEpisode}`
+                      : t.play}
                 </button>
 
                 {/* Mark as watched — movies only */}
@@ -547,8 +550,8 @@ export function TitlePage() {
                       }}
                     >
                       {isWatched
-                        ? <><CheckCircle2 className="w-4 h-4" /> Watched</>
-                        : <><Circle className="w-4 h-4" /> Mark as Watched</>}
+                        ? <><CheckCircle2 className="w-4 h-4" /> {t.watched}</>
+                        : <><Circle className="w-4 h-4" /> {t.markWatched}</>}
                     </button>
                   )
                 })()}
@@ -589,7 +592,7 @@ export function TitlePage() {
                       className="inline-flex items-center gap-2 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold transition-all hover:opacity-90"
                       style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)' }}
                     >
-                      <Plus className="w-4 h-4" /> Add to Collection
+                      <Plus className="w-4 h-4" /> {t.addToCollection}
                     </button>
                 )}
                 {isUnreleased && details && (
@@ -607,7 +610,7 @@ export function TitlePage() {
                     }}
                   >
                     {isReminded ? <BellRing className="w-4 h-4 fill-current" /> : <Bell className="w-4 h-4" />}
-                    {isReminded ? 'Reminder Set' : 'Remind Me'}
+                    {isReminded ? t.reminderSet : t.remindMe}
                   </button>
                 )}
                 {trailer && (
@@ -618,7 +621,7 @@ export function TitlePage() {
                     className="inline-flex items-center gap-2 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm font-semibold"
                     style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)' }}
                   >
-                    Trailer <ArrowRight className="w-4 h-4" />
+                    {t.trailer} <ArrowRight className="w-4 h-4" />
                   </a>
                 )}
               </div>
@@ -658,6 +661,7 @@ export function TitlePage() {
               activeSeason={activeSeason}
               activeEpisode={playback?.episode ?? activeEpisode}
               seasonDetails={seasonDetails}
+              t={t}
               onSeasonChange={(n) => {
                 const next = new URLSearchParams(searchParams)
                 next.set('season', String(n))
@@ -694,30 +698,30 @@ export function TitlePage() {
           {/* Cast + Details */}
           <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
             <div>
-              <h2 className="text-lg font-semibold text-white mb-4">Cast</h2>
+              <h2 className="text-lg font-semibold text-white mb-4">{t.cast}</h2>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {cast.map((m) => <CastCard key={m.id} member={m} />)}
                 {!cast.length && !loading && (
-                  <EmptyPanel label="No cast info" description="Cast data not available from TMDB." />
+                  <EmptyPanel label={t.noCast} description={t.noCastSub} />
                 )}
               </div>
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold text-white mb-4">Details</h2>
+              <h2 className="text-lg font-semibold text-white mb-4">{t.details}</h2>
               <div className="grid grid-cols-2 gap-2">
-                <FactBadge label="Released" value={details?.release_date ?? details?.first_air_date ?? '—'} />
-                <FactBadge label="Language" value={details?.original_language?.toUpperCase() ?? '—'} />
-                <FactBadge label="Score" value={details?.vote_average ? `${details.vote_average.toFixed(1)} / 10` : '—'} />
-                <FactBadge label="Status" value={details?.status ?? '—'} />
+                <FactBadge label={t.facts.released} value={details?.release_date ?? details?.first_air_date ?? '—'} />
+                <FactBadge label={t.facts.language} value={details?.original_language?.toUpperCase() ?? '—'} />
+                <FactBadge label={t.facts.score} value={details?.vote_average ? `${details.vote_average.toFixed(1)} / 10` : '—'} />
+                <FactBadge label={t.facts.status} value={details?.status ?? '—'} />
                 {isEpisodic && details?.number_of_seasons ? (
-                  <FactBadge label="Seasons" value={`${details.number_of_seasons} season${details.number_of_seasons > 1 ? 's' : ''}`} />
+                  <FactBadge label={t.facts.seasons} value={`${details.number_of_seasons}`} />
                 ) : null}
                 {mediaType === 'movie' && details?.runtime ? (
-                  <FactBadge label="Runtime" value={formatDuration(details.runtime)} />
+                  <FactBadge label={t.facts.runtime} value={formatDuration(details.runtime)} />
                 ) : null}
-                {details?.budget ? <FactBadge label="Budget" value={formatMoney(details.budget)} /> : null}
-                {details?.revenue ? <FactBadge label="Revenue" value={formatMoney(details.revenue)} /> : null}
+                {details?.budget ? <FactBadge label={t.facts.budget} value={formatMoney(details.budget)} /> : null}
+                {details?.revenue ? <FactBadge label={t.facts.revenue} value={formatMoney(details.revenue)} /> : null}
               </div>
             </div>
           </div>
@@ -725,7 +729,7 @@ export function TitlePage() {
           {/* More Like This */}
           {details?.recommendations?.results && details.recommendations.results.length > 0 && (
             <div className="pt-8">
-              <h2 className="text-lg font-semibold text-white mb-6">More Like This</h2>
+              <h2 className="text-lg font-semibold text-white mb-6">{t.moreLikeThis}</h2>
               <MediaGrid
                 items={details.recommendations.results.slice(0, 12)}
                 loading={false}
@@ -787,7 +791,7 @@ export function TitlePage() {
 
 function SeasonPanel({
   details, activeSeason, activeEpisode, seasonDetails, onSeasonChange, onEpisodeChange,
-  progressStore, watchedEpisodes, onToggleWatched, onAddToHistory, mediaType, id
+  progressStore, watchedEpisodes, onToggleWatched, onAddToHistory, mediaType, id, t
 }: {
   details: MediaDetails | null
   activeSeason: number
@@ -798,10 +802,10 @@ function SeasonPanel({
   progressStore: Record<string, number>
   watchedEpisodes: Set<string>
   onToggleWatched: (key: string) => void
-  /** Called whenever any episode is manually marked watched — adds title to history */
   onAddToHistory: () => void
   mediaType: string
   id: string
+  t: typeof locales.en.titlePage
 }) {
   const seasons = details?.seasons?.filter((s) => s.season_number > 0) ?? []
   const [episodeQuery, setEpisodeQuery] = useState('')
@@ -865,7 +869,7 @@ function SeasonPanel({
     <div>
       {/* Header row: "Episodes" label + season + show watched buttons */}
       <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
-        <h2 className="text-lg font-semibold text-white">Episodes</h2>
+        <h2 className="text-lg font-semibold text-white">{t.episodes}</h2>
         {allEpisodes.length > 0 && (
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
             {/* Mark whole show */}
@@ -880,8 +884,8 @@ function SeasonPanel({
               }}
             >
               {allShowWatched
-                ? <><CheckCircle2 className="w-3.5 h-3.5" /> Show watched</>
-                : <><Circle className="w-3.5 h-3.5" /> Mark show watched</>
+                ? <><CheckCircle2 className="w-3.5 h-3.5" /> {t.showWatched}</>
+                : <><Circle className="w-3.5 h-3.5" /> {t.markShowWatched}</>
               }
             </button>
 
@@ -897,8 +901,8 @@ function SeasonPanel({
               }}
             >
               {allSeasonWatched
-                ? <><CheckCircle2 className="w-3.5 h-3.5" /> Season watched</>
-                : <><Circle className="w-3.5 h-3.5" /> Mark season watched</>
+                ? <><CheckCircle2 className="w-3.5 h-3.5" /> {t.seasonWatched}</>
+                : <><Circle className="w-3.5 h-3.5" /> {t.markSeasonWatched}</>
               }
             </button>
           </div>
@@ -920,7 +924,7 @@ function SeasonPanel({
                   : { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.65)' }
               }
             >
-              Season {s.season_number}
+              {t.season} {s.season_number}
             </button>
           ))}
         </div>
@@ -930,7 +934,7 @@ function SeasonPanel({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
           <input
             type="text"
-            placeholder="Search episode name..."
+            placeholder={t.searchEpisode}
             value={episodeQuery}
             onChange={(e) => setEpisodeQuery(e.target.value)}
             className="w-full pl-10 pr-8 py-2 text-sm bg-white/5 border border-white/10 rounded-full outline-none text-white placeholder-white/40 transition-all focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30"
@@ -993,7 +997,7 @@ function SeasonPanel({
                     <img src={imageUrl(ep.still_path, 'w342')} alt={ep.name} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                      No still
+                      {t.noStill}
                     </div>
                   )}
 
@@ -1038,7 +1042,7 @@ function SeasonPanel({
                             onAddToHistory()
                           }
                         }}
-                        title={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
+                        title={isWatched ? t.markUnwatched : t.markWatched}
                         className="flex items-center justify-center transition-colors hover:opacity-80"
                         style={{ color: isWatched ? 'var(--accent)' : 'rgba(255,255,255,0.25)', minHeight: 0 }}
                       >
@@ -1049,7 +1053,7 @@ function SeasonPanel({
                       </button>
 
                       {isWatched && (
-                        <span className="hidden sm:inline text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Watched</span>
+                        <span className="hidden sm:inline text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>{t.watched}</span>
                       )}
                       {!isWatched && hasProgress && (
                         <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
@@ -1063,7 +1067,7 @@ function SeasonPanel({
                   <div className="text-xs sm:text-sm font-semibold text-white mb-0.5 truncate" style={{ opacity: isWatched ? 0.6 : 1 }}>{ep.name}</div>
                   <div className="ep-synopsis-wrap hidden sm:block overflow-hidden" style={{ maxHeight: 'calc(2 * 1.625em)', fontSize: '0.75rem' }}>
                     <p className="ep-synopsis-text leading-relaxed m-0" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                      {ep.overview || 'No synopsis available.'}
+                      {ep.overview || t.noSynopsis}
                     </p>
                   </div>
                 </div>
@@ -1073,11 +1077,11 @@ function SeasonPanel({
         })}
         {filteredEpisodes.length === 0 && (seasonDetails?.episodes ?? []).length > 0 && (
           <div className="col-span-full py-12 text-center">
-            <p className="text-white/40 text-sm">No episodes found matching "{episodeQuery}"</p>
+            <p className="text-white/40 text-sm">{t.noEpisodesFound} "{episodeQuery}"</p>
           </div>
         )}
         {!seasonDetails?.episodes?.length && (
-          <EmptyPanel label="Episodes loading" description="Season data is on its way." />
+          <EmptyPanel label={t.episodesLoading} description={t.episodesLoadingSub} />
         )}
       </div>
     </div>
