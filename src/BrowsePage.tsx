@@ -11,6 +11,8 @@ import type { DiscoverMediaType, DiscoverSort, DiscoverResult } from './lib/tmdb
 import { discoverAnime, ANILIST_GENRES } from './lib/anilist'
 import type { MediaItem } from './types'
 import { NETWORKS } from './NetworkPage'
+import { locales } from './locales'
+import { useAuth } from './context/AuthContext'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -85,31 +87,9 @@ const MOVIE_STUDIOS = [
   { value: '923', label: 'Legendary' },
 ]
 
-const SORT_OPTIONS: { value: DiscoverSort; label: string }[] = [
-  { value: 'popularity.desc', label: 'Most Popular' },
-  { value: 'vote_average.desc', label: 'Top Rated' },
-  { value: 'newest', label: 'Newest First' },
-  { value: 'oldest', label: 'Oldest First' },
-]
-
 const CURRENT_YEAR = new Date().getFullYear()
-const YEAR_OPTIONS = [
-  { value: '', label: 'Any Year' },
-  ...Array.from({ length: CURRENT_YEAR - 1979 }, (_, i) => {
-    const y = String(CURRENT_YEAR - i)
-    return { value: y, label: y }
-  }),
-]
-
-const RATING_OPTIONS = [
-  { value: '', label: 'Any Rating' },
-  { value: '6', label: '6.0 +' },
-  { value: '7', label: '7.0 +' },
-  { value: '7.5', label: '7.5 +' },
-  { value: '8', label: '8.0 +' },
-  { value: '8.5', label: '8.5 +' },
-  { value: '9', label: '9.0 +' },
-]
+const YEAR_VALS = ['', ...Array.from({ length: CURRENT_YEAR - 1979 }, (_, i) => String(CURRENT_YEAR - i))]
+const RATING_VALS = ['', '6', '7', '7.5', '8', '8.5', '9']
 
 // ─── CollectionCard ───────────────────────────────────────────────────────────
 
@@ -252,6 +232,7 @@ function FilterPanelContent({
   year, onYearChange,
   minRating, onMinRatingChange,
   hasActiveFilters, onClearAll,
+  t,
 }: {
   type: DiscoverMediaType
   onTypeChange: (t: DiscoverMediaType) => void
@@ -267,32 +248,54 @@ function FilterPanelContent({
   onMinRatingChange: (r: string) => void
   hasActiveFilters: boolean
   onClearAll: () => void
+  t: typeof locales.en.browse
 }) {
   const TYPE_OPTS: { value: DiscoverMediaType; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'movie', label: 'Movies' },
-    { value: 'tv', label: 'TV Shows' },
-    { value: 'anime', label: 'Anime' },
+    { value: 'all', label: t.types.all },
+    { value: 'movie', label: t.types.movies },
+    { value: 'tv', label: t.types.tv },
+    { value: 'anime', label: t.types.anime },
   ]
+
+  const SORT_OPTIONS: { value: DiscoverSort; label: string }[] = [
+    { value: 'popularity.desc', label: t.sortOptions.popular },
+    { value: 'vote_average.desc', label: t.sortOptions.topRated },
+    { value: 'newest', label: t.sortOptions.newest },
+    { value: 'oldest', label: t.sortOptions.oldest },
+  ]
+
+  const YEAR_OPTIONS = [
+    { value: '', label: t.anyYear },
+    ...YEAR_VALS.slice(1).map(y => ({ value: y, label: y })),
+  ]
+
+  const RATING_OPTIONS = RATING_VALS.map(v => ({
+    value: v,
+    label: v === '' ? t.anyRating : `${v} +`,
+  }))
 
   const genreOptions =
     type === 'movie'
-      ? [{ value: '', label: 'All Genres' }, ...MOVIE_GENRES.map(g => ({ value: String(g.id), label: g.name }))]
+      ? [{ value: '', label: t.allGenres }, ...MOVIE_GENRES.map(g => ({ value: String(g.id), label: g.name }))]
       : type === 'tv'
-      ? [{ value: '', label: 'All Genres' }, ...TV_GENRES.map(g => ({ value: String(g.id), label: g.name }))]
+      ? [{ value: '', label: t.allGenres }, ...TV_GENRES.map(g => ({ value: String(g.id), label: g.name }))]
       : type === 'anime'
-      ? [{ value: '', label: 'All Genres' }, ...ANILIST_GENRES.map(g => ({ value: g, label: g }))]
+      ? [{ value: '', label: t.allGenres }, ...ANILIST_GENRES.map(g => ({ value: g, label: g }))]
       : []
 
-  const networkOptions = type === 'tv' ? TV_NETWORKS : type === 'movie' ? MOVIE_STUDIOS : null
-  const networkLabel = type === 'movie' ? 'Studio' : 'Network'
+  const networkOptions = type === 'tv'
+    ? TV_NETWORKS.map(n => n.value === '' ? { ...n, label: t.allNetworks } : n)
+    : type === 'movie'
+    ? MOVIE_STUDIOS.map(n => n.value === '' ? { ...n, label: t.allStudios } : n)
+    : null
+  const networkLabel = type === 'movie' ? t.studio : t.network
 
   return (
     <div className="space-y-5">
       {/* Type */}
       <div className="space-y-2">
         <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-tertiary)' }}>
-          Type
+          {t.types.all}
         </p>
         <div className="grid grid-cols-2 gap-1.5">
           {TYPE_OPTS.map(opt => (
@@ -314,16 +317,11 @@ function FilterPanelContent({
       </div>
 
       {/* Sort */}
-      <FilterDropdown
-        label="Sort By"
-        value={sortBy}
-        onChange={v => onSortChange(v as DiscoverSort)}
-        options={SORT_OPTIONS}
-      />
+      <FilterDropdown label={t.sortBy} value={sortBy} onChange={v => onSortChange(v as DiscoverSort)} options={SORT_OPTIONS} />
 
       {/* Genre */}
       {genreOptions.length > 0 && (
-        <FilterDropdown label="Genre" value={genre} onChange={onGenreChange} options={genreOptions} />
+        <FilterDropdown label={t.genre} value={genre} onChange={onGenreChange} options={genreOptions} />
       )}
 
       {/* Network / Studio */}
@@ -332,10 +330,10 @@ function FilterPanelContent({
       )}
 
       {/* Year */}
-      <FilterDropdown label="Release Year" value={year} onChange={onYearChange} options={YEAR_OPTIONS} />
+      <FilterDropdown label={t.releaseYear} value={year} onChange={onYearChange} options={YEAR_OPTIONS} />
 
       {/* Min Rating */}
-      <FilterDropdown label="Min Rating" value={minRating} onChange={onMinRatingChange} options={RATING_OPTIONS} />
+      <FilterDropdown label={t.minRating} value={minRating} onChange={onMinRatingChange} options={RATING_OPTIONS} />
 
       {/* Clear all */}
       {hasActiveFilters && (
@@ -346,7 +344,7 @@ function FilterPanelContent({
           style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
         >
           <RotateCcw style={{ width: 11, height: 11 }} />
-          Clear Filters
+          {t.clearFilters}
         </button>
       )}
     </div>
@@ -508,6 +506,9 @@ export function BrowsePage() {
   const franchisesRef = useRef<HTMLDivElement>(null)
   const d = useDiscover()
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const { settings } = useAuth()
+  const lang = settings.language ?? 'en'
+  const t = locales[lang]
 
   function scrollFranchises(dir: 'left' | 'right') {
     franchisesRef.current?.scrollBy({
@@ -528,6 +529,7 @@ export function BrowsePage() {
     year: d.year, onYearChange: d.setYear,
     minRating: d.minRating, onMinRatingChange: d.setMinRating,
     hasActiveFilters: d.hasActiveFilters, onClearAll: d.clearAll,
+    t: t.browse,
   }
 
   return (
@@ -536,16 +538,21 @@ export function BrowsePage() {
       {/* Page Header */}
       <div className="space-y-2 mb-12">
         <h1 className="text-3xl sm:text-4xl font-normal text-white" style={{ fontFamily: 'DM Serif Display, serif' }}>
-          Browse Catalog
+          {t.nav.browse}
         </h1>
         <p className="text-sm text-white/50 max-w-2xl leading-relaxed">
-          Explore movies, TV shows, timeless classics, and studio hubs across all your favorite genres and franchises.
+          {lang === 'pl'
+            ? 'Filmy, seriale, klasyki i huby studyjne we wszystkich gatunkach i franczyzach.'
+            : 'Explore movies, TV shows, timeless classics, and studio hubs across all your favorite genres and franchises.'}
         </p>
       </div>
 
       {/* ── Studio Hubs ─────────────────────────────────────────────────── */}
       <section className="mb-12">
-        <SectionHeader title="Studio Hubs" subtitle="Explore by network and production company" />
+        <SectionHeader
+          title={lang === 'pl' ? 'Huby Studyjne' : 'Studio Hubs'}
+          subtitle={lang === 'pl' ? 'Przeglądaj według sieci i wytwórni filmowej' : 'Explore by network and production company'}
+        />
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {Object.values(NETWORKS).map(network => (
             <Link
@@ -569,7 +576,10 @@ export function BrowsePage() {
 
       {/* ── Franchises & Collections ────────────────────────────────────── */}
       <section className="mb-16">
-        <SectionHeader title="Franchises & Collections" subtitle="Epic movie marathons and series collections" />
+        <SectionHeader
+          title={lang === 'pl' ? 'Franczyzy i Kolekcje' : 'Franchises & Collections'}
+          subtitle={lang === 'pl' ? 'Epickie maratony filmowe i kolekcje seriali' : 'Epic movie marathons and series collections'}
+        />
         <div className="relative group/rail">
           <button type="button" onClick={() => scrollFranchises('left')} tabIndex={-1} aria-label="Scroll left"
             className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 flex items-center justify-center w-9 h-9 rounded-full opacity-0 group-hover/rail:opacity-100 transition-opacity no-bg-hover"
@@ -595,10 +605,10 @@ export function BrowsePage() {
       <section>
         <div className="flex items-center gap-2 mb-6">
           <SlidersHorizontal className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
-          <h2 className="text-xl font-semibold text-white">Discover</h2>
+          <h2 className="text-xl font-semibold text-white">{t.browse.discover}</h2>
           {d.hasActiveFilters && (
             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'var(--accent)', color: '#fff' }}>
-              Filtered
+              {t.browse.filtered}
             </span>
           )}
         </div>
@@ -624,7 +634,7 @@ export function BrowsePage() {
               <input
                 value={d.rawQuery}
                 onChange={e => d.setRawQuery(e.target.value)}
-                placeholder="Search movies, shows, anime..."
+                placeholder={t.search.placeholder}
                 className="w-full pl-10 pr-9 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 onFocus={e => (e.currentTarget.style.borderColor = 'var(--border-hover)')}
@@ -655,7 +665,7 @@ export function BrowsePage() {
                   }}
                 >
                   <SlidersHorizontal style={{ width: 13, height: 13 }} />
-                  Filters
+                  {t.browse.filters}
                   {d.hasActiveFilters && (
                     <span className="w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center" style={{ background: 'var(--accent)', color: '#fff' }}>
                       ✓
@@ -665,7 +675,7 @@ export function BrowsePage() {
                 </button>
                 {!d.loading && d.totalResults > 0 && (
                   <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                    {d.totalResults.toLocaleString()} results
+                    {d.totalResults.toLocaleString()} {t.browse.results}
                   </span>
                 )}
               </div>
@@ -691,7 +701,7 @@ export function BrowsePage() {
             <AnimatePresence>
               {!d.loading && d.totalResults > 0 && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hidden lg:block text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
-                  {d.totalResults.toLocaleString()} results
+                  {d.totalResults.toLocaleString()} {t.browse.results}
                 </motion.p>
               )}
             </AnimatePresence>
@@ -700,7 +710,7 @@ export function BrowsePage() {
             {d.loading ? (
               <GridSkeleton columnsClassName="grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4" />
             ) : d.items.length === 0 ? (
-              <EmptyPanel label="No results found" description="Try adjusting your search or filters." />
+              <EmptyPanel label={t.browse.noResults} description={t.browse.noResultsHint} />
             ) : (
               <>
                 <motion.div
@@ -732,9 +742,9 @@ export function BrowsePage() {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.37 0 0 5.37 0 12h4z" />
                           </svg>
-                          Loading...
+                          {t.common.loading}
                         </>
-                      ) : 'Load More'}
+                      ) : t.browse.loadMore}
                     </button>
                   </div>
                 )}

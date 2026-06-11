@@ -4,6 +4,11 @@ import { THEME_PRESETS } from './hooks'
 import type { ThemeSettings, ThemeId } from './hooks'
 import { locales } from './locales'
 
+const LANGUAGE_OPTIONS = [
+  { code: 'en', label: 'English', flag: 'gb' },
+  { code: 'pl', label: 'Polski', flag: 'pl' },
+]
+
 export function SettingsPage({
   settings,
   onChange,
@@ -114,14 +119,15 @@ export function SettingsPage({
               <Languages className="w-4 h-4" style={{ color: 'var(--accent)' }} />
               <h2 className="text-base font-semibold text-white">{t.language}</h2>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {(['en', 'pl'] as const).map(l => {
-                const isActive = settings.language === l
+            <div className="flex flex-col gap-2">
+              {LANGUAGE_OPTIONS.map(opt => {
+                const isActive = (settings.language ?? 'en') === opt.code
                 return (
                   <button
-                    key={l}
-                    onClick={() => onChange({ language: l })}
-                    className="p-4 text-left transition-all"
+                    key={opt.code}
+                    type="button"
+                    onClick={() => onChange({ language: opt.code as 'en' | 'pl' })}
+                    className="flex items-center gap-3 p-4 text-left transition-all w-full"
                     style={{
                       borderRadius: 14,
                       background: isActive ? theme.glow.replace(/0\.(35|30|28)/, '0.10') : 'rgba(255,255,255,0.04)',
@@ -129,7 +135,14 @@ export function SettingsPage({
                       boxShadow: isActive ? `0 0 24px ${theme.glow}` : 'none',
                     }}
                   >
-                    <div className="font-semibold text-white">{l === 'en' ? 'English' : 'Polski'}</div>
+                    <span className={`fi fi-${opt.flag}`} style={{ width: 24, height: 18, borderRadius: 3, flexShrink: 0, display: 'inline-block' }} />
+                    <span className="font-semibold text-white">{opt.label}</span>
+                    {isActive && (
+                      <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                        style={{ background: theme.glow.replace(/0\.(35|30|28)/, '0.15'), color: theme.accent }}>
+                        {t.active}
+                      </span>
+                    )}
                   </button>
                 )
               })}

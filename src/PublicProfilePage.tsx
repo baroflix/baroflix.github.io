@@ -42,9 +42,14 @@ function getProfileStatus(profile: ProfileWithBadges): { type: 'watching' | 'onl
   return { type: 'offline', label: 'Offline' }
 }
 
-function countryFlag(code: string): string {
-  if (!code || code.length !== 2) return ''
-  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(c.charCodeAt(0) + 127397))
+function CountryFlag({ code, size = 16 }: { code: string; size?: number }) {
+  if (!code || code.length !== 2) return null
+  return (
+    <span
+      className={`fi fi-${code.toLowerCase()}`}
+      style={{ width: size * 1.33, height: size, borderRadius: 2, display: 'inline-block', flexShrink: 0, verticalAlign: 'middle' }}
+    />
+  )
 }
 
 function formatMinutes(totalMinutes: number): string {
@@ -261,8 +266,8 @@ function FollowListModal({
                             </span>
                           )}
                           {user.country && (
-                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', flexShrink: 0 }}>
-                              {countryFlag(user.country)}
+                            <span style={{ flexShrink: 0 }}>
+                              <CountryFlag code={user.country} size={11} />
                             </span>
                           )}
                         </div>
@@ -606,7 +611,7 @@ export function PublicProfilePage() {
               {profile.country && (
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <Globe size={12} style={{ opacity: 0.6 }} />
-                  {countryFlag(profile.country)} {profile.country}
+                  <CountryFlag code={profile.country} size={13} /> {profile.country}
                 </span>
               )}
               {memberSince && (
