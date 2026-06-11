@@ -186,6 +186,15 @@ export const locales = {
         anime: 'Anime',
       },
     },
+    shell: {
+      myProfile: 'My Profile',
+      activityFeed: 'Activity Feed',
+      myCollection: 'My Collection',
+      myStats: 'My Stats',
+      settings: 'Settings',
+      signOut: 'Sign Out',
+      termsAndConditions: 'Terms & Conditions',
+    },
     common: {
       active: 'Active',
       loading: 'Loading…',
@@ -382,6 +391,15 @@ export const locales = {
         tv: 'Seriale',
         anime: 'Anime',
       },
+    },
+    shell: {
+      myProfile: 'Mój Profil',
+      activityFeed: 'Aktywność',
+      myCollection: 'Moja Kolekcja',
+      myStats: 'Moje Statystyki',
+      settings: 'Ustawienia',
+      signOut: 'Wyloguj się',
+      termsAndConditions: 'Regulamin',
     },
     common: {
       active: 'Aktywny',

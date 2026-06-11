@@ -85,7 +85,7 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
         >
-          Terms &amp; Conditions
+          {locales[settings.language ?? 'en'].shell.termsAndConditions}
         </Link>
       </footer>
     </div>
@@ -105,6 +105,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
   const profileRef = useRef<HTMLDivElement>(null)
   const lang = language || 'en'
   const t = locales[lang].nav
+  const ts = locales[lang].shell
   const isElectron = /electron/i.test(navigator.userAgent)
 
   // Close mobile menu and profile dropdown on route change
@@ -192,11 +193,11 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
   ]
 
   const profileMenuItems = [
-    { to: profile?.username ? `/user/${profile.username}` : '/profile', icon: User, label: 'My Profile' },
-    { to: '/feed', icon: Activity, label: 'Activity Feed' },
-    { to: '/collections', icon: Library, label: 'My Collection' },
-    { to: '/stats', icon: BarChart2, label: 'My Stats' },
-    { to: '/profile', icon: Settings, label: 'Settings' },
+    { to: profile?.username ? `/user/${profile.username}` : '/profile', icon: User, label: ts.myProfile },
+    { to: '/feed', icon: Activity, label: ts.activityFeed },
+    { to: '/collections', icon: Library, label: ts.myCollection },
+    { to: '/stats', icon: BarChart2, label: ts.myStats },
+    { to: '/profile', icon: Settings, label: ts.settings },
   ]
 
   /** Avatar shown in the button and dropdown header */
@@ -408,7 +409,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)' }}
                       >
                         <LogOut className="w-4 h-4 shrink-0 opacity-60" />
-                        Sign Out
+                        {ts.signOut}
                       </button>
                     </div>
                   </motion.div>
@@ -493,7 +494,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             style={{ color: 'var(--text-tertiary)', background: 'transparent' }}
           >
             <LogOut className="w-4 h-4 shrink-0" />
-            Sign Out
+            {ts.signOut}
           </button>
 
           {!isElectron && (
