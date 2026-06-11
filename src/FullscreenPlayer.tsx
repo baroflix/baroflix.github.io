@@ -242,9 +242,9 @@ export function FullscreenPlayer({
           flexDirection: 'column',
         }}
       >
-        {/* ── Top bar ──────────────────────────────────────────────────── */}
+        {/* ── Top bar (gradient + Next Episode — auto-hides) ───────────── */}
         <AnimatePresence>
-          {showControls && (
+          {showControls && onNextEpisode && (
             <motion.div
               initial={{ y: -40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -254,7 +254,7 @@ export function FullscreenPlayer({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
-                padding: '12px 20px',
+                padding: '12px 64px 12px 20px',
                 background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%)',
                 position: 'absolute',
                 top: 0,
@@ -262,56 +262,65 @@ export function FullscreenPlayer({
                 right: 0,
                 zIndex: 10,
                 gap: 12,
+                pointerEvents: 'none',
               }}
             >
-              {onNextEpisode && (
-                <button
-                  type="button"
-                  onClick={onNextEpisode}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '0 14px',
-                    height: 36,
-                    borderRadius: 18,
-                    background: 'rgba(255,255,255,0.12)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    cursor: 'pointer',
-                    color: '#fff',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    flexShrink: 0,
-                    fontFamily: 'Inter, sans-serif',
-                  }}
-                >
-                  <SkipForward style={{ width: 14, height: 14 }} />
-                  Next Episode
-                </button>
-              )}
               <button
                 type="button"
-                onClick={onClose}
-                aria-label="Close player"
+                onClick={onNextEpisode}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 36,
+                  gap: 6,
+                  padding: '0 14px',
                   height: 36,
-                  borderRadius: '50%',
+                  borderRadius: 18,
                   background: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.15)',
+                  border: '1px solid rgba(255,255,255,0.2)',
                   cursor: 'pointer',
                   color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 600,
                   flexShrink: 0,
+                  fontFamily: 'Inter, sans-serif',
+                  pointerEvents: 'auto',
                 }}
               >
-                <X style={{ width: 16, height: 16 }} />
+                <SkipForward style={{ width: 14, height: 14 }} />
+                Next Episode
               </button>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* ── Close button — always visible ─────────────────────────────── */}
+        <button
+          type="button"
+          onClick={onClose}
+          onTouchStart={wake}
+          aria-label="Close player"
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 20,
+            zIndex: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            background: showControls ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.5)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            cursor: 'pointer',
+            color: '#fff',
+            opacity: showControls ? 1 : 0.4,
+            transition: 'opacity 0.3s, background 0.3s',
+            flexShrink: 0,
+          }}
+        >
+          <X style={{ width: 18, height: 18 }} />
+        </button>
 
         {/* ── iframe — takes up the full screen ──────────────────────── */}
         <iframe
