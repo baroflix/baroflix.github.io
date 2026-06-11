@@ -17,7 +17,7 @@ import { fetchTrendingAnime, searchAnime as searchAnilist, fetchAnimeDetails } f
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export type ThemeId = 'scarlet' | 'emerald' | 'aurora' | 'oxide' | 'pearl' | 'fuchsia' | 'amethyst' | 'pride'
+export type ThemeId = 'scarlet' | 'emerald' | 'aurora' | 'oxide' | 'pearl' | 'fuchsia' | 'amethyst' | 'lapis'
 
 export type LanguageId = 'en' | 'pl'
 
@@ -103,7 +103,7 @@ export const THEME_PRESETS: Record<ThemeId, { label: string; accent: string; glo
   pearl:    { label: 'Pearl',    accent: '#ffffff', glow: 'rgba(255,255,255,0.30)', surface: 'rgba(20,20,20,0.9)'  },
   fuchsia:  { label: 'Fuchsia',  accent: '#ec4899', glow: 'rgba(236,72,153,0.30)',  surface: 'rgba(36,10,24,0.9)'  },
   amethyst: { label: 'Amethyst', accent: '#a855f7', glow: 'rgba(168,85,247,0.30)',  surface: 'rgba(24,10,36,0.9)'  },
-  pride:    { label: 'Pride 🌈', accent: 'hsl(var(--rainbow-hue), 80%, 55%)', glow: 'hsla(var(--rainbow-hue), 80%, 55%, 0.30)',  surface: 'rgba(20,20,20,0.9)'  },
+  lapis:    { label: 'Lapis',    accent: '#1d4ed8',  glow: 'rgba(29,78,216,0.25)',   surface: 'rgba(245,247,250,0.97)' },
 }
 
 export const defaultSettings: ThemeSettings = {
@@ -128,9 +128,9 @@ export function useLocalStorageState<T>(key: string, initialValue: T) {
       const stored = window.localStorage.getItem(key)
       if (stored) {
         const parsed = JSON.parse(stored) as any
-        // Migrate old users off the removed midnight theme
+        // Migrate old users off removed themes
         if (key === STORAGE_KEYS.settings && parsed) {
-          if (parsed.theme === 'midnight') {
+          if (parsed.theme === 'midnight' || parsed.theme === 'pride') {
             parsed.theme = 'scarlet'
           }
           if (!parsed.language) {

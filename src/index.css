@@ -1,22 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 @import 'tailwindcss';
 
-@property --rainbow-hue {
-  syntax: '<angle>';
-  inherits: true;
-  initial-value: 0deg;
-}
-
-@keyframes rainbow-hue-anim {
-  from { --rainbow-hue: 0deg; }
-  to { --rainbow-hue: 360deg; }
-}
-
-/* Only animate when the pride theme is active — running this on :root
-   unconditionally causes continuous GPU repaints and crashes Safari on iPad */
-:root.pride-theme {
-  animation: rainbow-hue-anim 8s linear infinite;
-}
 
 /* ─── Design Tokens ────────────────────────────────────────────────────────── */
 :root {
@@ -68,6 +52,25 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: dark;
+}
+
+/* ─── Light theme (Lapis) ───────────────────────────────────────────────────── */
+/* Design tokens are overridden via JS in Shell.tsx; this block handles elements
+   that use hardcoded rgba(255,255,255,…) text/bg values in inner pages. */
+:root.light-theme {
+  color-scheme: light;
+}
+
+/* Cards / panels that use hardcoded dark fills */
+.light-theme .glass {
+  background: rgba(255,255,255,0.75);
+  border-color: rgba(0,0,0,0.09);
+}
+
+/* Hardcoded rgba(255,255,255,0.x) text in page components → dark */
+.light-theme h1, .light-theme h2, .light-theme h3,
+.light-theme h4, .light-theme h5, .light-theme h6 {
+  color: #0d1117;
 }
 
 /* ─── Reset & Base ─────────────────────────────────────────────────────────── */

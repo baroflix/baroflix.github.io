@@ -18,22 +18,43 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
   // Sync theme CSS vars to :root so body::before gradient picks them up
   useEffect(() => {
     const root = document.documentElement
+    const isLight = settings.theme === 'lapis'
+
     root.style.setProperty('--accent', theme.accent)
     root.style.setProperty('--accent-glow', theme.glow)
     const dimAlpha = theme.glow.replace(/[\d.]+\)$/, '0.15)')
     const softAlpha = theme.glow.replace(/[\d.]+\)$/, '0.08)')
     root.style.setProperty('--accent-dim', dimAlpha)
     root.style.setProperty('--accent-soft', softAlpha)
-    // Gate the rainbow animation — it runs on :root and causes continuous GPU
-    // repaints which crash Safari on iPad when active for non-pride themes
-    root.classList.toggle('pride-theme', settings.theme === 'pride')
+
+    // Light/dark adaptive tokens
+    const navRgb = isLight ? '245,247,250' : '8,8,8'
+    root.style.setProperty('--nav-gradient',    `linear-gradient(180deg, rgba(${navRgb},0.96) 0%, rgba(${navRgb},0) 100%)`)
+    root.style.setProperty('--bg',              isLight ? '#f5f7fa'                    : '#080808')
+    root.style.setProperty('--bg-elevated',     isLight ? '#eef2f8'                    : '#111111')
+    root.style.setProperty('--bg-card',         isLight ? 'rgba(0,0,0,0.04)'          : 'rgba(255,255,255,0.035)')
+    root.style.setProperty('--bg-card-hover',   isLight ? 'rgba(0,0,0,0.07)'          : 'rgba(255,255,255,0.065)')
+    root.style.setProperty('--border',          isLight ? 'rgba(0,0,0,0.10)'          : 'rgba(255,255,255,0.08)')
+    root.style.setProperty('--border-hover',    isLight ? 'rgba(0,0,0,0.22)'          : 'rgba(255,255,255,0.18)')
+    root.style.setProperty('--text-primary',    isLight ? '#0d1117'                   : '#ffffff')
+    root.style.setProperty('--text-secondary',  isLight ? 'rgba(0,0,0,0.60)'         : 'rgba(255,255,255,0.55)')
+    root.style.setProperty('--text-tertiary',   isLight ? 'rgba(0,0,0,0.38)'         : 'rgba(255,255,255,0.30)')
+    root.style.setProperty('--surface-nav',     isLight ? 'rgba(245,247,250,0.97)'   : 'rgba(10,10,10,0.97)')
+    root.style.setProperty('--surface-dropdown',isLight ? 'rgba(255,255,255,0.99)'   : 'rgba(14,14,14,0.98)')
+    root.style.setProperty('--shadow-dropdown', isLight ? '0 12px 48px rgba(0,0,0,0.15)' : '0 12px 48px rgba(0,0,0,0.7)')
+    root.style.setProperty('--shadow-card',     isLight
+      ? '0 2px 16px rgba(0,0,0,0.10), 0 0 0 1px var(--border)'
+      : '0 2px 16px rgba(0,0,0,0.5),  0 0 0 1px var(--border)')
+
+    root.classList.toggle('light-theme', isLight)
   }, [theme, settings.theme])
 
   return (
     <div
-      className="relative min-h-screen text-white"
+      className="relative min-h-screen"
       style={
         {
+          color: 'var(--text-primary)',
           '--accent': theme.accent,
           '--accent-glow': theme.glow,
           '--accent-dim': theme.glow.replace('0.35)', '0.15)').replace('0.30)', '0.12)').replace('0.28)', '0.10)'),
@@ -50,18 +71,18 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
       {/* Footer */}
       <footer
         className="relative z-10 flex items-center justify-center gap-4 py-6 px-4"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}
+        style={{ borderTop: '1px solid var(--border)' }}
       >
-        <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
           &copy; {new Date().getFullYear()} Baroflix
         </span>
-        <span style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.2)', display: 'inline-block' }} />
+        <span style={{ width: 1, height: 12, background: 'var(--border)', display: 'inline-block' }} />
         <Link
           to="/terms"
           className="no-bg-hover transition-colors"
-          style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)' }}
+          style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
         >
           Terms &amp; Conditions
         </Link>
@@ -217,7 +238,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
         className="fixed top-0 left-0 right-0 z-50 transition-transform duration-300"
         style={{
           transform: (hidden || theatreActive) ? 'translateY(-100%)' : 'translateY(0)',
-          background: 'linear-gradient(180deg, rgba(8,8,8,0.96) 0%, rgba(8,8,8,0.0) 100%)',
+          background: 'var(--nav-gradient)',
           backdropFilter: 'blur(12px)',
         }}
       >
@@ -239,7 +260,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
                   key={to}
                   to={to}
                   className="text-sm font-semibold transition-colors"
-                  style={{ color: isActive(to) ? '#fff' : 'rgba(255,255,255,0.6)' }}
+                  style={{ color: isActive(to) ? 'var(--text-primary)' : 'var(--text-secondary)' }}
                 >
                   {label}
                 </Link>
@@ -284,10 +305,10 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
                 style={{
                   background: profile?.avatar_url ? 'transparent'
                     : profileOpen || isActive('/profile') || isActive('/user/') || isActive('/feed') || isActive('/collections') || isActive('/stats')
-                      ? 'var(--accent-dim)' : 'rgba(255,255,255,0.08)',
+                      ? 'var(--accent-dim)' : 'var(--bg-card)',
                   border: `1px solid ${profileOpen || isActive('/profile') || isActive('/user/') || isActive('/feed') || isActive('/collections') || isActive('/stats')
-                    ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
-                  color: 'rgba(255,255,255,0.85)',
+                    ? 'var(--accent)' : 'var(--border)'}`,
+                  color: 'var(--text-secondary)',
                   overflow: 'visible',
                   padding: 0,
                 }}
@@ -305,21 +326,21 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
                     transition={{ duration: 0.15 }}
                     className="absolute right-0 top-full mt-2 w-52 rounded-2xl overflow-hidden z-[60]"
                     style={{
-                      background: 'rgba(14,14,14,0.98)',
-                      border: '1px solid rgba(255,255,255,0.1)',
+                      background: 'var(--surface-dropdown)',
+                      border: '1px solid var(--border)',
                       backdropFilter: 'blur(24px)',
-                      boxShadow: '0 12px 48px rgba(0,0,0,0.7)',
+                      boxShadow: 'var(--shadow-dropdown)',
                     }}
                   >
                     {/* User info header */}
                     {profile?.username && (
-                      <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                      <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
                         <div className="flex items-center gap-2.5">
                           <div className="shrink-0">
                             <ProfileAvatar size="sm" />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-xs font-semibold text-white truncate">@{profile.username}</div>
+                            <div className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>@{profile.username}</div>
                           </div>
                         </div>
                       </div>
@@ -332,9 +353,9 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
                           key={to + label}
                           to={to}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors no-bg-hover"
-                          style={{ color: 'rgba(255,255,255,0.7)' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}
+                          style={{ color: 'var(--text-secondary)' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-card-hover)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
                         >
                           <Icon className="w-4 h-4 shrink-0 opacity-60" />
                           {label}
@@ -343,13 +364,13 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
                     </div>
 
                     {/* Sign out */}
-                    <div className="py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div className="py-1.5" style={{ borderTop: '1px solid var(--border)' }}>
                       <button
                         onClick={handleSignOut}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors no-bg-hover"
-                        style={{ color: 'rgba(255,255,255,0.45)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#f87171' }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)' }}
+                        style={{ color: 'var(--text-tertiary)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-card-hover)'; (e.currentTarget as HTMLElement).style.color = '#f87171' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)' }}
                       >
                         <LogOut className="w-4 h-4 shrink-0 opacity-60" />
                         Sign Out
@@ -362,8 +383,8 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
 
             {/* Hamburger — mobile only */}
             <button
-              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full text-white/70 hover:text-white transition-colors"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full transition-colors"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
               onClick={() => setMobileOpen(o => !o)}
               aria-label="Menu"
             >
@@ -391,9 +412,9 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           style={{
             transform: mobileOpen ? 'translateX(0)' : 'translateX(100%)',
             pointerEvents: mobileOpen ? 'auto' : 'none',
-            background: 'rgba(10,10,10,0.97)',
+            background: 'var(--surface-nav)',
             backdropFilter: 'blur(20px)',
-            borderLeft: '1px solid rgba(255,255,255,0.08)',
+            borderLeft: '1px solid var(--border)',
           }}
         >
           {navLinks.map(({ to, label }) => (
@@ -402,8 +423,8 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
               to={to}
               className="text-base font-semibold transition-colors px-3 py-3 rounded-xl"
               style={{
-                color: isActive(to) ? '#fff' : 'rgba(255,255,255,0.6)',
-                background: isActive(to) ? 'rgba(255,255,255,0.07)' : 'transparent',
+                color: isActive(to) ? 'var(--text-primary)' : 'var(--text-secondary)',
+                background: isActive(to) ? 'var(--bg-card)' : 'transparent',
               }}
             >
               {label}
@@ -411,7 +432,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           ))}
 
           {/* Divider */}
-          <div className="my-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+          <div className="my-3" style={{ borderTop: '1px solid var(--border)' }} />
 
           {/* Profile section links */}
           {profileMenuItems.map(({ to, icon: Icon, label }) => (
@@ -420,8 +441,8 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
               to={to}
               className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl"
               style={{
-                color: isActive(to) ? '#fff' : 'rgba(255,255,255,0.6)',
-                background: isActive(to) ? 'rgba(255,255,255,0.07)' : 'transparent',
+                color: isActive(to) ? 'var(--text-primary)' : 'var(--text-secondary)',
+                background: isActive(to) ? 'var(--bg-card)' : 'transparent',
               }}
             >
               <Icon className="w-4 h-4 shrink-0" />
@@ -434,7 +455,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             type="button"
             onClick={handleSignOut}
             className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl w-full"
-            style={{ color: 'rgba(255,255,255,0.4)', background: 'transparent' }}
+            style={{ color: 'var(--text-tertiary)', background: 'transparent' }}
           >
             <LogOut className="w-4 h-4 shrink-0" />
             Sign Out
