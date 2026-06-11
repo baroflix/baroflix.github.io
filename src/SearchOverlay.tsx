@@ -527,15 +527,15 @@ export function HomeSearchToggle() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center justify-center w-10 h-10 rounded-full text-sm transition-all lg:w-64 lg:justify-start lg:gap-2 lg:px-4 lg:h-10"
+        aria-label="Search"
+        className="flex items-center justify-center w-10 h-10 rounded-full transition-all"
         style={{
-          background: 'rgba(255,255,255,0.08)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          color: 'rgba(255,255,255,0.7)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          color: 'var(--text-secondary)',
         }}
       >
         <Search className="w-4 h-4 shrink-0" />
-        <span className="hidden lg:inline">Search…</span>
       </button>
       {open && <SearchOverlay onClose={() => setOpen(false)} />}
     </>
