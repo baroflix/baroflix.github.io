@@ -285,7 +285,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             )}
             {/* Discord */}
             <a
-              href="#"
+              href="https://discord.gg/zx7PUSt3uN"
               target="_blank"
               rel="noreferrer"
               aria-label="Discord"
@@ -302,7 +302,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             </a>
             {/* GitHub */}
             <a
-              href="https://github.com/baroflix/baroflix.github.io"
+              href="https://github.com/baroflix/"
               target="_blank"
               rel="noreferrer"
               aria-label="GitHub"
