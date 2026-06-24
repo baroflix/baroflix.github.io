@@ -182,16 +182,6 @@ export function HomePage() {
 
   return (
     <div>
-      {/* ── Status banner ────────────────────────────────────────────────── */}
-      <div
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center text-center px-4"
-        style={{ height: 32, background: '#facc15', color: '#1a1a1a' }}
-      >
-        <p className="text-xs sm:text-sm font-semibold truncate">
-          We are currently facing difficulties fetching the video files. We are working on a fix.
-        </p>
-      </div>
-
       {/* Fullscreen player — portal-mounted */}
       {playback && playerUrl && (
         <FullscreenPlayer
