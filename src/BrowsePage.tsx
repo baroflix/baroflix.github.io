@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  ChevronLeft, ChevronRight, Search, X, SlidersHorizontal, ChevronDown, RotateCcw,
+  ChevronLeft, ChevronRight, Search, X, SlidersHorizontal, ChevronDown, RotateCcw, Shuffle,
 } from 'lucide-react'
 import { useCollectionDetails } from './hooks'
 import { SectionHeader, MediaCard, GridSkeleton, EmptyPanel, SetupNotice } from './ui'
@@ -232,6 +232,7 @@ function FilterPanelContent({
   year, onYearChange,
   minRating, onMinRatingChange,
   hasActiveFilters, onClearAll,
+  onRandom, pickingRandom,
   t,
 }: {
   type: DiscoverMediaType
@@ -248,6 +249,8 @@ function FilterPanelContent({
   onMinRatingChange: (r: string) => void
   hasActiveFilters: boolean
   onClearAll: () => void
+  onRandom: () => void
+  pickingRandom: boolean
   t: typeof locales.en.browse
 }) {
   const TYPE_OPTS: { value: DiscoverMediaType; label: string }[] = [
@@ -347,6 +350,18 @@ function FilterPanelContent({
           {t.clearFilters}
         </button>
       )}
+
+      {/* Random pick */}
+      <button
+        type="button"
+        onClick={onRandom}
+        disabled={pickingRandom}
+        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
+        style={{ background: 'var(--accent)', color: '#fff', boxShadow: '0 0 16px var(--accent-glow)' }}
+      >
+        <Shuffle style={{ width: 13, height: 13 }} className={pickingRandom ? 'animate-spin' : ''} />
+        {pickingRandom ? t.picking : t.randomMovie}
+      </button>
     </div>
   )
 }
@@ -476,6 +491,38 @@ function useDiscover() {
 
   const hasActiveFilters = !!genre || !!networkId || !!year || !!minRating || sortBy !== 'popularity.desc'
 
+  const [pickingRandom, setPickingRandom] = useState(false)
+
+  const pickRandom = useCallback(async (): Promise<{ mediaType: 'movie' | 'tv' | 'anime'; id: number } | null> => {
+    setPickingRandom(true)
+    try {
+      const effectiveType: 'movie' | 'tv' | 'anime' = type === 'all' ? (Math.random() < 0.5 ? 'movie' : 'tv') : type
+
+      const genreIdNum = genre && !isNaN(Number(genre)) ? Number(genre) : undefined
+      const yearNum = year ? Number(year) : undefined
+      const ratingNum = minRating ? Number(minRating) : undefined
+      const networkNum = networkId ? Number(networkId) : undefined
+
+      const fetchPage = (p: number) =>
+        effectiveType === 'anime'
+          ? discoverAnime({ genre: genre && isNaN(Number(genre)) ? genre : undefined, sortBy, year: yearNum, minRating: ratingNum, page: p })
+          : discoverCatalog({ type: effectiveType, genreId: genreIdNum, sortBy, page: p, networkId: networkNum, year: yearNum, minRating: ratingNum })
+
+      const first = await fetchPage(1)
+      const cappedPages = Math.min(first.totalPages || 1, 500)
+      const randomPage = Math.max(1, Math.floor(Math.random() * cappedPages) + 1)
+      const res = randomPage === 1 ? first : await fetchPage(randomPage)
+      const pool = res.results
+      if (!pool.length) return null
+      const pick = pool[Math.floor(Math.random() * pool.length)]
+      return { mediaType: effectiveType, id: pick.id }
+    } catch {
+      return null
+    } finally {
+      setPickingRandom(false)
+    }
+  }, [type, genre, year, minRating, networkId, sortBy])
+
   return {
     rawQuery, setRawQuery,
     debouncedQuery,
@@ -488,6 +535,7 @@ function useDiscover() {
     items, loading, loadingMore,
     totalPages, totalResults, page,
     loadMore, clearAll, hasActiveFilters,
+    pickRandom, pickingRandom,
   }
 }
 
@@ -509,12 +557,18 @@ export function BrowsePage() {
   const { settings } = useAuth()
   const lang = settings.language ?? 'en'
   const t = locales[lang]
+  const navigate = useNavigate()
 
   function scrollFranchises(dir: 'left' | 'right') {
     franchisesRef.current?.scrollBy({
       left: dir === 'left' ? -franchisesRef.current.clientWidth * 0.75 : franchisesRef.current.clientWidth * 0.75,
       behavior: 'smooth',
     })
+  }
+
+  async function handleRandom() {
+    const result = await d.pickRandom()
+    if (result) navigate(`/title/${result.mediaType}/${result.id}`)
   }
 
   if (!hasTmdbCredentials) {
@@ -529,6 +583,7 @@ export function BrowsePage() {
     year: d.year, onYearChange: d.setYear,
     minRating: d.minRating, onMinRatingChange: d.setMinRating,
     hasActiveFilters: d.hasActiveFilters, onClearAll: d.clearAll,
+    onRandom: handleRandom, pickingRandom: d.pickingRandom,
     t: t.browse,
   }
 
