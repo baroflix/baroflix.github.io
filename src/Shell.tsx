@@ -63,19 +63,9 @@ export function Shell({ settings }: { settings: ThemeSettings }) {
         } as CSSProperties
       }
     >
-      {/* ── Status banner — always on top ──────────────────────────────── */}
-      <div
-        className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-center text-center px-4"
-        style={{ height: 32, background: '#facc15', color: '#1a1a1a' }}
-      >
-        <p className="text-xs sm:text-sm font-semibold truncate">
-          We are currently facing difficulties fetching the video files. We are working on a fix.
-        </p>
-      </div>
-
       <NavBar language={settings.language} />
       {/* pb-safe ensures content isn't hidden behind iOS home indicator */}
-      <main className="relative z-10 pb-[env(safe-area-inset-bottom,0px)] page-content" style={{ paddingTop: 32 }}>
+      <main className="relative z-10 pb-[env(safe-area-inset-bottom,0px)] page-content">
         <Outlet />
       </main>
 
@@ -247,9 +237,8 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
   return (
     <>
       <header
-        className="fixed left-0 right-0 z-50 transition-transform duration-300"
+        className="fixed top-0 left-0 right-0 z-50 transition-transform duration-300"
         style={{
-          top: 32,
           transform: (hidden || theatreActive) ? 'translateY(-100%)' : 'translateY(0)',
           background: 'var(--nav-gradient)',
           backdropFilter: 'blur(12px)',
