@@ -40,6 +40,7 @@ export const locales = {
       tabs: {
         general: 'General',
         profile: 'Profile',
+        client: 'Client',
       },
       general: {
         activeTheme: 'Active Theme',
@@ -270,6 +271,7 @@ export const locales = {
       tabs: {
         general: 'Ogólne',
         profile: 'Profil',
+        client: 'Klient',
       },
       general: {
         activeTheme: 'Aktywny Motyw',

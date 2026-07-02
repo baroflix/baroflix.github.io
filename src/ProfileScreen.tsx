@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowLeft, User, Image, Save, CheckCircle, AlertTriangle,
   Palette, Languages, Monitor, Globe, FileText, Pin, X, Eye, EyeOff, ChevronDown,
+  Volume2, RefreshCw, Shield, Keyboard, Info,
 } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
 import { supabase, type Profile, type PinnedItem } from './lib/supabase'
@@ -73,13 +74,39 @@ function LanguageDropdown({
   )
 }
 
+function ClientToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="no-bg-hover"
+      style={{
+        width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+        background: checked ? 'var(--accent)' : 'rgba(255,255,255,0.15)',
+        border: 'none', cursor: 'pointer', position: 'relative',
+        transition: 'background 0.2s',
+      }}
+    >
+      <div style={{
+        position: 'absolute', top: 3,
+        left: checked ? 23 : 3,
+        width: 18, height: 18, borderRadius: '50%',
+        background: '#fff',
+        transition: 'left 0.2s',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+      }} />
+    </button>
+  )
+}
+
 export function ProfileScreen() {
   const { session, profile: contextProfile, signOut, settings, updateSettings } = useAuth()
   const lang = settings.language ?? 'en'
   const t = locales[lang].profile
   const ts = locales[lang].settings
 
-  const [activeTab, setActiveTab] = useState<'general' | 'profile'>('profile')
+  const [activeTab, setActiveTab] = useState<'general' | 'profile' | 'client'>('profile')
+  const isElectron = !!window.__electronBridge?.isElectron
 
   const [username, setUsername] = useState(contextProfile?.username ?? '')
   const [avatarUrl, setAvatarUrl] = useState(contextProfile?.avatar_url ?? '')
@@ -99,6 +126,15 @@ export function ProfileScreen() {
   const usernameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [recentHistory, setRecentHistory] = useState<WatchHistoryEntry[]>([])
+
+  type ClientSettings = {
+    discordEnabled: boolean; cloudflareDns: boolean; hardwareAcceleration: boolean
+    volumeBoost: number; pipShortcut: string; customUrl: string
+  }
+  const [clientSettings, setClientSettings] = useState<ClientSettings | null>(null)
+  const [clientSaved, setClientSaved] = useState(false)
+  const [appVersion, setAppVersion] = useState('')
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'not-available' | 'error'>('idle')
 
   useEffect(() => {
     const trimmed = username.trim()
@@ -132,6 +168,41 @@ export function ProfileScreen() {
       }
     } catch {}
   }, [])
+
+  useEffect(() => {
+    if (!isElectron) return
+    window.__electronBridge!.getSettings().then(s => setClientSettings(s))
+    window.__electronBridge!.getAppVersion().then(v => setAppVersion(v))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handleShortcutKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    e.preventDefault()
+    const keys: string[] = []
+    if (e.ctrlKey || e.metaKey) keys.push('CommandOrControl')
+    if (e.shiftKey) keys.push('Shift')
+    if (e.altKey) keys.push('Alt')
+    let k = e.key
+    if (['Control', 'Shift', 'Alt', 'Meta'].includes(k)) return
+    if (k === ' ') k = 'Space'
+    else if (k.length === 1) k = k.toUpperCase()
+    else if (k.startsWith('Arrow')) k = k.replace('Arrow', '')
+    keys.push(k)
+    setClientSettings(prev => prev ? { ...prev, pipShortcut: keys.join('+') } : prev)
+  }
+
+  function saveClientSettings() {
+    if (!clientSettings) return
+    window.__electronBridge!.saveSettings(clientSettings)
+    setClientSaved(true)
+    setTimeout(() => setClientSaved(false), 2500)
+  }
+
+  async function checkUpdates() {
+    setUpdateStatus('checking')
+    const result = await window.__electronBridge!.checkForUpdates().catch(() => 'error' as const)
+    setUpdateStatus(result)
+    if (result !== 'available') setTimeout(() => setUpdateStatus('idle'), 5000)
+  }
 
   useEffect(() => {
     if (contextProfile) {
@@ -228,7 +299,7 @@ export function ProfileScreen() {
   const unpinnedHistory = recentHistory.filter(h => !isPinned(h))
 
   // ── Tab styles ──────────────────────────────────────────────────────────────
-  function tabStyle(tab: 'general' | 'profile') {
+  function tabStyle(tab: 'general' | 'profile' | 'client') {
     const active = activeTab === tab
     return {
       flex: 1,
@@ -310,6 +381,11 @@ export function ProfileScreen() {
           <button type="button" style={tabStyle('profile')} onClick={() => setActiveTab('profile')}>
             {t.tabs.profile}
           </button>
+          {isElectron && (
+            <button type="button" style={tabStyle('client')} onClick={() => setActiveTab('client')}>
+              {t.tabs.client}
+            </button>
+          )}
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
@@ -667,6 +743,170 @@ export function ProfileScreen() {
             </button>
 
           </form>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════
+            CLIENT TAB — Electron desktop app settings
+        ══════════════════════════════════════════════════════════════════ */}
+        {activeTab === 'client' && isElectron && clientSettings && (
+          <div className="flex flex-col gap-5">
+
+            {/* Playback */}
+            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center gap-2 mb-5">
+                <Volume2 className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                <h2 className="text-base font-semibold text-white">playback</h2>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <div className="text-sm font-medium text-white">volume boost</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>amplify beyond the normal maximum — 100% = stream level</div>
+                  </div>
+                  <span className="text-sm font-bold ml-4" style={{ color: 'var(--accent)', minWidth: 44, textAlign: 'right', fontFamily: 'ui-monospace,monospace' }}>
+                    {clientSettings.volumeBoost}%
+                  </span>
+                </div>
+                <input
+                  type="range" min={100} max={300} step={10}
+                  value={clientSettings.volumeBoost}
+                  onChange={e => setClientSettings(prev => prev ? { ...prev, volumeBoost: parseInt(e.target.value, 10) } : prev)}
+                  className="w-full"
+                  style={{
+                    WebkitAppearance: 'none', appearance: 'none', height: 5,
+                    borderRadius: 3, outline: 'none', cursor: 'pointer',
+                    background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${(clientSettings.volumeBoost - 100) / 2}%, rgba(255,255,255,0.15) ${(clientSettings.volumeBoost - 100) / 2}%, rgba(255,255,255,0.15) 100%)`,
+                  }}
+                />
+              </div>
+            </section>
+
+            {/* Integrations & toggles */}
+            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center gap-2 mb-5">
+                <Shield className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                <h2 className="text-base font-semibold text-white">integrations & system</h2>
+              </div>
+
+              {[
+                {
+                  key: 'discordEnabled' as const,
+                  label: 'discord rich presence',
+                  hint: 'show what you\'re watching on Discord',
+                },
+                {
+                  key: 'cloudflareDns' as const,
+                  label: 'cloudflare DNS (1.1.1.1)',
+                  hint: 'bypass ISP-level blocks — requires restart',
+                },
+                {
+                  key: 'hardwareAcceleration' as const,
+                  label: 'hardware acceleration',
+                  hint: 'GPU rendering for smooth 4K playback — requires restart',
+                },
+              ].map(({ key, label, hint }, i, arr) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between gap-4"
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                  }}
+                >
+                  <div>
+                    <div className="text-sm font-medium text-white">{label}</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>{hint}</div>
+                  </div>
+                  <ClientToggle
+                    checked={clientSettings[key] as boolean}
+                    onChange={v => setClientSettings(prev => prev ? { ...prev, [key]: v } : prev)}
+                  />
+                </div>
+              ))}
+            </section>
+
+            {/* PiP shortcut */}
+            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <Keyboard className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                <h2 className="text-base font-semibold text-white">shortcuts</h2>
+              </div>
+              <div className="text-sm font-medium text-white mb-1">picture-in-picture</div>
+              <div className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.38)' }}>click the box and press a key combination</div>
+              <input
+                type="text"
+                readOnly
+                value={clientSettings.pipShortcut}
+                onKeyDown={handleShortcutKey}
+                className="w-full text-center outline-none"
+                style={{
+                  padding: '9px 12px', background: 'rgba(255,255,255,0.06)',
+                  border: '1px dashed rgba(255,255,255,0.25)', borderRadius: 10,
+                  fontFamily: 'ui-monospace,monospace', fontSize: 13, fontWeight: 600,
+                  color: 'var(--accent)', cursor: 'pointer',
+                }}
+                onFocus={e => (e.target.style.borderStyle = 'solid')}
+                onBlur={e => (e.target.style.borderStyle = 'dashed')}
+              />
+            </section>
+
+            {/* App version */}
+            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <Info className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                <h2 className="text-base font-semibold text-white">app info</h2>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-sm font-medium text-white">baroflix desktop</div>
+                  <div className="text-xs mt-0.5" style={{
+                    color: updateStatus === 'available' ? 'var(--accent)' : 'rgba(255,255,255,0.38)',
+                  }}>
+                    {updateStatus === 'available' && 'update available — downloading…'}
+                    {updateStatus === 'not-available' && `v${appVersion} — up to date ✓`}
+                    {updateStatus === 'error' && `v${appVersion} — couldn't check`}
+                    {(updateStatus === 'idle' || updateStatus === 'checking') && (appVersion ? `v${appVersion}` : '')}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={checkUpdates}
+                  disabled={updateStatus === 'checking'}
+                  className="flex items-center gap-1.5 text-xs font-semibold transition-colors"
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, flexShrink: 0,
+                    background: 'transparent', border: '1px solid var(--accent)',
+                    color: 'var(--accent)', cursor: updateStatus === 'checking' ? 'default' : 'pointer',
+                    opacity: updateStatus === 'checking' ? 0.5 : 1,
+                  }}
+                >
+                  <RefreshCw className={`w-3 h-3 ${updateStatus === 'checking' ? 'animate-spin' : ''}`} />
+                  {updateStatus === 'checking' ? 'checking…' : 'check for updates'}
+                </button>
+              </div>
+            </section>
+
+            {/* Save */}
+            <button
+              type="button"
+              onClick={saveClientSettings}
+              className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-opacity"
+              style={{
+                background: 'var(--accent)',
+                boxShadow: '0 0 24px var(--accent-glow)',
+              }}
+            >
+              <Save size={15} />
+              save client settings
+            </button>
+            {clientSaved && (
+              <div className="text-center text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                ✓ saved
+              </div>
+            )}
+
+          </div>
         )}
 
         {/* ── Sign out ────────────────────────────────────────────────────── */}
