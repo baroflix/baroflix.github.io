@@ -54,7 +54,7 @@ function CommentImage({ url }: { url: string }) {
       )}
       <img
         src={url} alt="Shared image"
-        referrerPolicy="no-referrer" loading="lazy"
+        referrerPolicy="no-referrer"
         onLoad={() => setState('loaded')}
         onError={() => setState('error')}
         onClick={() => setExpanded(e => !e)}
