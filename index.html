@@ -1,50 +1,55 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="/favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet" />
-  <title>baroflix</title>
-  <meta name="title" content="baroflix" />
-  <meta name="description" content="Your private catalogue" />
-  <meta name="theme-color" content="#ff3d3d" />
-
-  <!-- Open Graph / Discord / Facebook -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://baroflix.github.io/" />
-  <meta property="og:title" content="baroflix" />
-  <meta property="og:description" content="Your private catalogue of movies, TV shows and live sports" />
-  <meta property="og:image" content="/favicon.png" />
-
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="https://baroflix.github.io/" />
-  <meta property="twitter:title" content="baroflix" />
-  <meta property="twitter:description" content="Your private catalogue of movies, TV shows and live sports" />
-  <meta property="twitter:image" content="/favicon.png" />
-  <!-- GitHub Pages SPA: restore path encoded by 404.html -->
-  <script>
-    (function () {
-      var qs = window.location.search;
-      var p = new URLSearchParams(qs).get('p');
-      if (p) {
-        var h = new URLSearchParams(qs).get('h') || '';
-        window.history.replaceState(null, '', decodeURIComponent(p) + decodeURIComponent(h));
-      }
-    })();
-  </script>
-  <script type="module" crossorigin src="/assets/index-1I4kNt0O.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BBBU3B60.css">
+  <title>Baroflix — New Address</title>
+  <meta http-equiv="refresh" content="5;url=https://baroflix.vercel.app" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #080808;
+      color: #fff;
+      font-family: Inter, system-ui, sans-serif;
+      text-align: center;
+      padding: 24px;
+    }
+    .card { max-width: 420px; width: 100%; }
+    img {
+      height: 36px;
+      width: auto;
+      margin: 0 auto 32px;
+      display: block;
+      opacity: 0.9;
+    }
+    h1 { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    p { font-size: 0.875rem; color: rgba(255,255,255,0.45); line-height: 1.6; margin-bottom: 28px; }
+    a.btn {
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 999px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    a.btn:hover { opacity: 0.85; }
+    .note { margin-top: 20px; font-size: 0.72rem; color: rgba(255,255,255,0.2); }
+  </style>
 </head>
-
 <body>
-  <div id="root"></div>
+  <div class="card">
+    <img src="https://baroflix.vercel.app/baroflix_oneline.png" alt="Baroflix" />
+    <h1>We've moved!</h1>
+    <p>Baroflix has a new home.<br/>You'll be redirected automatically in a few seconds.</p>
+    <a class="btn" href="https://baroflix.vercel.app">Go to Baroflix →</a>
+    <p class="note">Redirecting to baroflix.vercel.app…</p>
+  </div>
 </body>
-
 </html>
