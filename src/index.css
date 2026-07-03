@@ -112,6 +112,10 @@
 /* ─── Reset & Base ─────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Brutalist override — Tailwind's rounded-full uses calc(infinity*1px) internally.
+   Without !important, inline style={{ borderRadius: '50%' }} on avatars still wins. */
+.rounded-full, [class*="rounded-"] { border-radius: 0; }
+
 html { scroll-behavior: smooth; }
 
 body {
