@@ -21,9 +21,19 @@ export type ThemeId = 'scarlet' | 'emerald' | 'aurora' | 'oxide' | 'pearl' | 'fu
 
 export type LanguageId = 'en' | 'pl'
 
+export type EmbedProviderId = 'videasy' | 'vidsrc' | 'embedsu' | '2embed'
+
+export const EMBED_PROVIDERS: Record<EmbedProviderId, { label: string; description: string }> = {
+  videasy:  { label: 'Videasy',  description: 'Next episode, episode selector' },
+  vidsrc:   { label: 'VidSrc',   description: 'Popular fallback source' },
+  embedsu:  { label: 'Embed.su', description: 'Alternative source' },
+  '2embed': { label: '2Embed',   description: 'Alternative source' },
+}
+
 export type ThemeSettings = {
   theme: ThemeId
   language: LanguageId
+  embedProvider: EmbedProviderId
 }
 
 export type WatchHistoryEntry = {
@@ -109,6 +119,7 @@ export const THEME_PRESETS: Record<ThemeId, { label: string; accent: string; glo
 export const defaultSettings: ThemeSettings = {
   theme: 'scarlet',
   language: 'en',
+  embedProvider: 'videasy',
 }
 
 const defaultHomeState: HomeState = {

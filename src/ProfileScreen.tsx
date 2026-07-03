@@ -8,8 +8,8 @@ import {
 import { useAuth } from './context/AuthContext'
 import { supabase, type Profile, type PinnedItem } from './lib/supabase'
 
-import { THEME_PRESETS, STORAGE_KEYS } from './hooks'
-import type { ThemeId, WatchHistoryEntry } from './hooks'
+import { THEME_PRESETS, STORAGE_KEYS, EMBED_PROVIDERS } from './hooks'
+import type { ThemeId, EmbedProviderId, WatchHistoryEntry } from './hooks'
 import { locales } from './locales'
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w185'
@@ -458,6 +458,42 @@ export function ProfileScreen() {
                 onChange={code => updateSettings({ language: code as 'en' | 'pl' })}
                 accentColor={theme.accent}
               />
+            </section>
+            {/* Embed Provider */}
+            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Globe className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                <h2 className="text-base font-semibold text-white">Video Provider</h2>
+              </div>
+              <p className="text-xs mb-5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                Switch provider if the current one is down or not working.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {(Object.entries(EMBED_PROVIDERS) as [EmbedProviderId, { label: string; description: string }][]).map(([id, p]) => {
+                  const isActive = (settings.embedProvider ?? 'videasy') === id
+                  return (
+                    <button key={id} type="button" onClick={() => updateSettings({ embedProvider: id })}
+                      className="p-4 text-left transition-all"
+                      style={{
+                        borderRadius: 14,
+                        background: isActive ? theme.glow.replace(/0\.(35|30|28)/, '0.10') : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${isActive ? theme.accent + '60' : 'rgba(255,255,255,0.08)'}`,
+                        boxShadow: isActive ? `0 0 24px ${theme.glow}` : 'none',
+                      }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-semibold text-white">{p.label}</span>
+                        {isActive && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                            style={{ background: theme.glow.replace(/0\.(35|30|28)/, '0.15'), color: theme.accent }}>
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{p.description}</div>
+                    </button>
+                  )
+                })}
+              </div>
             </section>
           </>
         )}

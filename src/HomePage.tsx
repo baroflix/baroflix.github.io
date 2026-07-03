@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Play, ArrowRight, Star, ChevronLeft, ChevronRight } from 'lucide-react'
 import heroFallback from './assets/hero.png'
-import { imageUrl, mediaTypeFromItem, titleFromItem, yearFromItem, hasTmdbCredentials, pickTrailer, buildVideasyUrl } from './lib/tmdb'
+import { imageUrl, mediaTypeFromItem, titleFromItem, yearFromItem, hasTmdbCredentials, pickTrailer, buildEmbedUrl } from './lib/tmdb'
 import { useHomeCatalog, useFeaturedDetails, useLocalStorageState, STORAGE_KEYS, THEME_PRESETS, upsertHistory, useCustomLists, useRatings } from './hooks'
 import { useAuth } from './context/AuthContext'
 import type { WatchHistoryEntry } from './hooks'
@@ -175,7 +175,7 @@ export function HomePage() {
   }
 
   const playerUrl = playback
-    ? buildVideasyUrl(playback.mediaType, playback.id, playback.season, playback.episode, { color: THEME_PRESETS[settings.theme].accent })
+    ? buildEmbedUrl(settings.embedProvider ?? 'videasy', playback.mediaType, playback.id, playback.season, playback.episode, { color: THEME_PRESETS[settings.theme].accent })
     : null
 
   const progressKey = playback ? `${playback.mediaType}-${playback.id}-${playback.season || 0}-${playback.episode || 0}` : undefined

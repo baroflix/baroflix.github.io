@@ -228,6 +228,63 @@ export async function fetchByGenre(genreId: number, type: 'movie' | 'tv', signal
   return uniqueMedia(data.results.map(item => ({ ...item, media_type: type })))
 }
 
+export function buildEmbedUrl(
+  provider: import('../hooks').EmbedProviderId,
+  mediaType: MediaKind,
+  id: number,
+  season?: number,
+  episode?: number,
+  options?: {
+    color?: string
+    autoplay?: boolean
+    language?: 'sub' | 'dub'
+  }
+): string {
+  const isTv = mediaType === 'tv'
+  const isAnime = mediaType === 'anime'
+  const s = season ?? 1
+  const e = episode ?? 1
+
+  // Anime always uses animeplay regardless of provider setting
+  if (isAnime) {
+    const lang = options?.language ?? 'sub'
+    return `https://animeplay.cfd/stream/ani/${id}/${e}/${lang}`
+  }
+
+  switch (provider) {
+    case 'vidsrc':
+      return isTv
+        ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}`
+        : `https://vidsrc.to/embed/movie/${id}`
+
+    case 'embedsu':
+      return isTv
+        ? `https://embed.su/embed/tv/${id}/${s}/${e}`
+        : `https://embed.su/embed/movie/${id}`
+
+    case '2embed':
+      return isTv
+        ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`
+        : `https://www.2embed.cc/embed/${id}`
+
+    case 'videasy':
+    default: {
+      const base = isTv
+        ? `https://player.videasy.net/tv/${id}/${s}/${e}`
+        : `https://player.videasy.net/movie/${id}`
+      const params = new URLSearchParams()
+      if (options?.color) params.set('color', options.color.replace('#', ''))
+      if (isTv) {
+        params.set('nextEpisode', 'true')
+        params.set('episodeSelector', 'true')
+        params.set('autoplayNextEpisode', 'true')
+      }
+      params.set('overlay', 'true')
+      return `${base}?${params.toString()}`
+    }
+  }
+}
+
 export function buildVideasyUrl(
   mediaType: MediaKind,
   id: number,
@@ -236,40 +293,10 @@ export function buildVideasyUrl(
   options?: {
     color?: string
     autoplay?: boolean
-    /** Sub or dub — only applies to anime (animeplay.cfd). Defaults to 'sub'. */
     language?: 'sub' | 'dub'
   }
 ) {
-  const isTv = mediaType === 'tv'
-  const isAnime = mediaType === 'anime'
-
-  // ── Anime uses animeplay.cfd with AniList IDs ───────────────────────────────
-  if (isAnime) {
-    const lang = options?.language ?? 'sub'
-    const ep = episode ?? 1
-    return `https://animeplay.cfd/stream/ani/${id}/${ep}/${lang}`
-  }
-
-  // ── Movies / TV use Videasy ─────────────────────────────────────────────────
-  const base = isTv
-    ? `https://player.videasy.net/tv/${id}/${season ?? 1}/${episode ?? 1}`
-    : `https://player.videasy.net/movie/${id}`
-
-  const params = new URLSearchParams()
-
-  if (options?.color) {
-    params.set('color', options.color.replace('#', ''))
-  }
-
-  if (isTv) {
-    params.set('nextEpisode', 'true')
-    params.set('episodeSelector', 'true')
-    params.set('autoplayNextEpisode', 'true')
-  }
-
-  params.set('overlay', 'true')
-
-  return `${base}?${params.toString()}`
+  return buildEmbedUrl('videasy', mediaType, id, season, episode, options)
 }
 
 export function pickTrailer(videos?: { results: Array<{ site: string; type: string; official?: boolean; key: string }> }) {

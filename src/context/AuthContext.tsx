@@ -158,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (dbTheme || dbLang) {
           setSettings((current) => {
             const next = {
+              ...current,
               theme: dbTheme || current.theme,
               language: dbLang || current.language,
             }
