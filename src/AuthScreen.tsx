@@ -100,7 +100,8 @@ export function AuthScreen() {
             style={{
               height: '2.5rem',
               width: 'auto',
-              marginBottom: '0.75rem',
+              display: 'block',
+              margin: '0 auto 0.75rem',
             }}
           />
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.875rem' }}>
