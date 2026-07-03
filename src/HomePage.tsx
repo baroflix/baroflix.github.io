@@ -246,8 +246,8 @@ export function HomePage() {
                 />
               ) : (
                 <h1
-                  className="text-5xl sm:text-6xl lg:text-7xl font-normal text-white"
-                  style={{ fontFamily: 'DM Serif Display, serif', textShadow: '0 4px 32px rgba(0,0,0,0.6)', letterSpacing: '-0.02em' }}
+                  className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white"
+                  style={{ textShadow: '0 4px 32px rgba(0,0,0,0.6)', letterSpacing: '-0.04em' }}
                 >
                   {activeHero ? titleFromItem(activeHero) : 'Baroflix'}
                 </h1>
@@ -265,8 +265,8 @@ export function HomePage() {
               <div className="flex flex-wrap gap-2 items-center">
                 {activeHero?.vote_average ? (
                   <span
-                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold"
-                    style={{ borderRadius: 999, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold font-mono"
+                    style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }}
                   >
                     <Star className="w-3 h-3 fill-current" />
                     {activeHero.vote_average.toFixed(1)}
@@ -283,16 +283,16 @@ export function HomePage() {
                   type="button"
                   onClick={handlePlayClick}
                   id="hero-play-btn"
-                  className="primary-btn inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90 hover:text-white"
-                  style={{ background: 'var(--accent)', boxShadow: '0 0 32px var(--accent-glow)' }}
+                  className="primary-btn inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 hover:text-white"
+                  style={{ background: 'var(--accent)' }}
                 >
                   <Play className="w-4 h-4 fill-white" />
                   {t.play}
                 </button>
                 <Link
                   to={featuredLink}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.15)' }}
+                  className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-colors"
+                  style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   {t.moreInfo}
                   <ArrowRight className="w-4 h-4" />
@@ -302,7 +302,7 @@ export function HomePage() {
                     href={`https://www.youtube.com/watch?v=${trailer.key}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold transition-colors"
                     style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
                   >
                     {t.trailer}
@@ -316,28 +316,27 @@ export function HomePage() {
                 <button
                   type="button"
                   onClick={goPrevHero}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/35 text-white/80 backdrop-blur-xl transition hover:bg-white/12 hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center border border-white/10 bg-black/40 text-white/70 transition hover:bg-white/10 hover:text-white"
                   aria-label="Previous hero item"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
 
-                <div className="flex flex-1 items-center justify-center gap-2 px-2" aria-label="Hero gallery position">
+                <div className="flex flex-1 items-center justify-center gap-1.5 px-2" aria-label="Hero gallery position">
                   {heroItems.slice(0, 8).map((item, index) => (
                     <button
                       key={`dot-${item.id}`}
                       type="button"
                       onClick={() => goToHero(index)}
-                      className="rounded-full transition-all"
+                      className="transition-all"
                       style={{
-                        width: index === activeIndex ? 28 : 10,
-                        height: 10,
+                        width: index === activeIndex ? 24 : 6,
+                        height: 3,
                         minHeight: 0,
                         padding: 0,
                         border: 'none',
                         flexShrink: 0,
-                        background: index === activeIndex ? 'var(--accent)' : 'rgba(255,255,255,0.28)',
-                        boxShadow: index === activeIndex ? '0 0 18px var(--accent-glow)' : undefined,
+                        background: index === activeIndex ? 'var(--accent)' : 'rgba(255,255,255,0.3)',
                       }}
                       aria-label={`Go to hero item ${index + 1}`}
                     />
@@ -347,7 +346,7 @@ export function HomePage() {
                 <button
                   type="button"
                   onClick={goNextHero}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/35 text-white/80 backdrop-blur-xl transition hover:bg-white/12 hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center border border-white/10 bg-black/40 text-white/70 transition hover:bg-white/10 hover:text-white"
                   aria-label="Next hero item"
                 >
                   <ChevronRight className="h-5 w-5" />
@@ -383,8 +382,8 @@ export function HomePage() {
                 onClick={() => scrollCollections('left')}
                 tabIndex={-1}
                 aria-label="Scroll left"
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 flex items-center justify-center w-9 h-9 rounded-full opacity-0 group-hover/rail:opacity-100 transition-opacity"
-                style={{ background: 'rgba(8,8,8,0.9)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 flex items-center justify-center w-9 h-9 opacity-0 group-hover/rail:opacity-100 transition-opacity"
+                style={{ background: 'rgba(8,8,8,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}
               >
                 <ChevronLeft className="w-4 h-4 text-white" />
               </button>
@@ -398,7 +397,6 @@ export function HomePage() {
                   style={{
                     width: 220,
                     aspectRatio: '2/3',
-                    borderRadius: 14,
                     border: '1px solid var(--border)',
                     background: 'var(--bg-card)',
                   }}
@@ -429,8 +427,8 @@ export function HomePage() {
                 onClick={() => scrollCollections('right')}
                 tabIndex={-1}
                 aria-label="Scroll right"
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 flex items-center justify-center w-9 h-9 rounded-full opacity-0 group-hover/rail:opacity-100 transition-opacity"
-                style={{ background: 'rgba(8,8,8,0.9)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 flex items-center justify-center w-9 h-9 opacity-0 group-hover/rail:opacity-100 transition-opacity"
+                style={{ background: 'rgba(8,8,8,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}
               >
                 <ChevronRight className="w-4 h-4 text-white" />
               </button>

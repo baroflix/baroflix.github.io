@@ -58,7 +58,7 @@ export function ImageUpload({ onImageOptimized, currentImage }: { onImageOptimiz
       style={{
         width: 120,
         height: 180,
-        borderRadius: 12,
+        
         background: 'rgba(255,255,255,0.05)',
         border: '1px dashed rgba(255,255,255,0.2)',
       }}
@@ -155,7 +155,7 @@ export function AddToCollectionModal({ item, onClose }: { item: MediaItem; onClo
         style={{
           background: 'rgba(20,20,20,0.95)',
           border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 24,
+          
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
           maxHeight: '85vh'
         }}

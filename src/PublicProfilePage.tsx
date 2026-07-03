@@ -47,7 +47,7 @@ function CountryFlag({ code, size = 16 }: { code: string; size?: number }) {
   return (
     <span
       className={`fi fi-${code.toLowerCase()}`}
-      style={{ width: size * 1.33, height: size, borderRadius: 2, display: 'inline-block', flexShrink: 0, verticalAlign: 'middle' }}
+      style={{ width: size * 1.33, height: size,  display: 'inline-block', flexShrink: 0, verticalAlign: 'middle' }}
     />
   )
 }
@@ -82,7 +82,7 @@ function BadgePill({ type, size = 'sm' }: { type: BadgeType; size?: 'sm' | 'lg' 
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: size === 'lg' ? 6 : 4,
-      padding: size === 'lg' ? '5px 12px' : '2px 8px', borderRadius: 999,
+      padding: size === 'lg' ? '5px 12px' : '2px 8px', 
       background: cfg.bg, border: `1px solid ${cfg.border}`,
       color: cfg.color, fontSize: size === 'lg' ? 13 : 11, fontWeight: 600,
       whiteSpace: 'nowrap' as const, lineHeight: 1.4,
@@ -103,10 +103,10 @@ function PosterCard({ item }: { item: PinnedItem | any }) {
   const [imgFailed, setImgFailed] = useState(false)
   return (
     <Link to={`/title/${item.mediaType}/${item.id}`} className="no-bg-hover"
-      style={{ display: 'block', borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
+      style={{ display: 'block',  overflow: 'hidden', flexShrink: 0 }}>
       <div style={{
         width: '100%', aspectRatio: '2/3',
-        background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden', position: 'relative',
+        background: 'rgba(255,255,255,0.06)',  overflow: 'hidden', position: 'relative',
       }}>
         {posterUrl && !imgFailed ? (
           <img src={posterUrl} alt={item.title}
@@ -162,7 +162,7 @@ function FollowListModal({
       <div
         style={{
           width: '100%', maxWidth: 420, maxHeight: '72vh',
-          background: '#111111', borderRadius: 20,
+          background: '#111111', 
           border: '1px solid rgba(255,255,255,0.1)',
           boxShadow: '0 32px 80px rgba(0,0,0,0.8)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -199,7 +199,7 @@ function FollowListModal({
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '4px 0' }}>
               {[1, 2, 3].map(i => (
-                <div key={i} className="skeleton" style={{ height: 60, borderRadius: 12 }} />
+                <div key={i} className="skeleton" style={{ height: 60,}} />
               ))}
             </div>
           ) : users.length === 0 ? (
@@ -219,7 +219,7 @@ function FollowListModal({
                     className="no-bg-hover"
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '10px 12px', borderRadius: 12,
+                      padding: '10px 12px', 
                       background: 'rgba(255,255,255,0.03)',
                       border: '1px solid rgba(255,255,255,0.06)',
                       textDecoration: 'none', transition: 'background 0.15s',
@@ -250,7 +250,7 @@ function FollowListModal({
                         {badgeCfg && (
                           <span style={{
                             display: 'inline-flex', alignItems: 'center', gap: 3,
-                            padding: '1px 6px', borderRadius: 999,
+                            padding: '1px 6px', 
                             background: badgeCfg.bg, border: `1px solid ${badgeCfg.border}`,
                             color: badgeCfg.color, fontSize: 10, fontWeight: 600,
                           }}>
@@ -383,8 +383,8 @@ export function PublicProfilePage() {
       <div className="min-h-screen flex items-center justify-center pt-20">
         <div style={{ textAlign: 'center' }}>
           <div className="skeleton" style={{ width: 64, height: 64, borderRadius: '50%', margin: '0 auto 16px' }} />
-          <div className="skeleton" style={{ width: 160, height: 18, borderRadius: 8, margin: '0 auto 8px' }} />
-          <div className="skeleton" style={{ width: 120, height: 14, borderRadius: 8, margin: '0 auto' }} />
+          <div className="skeleton" style={{ width: 160, height: 18,  margin: '0 auto 8px' }} />
+          <div className="skeleton" style={{ width: 120, height: 14,  margin: '0 auto' }} />
         </div>
       </div>
     )
@@ -488,7 +488,7 @@ export function PublicProfilePage() {
       {/* ── Banner ──────────────────────────────────────────────────────────── */}
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 16px' }}>
         <div style={{
-          position: 'relative', height: 220, overflow: 'hidden', borderRadius: 16,
+          position: 'relative', height: 220, overflow: 'hidden', 
           background: profile.banner_url
             ? undefined
             : `linear-gradient(135deg, ${theme.glow.replace(/[\d.]+\)$/, '0.4)')}, ${theme.glow.replace(/[\d.]+\)$/, '0.05)')})`,
@@ -520,7 +520,7 @@ export function PublicProfilePage() {
               style={{
                 position: 'absolute', top: 14, right: 14,
                 display: 'flex', alignItems: 'center', gap: 6,
-                padding: '6px 12px', borderRadius: 20,
+                padding: '6px 12px', 
                 background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)',
                 color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 600,
                 textDecoration: 'none', zIndex: 2,
@@ -585,7 +585,7 @@ export function PublicProfilePage() {
                     fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
                     background: 'rgba(255,255,255,0.07)',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    padding: '2px 8px', borderRadius: 999,
+                    padding: '2px 8px', 
                   }}>
                     Follows you
                   </span>
@@ -634,7 +634,7 @@ export function PublicProfilePage() {
           {profile.now_watching && getProfileStatus(profile).type === 'watching' && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              marginTop: 10, padding: '8px 12px', borderRadius: 12,
+              marginTop: 10, padding: '8px 12px', 
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.08)',
             }}>
@@ -692,7 +692,7 @@ export function PublicProfilePage() {
         {/* ── Stats bar ───────────────────────────────────────────────────── */}
         <div style={{
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8,
-          padding: 16, borderRadius: 16,
+          padding: 16, 
           background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
           marginBottom: 20,
         }}>
@@ -713,7 +713,7 @@ export function PublicProfilePage() {
         {/* ── About ───────────────────────────────────────────────────────── */}
         {profile.bio && (
           <section style={{
-            padding: 20, borderRadius: 16,
+            padding: 20, 
             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
             marginBottom: 20,
           }}>
@@ -770,7 +770,7 @@ export function PublicProfilePage() {
                   return (
                     <div key={badge.id} style={{
                       display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '12px 16px', borderRadius: 12,
+                      padding: '12px 16px', 
                       background: cfg.bg, border: `1px solid ${cfg.border}`,
                     }}>
                       <span style={{ fontSize: 22 }}>{cfg.emoji}</span>
@@ -802,7 +802,7 @@ export function PublicProfilePage() {
                   return (
                     <div key={badge.id} style={{
                       display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '10px 12px', borderRadius: 12,
+                      padding: '10px 12px', 
                       background: cfg.bg, border: `1px solid ${cfg.border}`,
                     }}>
                       <span style={{ fontSize: 20, flexShrink: 0 }}>{cfg.emoji}</span>
@@ -858,7 +858,7 @@ function FollowButton({
       className="no-bg-hover"
       style={{
         display: 'flex', alignItems: 'center', gap: 7,
-        padding: '8px 18px', borderRadius: 20,
+        padding: '8px 18px', 
         background: isFollowing ? 'rgba(255,255,255,0.08)' : 'var(--accent)',
         border: isFollowing ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--accent)',
         color: isFollowing ? 'rgba(255,255,255,0.8)' : '#fff',

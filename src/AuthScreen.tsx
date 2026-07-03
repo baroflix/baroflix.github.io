@@ -94,16 +94,10 @@ export function AuthScreen() {
       <div style={{ width: '100%', maxWidth: 420 }}>
         {/* Logo / Title */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <img
-            src="/baroflix_oneline.png"
-            alt="Baroflix"
-            style={{
-              height: '2.5rem',
-              width: 'auto',
-              display: 'block',
-              margin: '0 auto 0.75rem',
-            }}
-          />
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 0, marginBottom: '0.75rem' }}>
+            <span style={{ fontFamily: "'Geist Mono Variable', 'Geist Mono', monospace", fontWeight: 700, fontSize: '2rem', letterSpacing: '-0.04em', color: '#fff', lineHeight: 1 }}>baro</span>
+            <span style={{ fontFamily: "'Geist Pixel', monospace", fontSize: '2rem', color: 'var(--accent)', lineHeight: 1 }}>flix</span>
+          </div>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.875rem' }}>
             Sign in to access {phrase}
           </p>
@@ -114,7 +108,6 @@ export function AuthScreen() {
           style={{
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.09)',
-            borderRadius: 20,
             padding: '2rem',
             backdropFilter: 'blur(16px)',
           }}
@@ -125,11 +118,11 @@ export function AuthScreen() {
               style={{
                 marginBottom: '1.25rem',
                 padding: '0.875rem 1rem',
-                borderRadius: 12,
                 background: isAccessDenied
                   ? 'rgba(239,68,68,0.12)'
                   : 'rgba(239,68,68,0.08)',
                 border: `1px solid ${isAccessDenied ? 'rgba(239,68,68,0.5)' : 'rgba(239,68,68,0.25)'}`,
+                borderLeft: `3px solid #ef4444`,
                 display: 'flex',
                 gap: '0.625rem',
                 alignItems: 'flex-start',
@@ -176,12 +169,11 @@ export function AuthScreen() {
               onClick={handleGoogle}
               style={{
                 width: '100%',
-                padding: '0.7rem',
-                borderRadius: 10,
+                padding: '0.75rem',
                 border: '1px solid rgba(255,255,255,0.12)',
                 background: 'rgba(255,255,255,0.05)',
                 color: 'white',
-                fontWeight: 500,
+                fontWeight: 600,
                 fontSize: '0.9rem',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.6 : 1,
@@ -189,7 +181,8 @@ export function AuthScreen() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.625rem',
-                transition: 'background 0.2s',
+                transition: 'background 0.15s',
+                fontFamily: "'Geist Variable', system-ui, sans-serif",
               }}
             >
               <Globe size={16} />

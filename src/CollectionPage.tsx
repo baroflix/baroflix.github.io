@@ -74,7 +74,7 @@ export function CollectionPage() {
               <div className="max-w-3xl space-y-5">
                 <h1
                   className="text-5xl sm:text-6xl font-normal text-white"
-                  style={{ fontFamily: 'DM Serif Display, serif', textShadow: '0 4px 32px rgba(0,0,0,0.6)', letterSpacing: '-0.02em' }}
+                  style={{ textShadow: '0 4px 32px rgba(0,0,0,0.6)', letterSpacing: '-0.02em' }}
                 >
                   {details.name}
                 </h1>

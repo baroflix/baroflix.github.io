@@ -92,7 +92,7 @@ function ProfileResults({
             }}
             style={{
               display: 'flex', alignItems: 'center', gap: 14,
-              padding: '12px 16px', borderRadius: 14, width: '100%', textAlign: 'left',
+              padding: '12px 16px', width: '100%', textAlign: 'left',
               background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
               cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s',
             }}
@@ -128,7 +128,7 @@ function ProfileResults({
                 {badgeCfg && (
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4,
-                    padding: '1px 7px', borderRadius: 999,
+                    padding: '1px 7px',
                     background: badgeCfg.bg, border: `1px solid ${badgeCfg.border}`,
                     color: badgeCfg.color, fontSize: 11, fontWeight: 600,
                   }}>
@@ -294,15 +294,11 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                 alignItems: 'center',
                 gap: 14,
                 padding: '0 20px',
-                height: 54,
-                background: 'rgba(255, 255, 255, 0.05)',
+                height: 52,
+                background: 'rgba(255, 255, 255, 0.04)',
                 border: isFocused ? '1px solid var(--accent)' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: 27,
                 flex: 1,
-                boxShadow: isFocused
-                  ? 'inset 0 1px 1px rgba(255,255,255,0.05), 0 0 20px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3)'
-                  : 'inset 0 1px 1px rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.3)',
-                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                transition: 'border-color 0.2s ease',
               }}
             >
               <Search style={{ width: 18, height: 18, color: 'var(--accent)', flexShrink: 0 }} />
@@ -323,7 +319,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                   fontSize: 16,
                   fontWeight: 400,
                   color: '#fff',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: "'Geist Variable', system-ui, sans-serif",
                   minWidth: 0,
                 }}
               />
@@ -338,7 +334,6 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                     justifyContent: 'center',
                     width: 22,
                     height: 22,
-                    borderRadius: '50%',
                     background: 'rgba(255,255,255,0.1)',
                     border: 'none',
                     cursor: 'pointer',
@@ -362,13 +357,12 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                 justifyContent: 'center',
                 width: 44,
                 height: 44,
-                borderRadius: '50%',
                 background: 'rgba(255, 255, 255, 0.06)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 cursor: 'pointer',
                 flexShrink: 0,
                 color: 'rgba(255,255,255,0.7)',
-                transition: 'all 0.2s ease',
+                transition: 'background 0.15s, color 0.15s',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255,255,255,0.12)'
@@ -400,7 +394,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                 key={key}
                 type="button"
                 onClick={() => setFilter(key)}
-                className="px-4 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-colors shrink-0"
+                className="px-4 py-1 text-xs font-semibold uppercase tracking-wider transition-colors shrink-0 font-mono"
                 style={{
                   background: filter === key ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
                   color: filter === key ? '#fff' : 'rgba(255,255,255,0.5)',
@@ -449,7 +443,6 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                             alignItems: 'center',
                             gap: 6,
                             padding: '6px 12px 6px 10px',
-                            borderRadius: 999,
                             background: 'rgba(255,255,255,0.07)',
                             border: '1px solid rgba(255,255,255,0.1)',
                             cursor: 'pointer',
@@ -471,7 +464,6 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                               justifyContent: 'center',
                               width: 16,
                               height: 16,
-                              borderRadius: '50%',
                               background: 'transparent',
                               border: 'none',
                               cursor: 'pointer',
@@ -528,7 +520,7 @@ export function HomeSearchToggle() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search"
-        className="flex items-center justify-center w-10 h-10 rounded-full transition-all"
+        className="flex items-center justify-center w-9 h-9 transition-all"
         style={{
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',

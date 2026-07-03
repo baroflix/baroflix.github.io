@@ -191,7 +191,7 @@ export function StatsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <h1 className="text-4xl sm:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-purple-500 mb-4"
-              style={{ fontFamily: 'DM Serif Display, serif' }}>
+              style={{  }}>
               Your Baroflix Wrapped
             </h1>
             <p className="text-lg" style={{ color: 'rgba(255,255,255,0.6)' }}>
@@ -501,7 +501,7 @@ export function StatsPage() {
                     <>
                       <Sparkles className="w-14 h-14 text-yellow-400 mb-6 animate-pulse" />
                       <h1 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-[var(--accent)] to-purple-500 tracking-tight leading-none mb-4"
-                        style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '0.04em' }}>
+                        style={{ letterSpacing: '0.04em' }}>
                         BAROFLIX WRAPPED
                       </h1>
                       <p className="text-base text-white/60 max-w-sm mb-10">
@@ -520,7 +520,7 @@ export function StatsPage() {
                       <Clock className="w-14 h-14 text-blue-400 mb-6" />
                       <h2 className="text-lg font-bold text-white/50 tracking-wider mb-2">TIME SPENT</h2>
                       <div className="text-6xl md:text-7xl font-black text-white leading-none my-4 tracking-tight"
-                        style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '0.02em' }}>
+                        style={{ letterSpacing: '0.02em' }}>
                         {totalMinutes.toLocaleString()} MIN
                       </div>
                       <p className="text-sm text-white/60 max-w-md">
@@ -637,7 +637,7 @@ export function StatsPage() {
                     <>
                       <div className="p-6 rounded-3xl bg-white/5 border border-white/10 shadow-2xl max-w-sm w-full relative overflow-hidden text-left font-sans">
                         <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none opacity-20 bg-[var(--accent)]" />
-                        <h2 className="text-2xl font-black text-white tracking-wider uppercase mb-5" style={{ fontFamily: 'Bebas Neue, sans-serif' }}>
+                        <h2 className="text-2xl font-black text-white tracking-wider uppercase mb-5" style={{  }}>
                           MY BAROFLIX WRAPPED
                         </h2>
                         <div className="space-y-4">

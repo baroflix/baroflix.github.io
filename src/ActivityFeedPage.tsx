@@ -81,9 +81,9 @@ function ActivityItem({ entry, username, avatarUrl }: {
       <Link
         to={`/title/${entry.mediaType}/${entry.id}`}
         className="no-bg-hover shrink-0"
-        style={{ display: 'block', width: 44, borderRadius: 8, overflow: 'hidden' }}
+        style={{ display: 'block', width: 44,  overflow: 'hidden' }}
       >
-        <div style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.06)', borderRadius: 8, overflow: 'hidden' }}>
+        <div style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.06)',  overflow: 'hidden' }}>
           {imgSrc && !imgFailed ? (
             <img src={imgSrc} alt={entry.title}
               onError={() => setImgFailed(true)}

@@ -61,11 +61,11 @@ function ChatImage({ url }: { url: string }) {
   return (
     <div style={{ marginTop: 4, maxWidth: '100%' }}>
       {imgState === 'loading' && (
-        <div className="skeleton" style={{ height: 110, borderRadius: 8 }} />
+        <div className="skeleton" style={{ height: 110,}} />
       )}
       {imgState === 'error' && (
         <div style={{
-          padding: '6px 10px', borderRadius: 8, fontSize: 10,
+          padding: '6px 10px',  fontSize: 10,
           background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
           color: 'rgba(255,255,255,0.3)',
         }}>
@@ -86,7 +86,7 @@ function ChatImage({ url }: { url: string }) {
           width: '100%',
           maxHeight: expanded ? 360 : 150,
           objectFit: expanded ? 'contain' : 'cover',
-          borderRadius: 8,
+          
           cursor: expanded ? 'zoom-out' : 'zoom-in',
           border: '1px solid rgba(255,255,255,0.07)',
           background: 'rgba(0,0,0,0.3)',
@@ -618,7 +618,7 @@ export function SportsPage() {
                   {/* Glowing hover accent border */}
                   <div 
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                    style={{ border: '1px solid var(--accent)', borderRadius: 16 }}
+                    style={{ border: '1px solid var(--accent)',}}
                   />
 
                   <div>
@@ -988,7 +988,7 @@ export function SportsPage() {
                         style={{
                           maxHeight: 72,
                           maxWidth: 128,
-                          borderRadius: 6,
+                          
                           objectFit: 'cover',
                           border: '1px solid rgba(255,255,255,0.1)',
                           display: 'block',

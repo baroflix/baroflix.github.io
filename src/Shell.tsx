@@ -217,10 +217,10 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
       return (
         <span style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: dim, height: dim, borderRadius: '50%', flexShrink: 0,
+          width: dim, height: dim, flexShrink: 0,
           background: 'var(--accent-dim)', border: '1px solid var(--accent)',
           color: 'var(--accent)', fontSize, fontWeight: 700, lineHeight: 1,
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: "'Geist Mono Variable', 'Geist Mono', monospace",
         }}>
           {profile.username[0].toUpperCase()}
         </span>
@@ -247,12 +247,9 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
         <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 sm:px-6 py-4 sm:py-5 gap-4">
           <div className="flex items-center gap-8">
             {/* Logo */}
-            <Link to="/" className="no-bg-hover shrink-0">
-              <img
-                src="/1x/Asset 1.webp"
-                alt="Baroflix"
-                className="block h-9 w-auto"
-              />
+            <Link to="/" className="no-bg-hover shrink-0 flex items-baseline gap-0" aria-label="Baroflix home">
+              <span style={{ fontFamily: "'Geist Mono Variable', 'Geist Mono', monospace", fontWeight: 700, fontSize: '1.3rem', letterSpacing: '-0.04em', color: 'var(--text-primary)', lineHeight: 1 }}>baro</span>
+              <span className="font-pixel" style={{ fontSize: '1.3rem', color: 'var(--accent)', lineHeight: 1 }}>flix</span>
             </Link>
 
             {/* Left nav — desktop */}
@@ -275,11 +272,8 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             {!isElectron && (
               <Link
                 to="/download"
-                className="hidden lg:flex items-center justify-center px-4 h-9 rounded-full text-sm font-bold text-white transition-all hover:brightness-110 mr-2"
-                style={{
-                  background: 'var(--accent)',
-                  boxShadow: '0 0 20px var(--accent-dim)',
-                }}
+                className="hidden lg:flex items-center justify-center px-4 h-9 text-sm font-bold text-white transition-all hover:brightness-110 mr-2"
+                style={{ background: 'var(--accent)' }}
               >
                 {t.downloadApp}
               </Link>
@@ -290,7 +284,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
               target="_blank"
               rel="noreferrer"
               aria-label="Discord"
-              className="flex items-center justify-center w-10 h-10 rounded-full transition-all"
+              className="flex items-center justify-center w-9 h-9 transition-all"
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
@@ -307,7 +301,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
               target="_blank"
               rel="noreferrer"
               aria-label="GitHub"
-              className="flex items-center justify-center w-10 h-10 rounded-full transition-all"
+              className="flex items-center justify-center w-9 h-9 transition-all"
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
@@ -326,7 +320,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
               {notifCount > 0 && (
                 <span style={{
                   position: 'absolute', top: -3, right: -3, zIndex: 10,
-                  minWidth: 17, height: 17, borderRadius: 999,
+                  minWidth: 17, height: 17,
                   background: '#ef4444', border: '2px solid var(--bg, #080808)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 9, fontWeight: 800, color: '#fff', padding: '0 3px',
@@ -337,7 +331,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
               )}
               <button
                 onClick={() => { clearNotifications(); setProfileOpen(o => !o) }}
-                className="flex items-center justify-center w-9 h-9 rounded-full transition-colors"
+                className="flex items-center justify-center w-9 h-9 transition-colors"
                 style={{
                   background: profile?.avatar_url ? 'transparent'
                     : profileOpen || isActive('/profile') || isActive('/user/') || isActive('/feed') || isActive('/collections') || isActive('/stats')
@@ -360,7 +354,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-52 rounded-2xl overflow-hidden z-[60]"
+                    className="absolute right-0 top-full mt-2 w-52 overflow-hidden z-[60]"
                     style={{
                       background: 'var(--surface-dropdown)',
                       border: '1px solid var(--border)',
@@ -419,7 +413,7 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
 
             {/* Hamburger — mobile only */}
             <button
-              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full transition-colors"
+              className="lg:hidden flex items-center justify-center w-9 h-9 transition-colors"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
               onClick={() => setMobileOpen(o => !o)}
               aria-label="Menu"
@@ -457,10 +451,11 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             <Link
               key={to}
               to={to}
-              className="text-base font-semibold transition-colors px-3 py-3 rounded-xl"
+              className="text-base font-semibold transition-colors px-3 py-3"
               style={{
                 color: isActive(to) ? 'var(--text-primary)' : 'var(--text-secondary)',
-                background: isActive(to) ? 'var(--bg-card)' : 'transparent',
+                borderLeft: isActive(to) ? '2px solid var(--accent)' : '2px solid transparent',
+                paddingLeft: 12,
               }}
             >
               {label}
@@ -475,10 +470,11 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
             <Link
               key={to + label}
               to={to}
-              className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl"
+              className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3"
               style={{
                 color: isActive(to) ? 'var(--text-primary)' : 'var(--text-secondary)',
-                background: isActive(to) ? 'var(--bg-card)' : 'transparent',
+                borderLeft: isActive(to) ? '2px solid var(--accent)' : '2px solid transparent',
+                paddingLeft: 12,
               }}
             >
               <Icon className="w-4 h-4 shrink-0" />
@@ -490,8 +486,8 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 rounded-xl w-full"
-            style={{ color: 'var(--text-tertiary)', background: 'transparent' }}
+            className="flex items-center gap-3 text-base font-semibold transition-colors px-3 py-3 w-full"
+            style={{ color: 'var(--text-tertiary)', background: 'transparent', borderLeft: '2px solid transparent' }}
           >
             <LogOut className="w-4 h-4 shrink-0" />
             {ts.signOut}
@@ -500,11 +496,8 @@ function NavBar({ language }: { language?: 'en' | 'pl' }) {
           {!isElectron && (
             <Link
               to="/download"
-              className="mt-4 flex items-center justify-center px-4 h-11 rounded-full text-sm font-bold text-white transition-all hover:brightness-110"
-              style={{
-                background: 'var(--accent)',
-                boxShadow: '0 0 20px var(--accent-dim)',
-              }}
+              className="mt-4 flex items-center justify-center px-4 h-11 text-sm font-bold text-white transition-all hover:brightness-110"
+              style={{ background: 'var(--accent)' }}
             >
               {t.downloadApp}
             </Link>

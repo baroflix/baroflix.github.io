@@ -40,15 +40,15 @@ function LanguageDropdown({
         type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 px-4 py-3 transition-all"
-        style={{ borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', color: 'var(--text-primary)' }}
+        style={{  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', color: 'var(--text-primary)' }}
       >
-        <span className={`fi fi-${selected.flag}`} style={{ width: 22, height: 16, borderRadius: 2, flexShrink: 0, display: 'inline-block' }} />
+        <span className={`fi fi-${selected.flag}`} style={{ width: 22, height: 16,  flexShrink: 0, display: 'inline-block' }} />
         <span className="flex-1 text-left text-sm font-medium">{selected.label}</span>
         <ChevronDown className="w-4 h-4 transition-transform" style={{ color: 'var(--text-tertiary)', transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>
       {open && (
         <div className="absolute left-0 right-0 mt-1 z-50 overflow-hidden"
-          style={{ borderRadius: 12, background: 'var(--surface-dropdown)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: 'var(--shadow-dropdown)' }}>
+          style={{  background: 'var(--surface-dropdown)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: 'var(--shadow-dropdown)' }}>
           {LANGUAGE_OPTIONS.map(opt => {
             const isActive = opt.code === value
             return (
@@ -63,7 +63,7 @@ function LanguageDropdown({
                   borderLeft: isActive ? `2px solid ${accentColor}` : '2px solid transparent',
                 }}
               >
-                <span className={`fi fi-${opt.flag}`} style={{ width: 22, height: 16, borderRadius: 2, flexShrink: 0, display: 'inline-block' }} />
+                <span className={`fi fi-${opt.flag}`} style={{ width: 22, height: 16,  flexShrink: 0, display: 'inline-block' }} />
                 <span className="font-medium">{opt.label}</span>
               </button>
             )
@@ -81,7 +81,7 @@ function ClientToggle({ checked, onChange }: { checked: boolean; onChange: (v: b
       onClick={() => onChange(!checked)}
       className="no-bg-hover"
       style={{
-        width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+        width: 44, height: 24,  flexShrink: 0,
         background: checked ? 'var(--accent)' : 'rgba(255,255,255,0.15)',
         border: 'none', cursor: 'pointer', position: 'relative',
         transition: 'background 0.2s',
@@ -304,7 +304,7 @@ export function ProfileScreen() {
     return {
       flex: 1,
       padding: '8px 0',
-      borderRadius: 10,
+      
       fontSize: 13,
       fontWeight: 600,
       border: 'none',
@@ -337,7 +337,7 @@ export function ProfileScreen() {
         {/* ── Avatar card ─────────────────────────────────────────────────── */}
         <div
           className="flex items-center gap-5 p-5"
-          style={{ borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+          style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
         >
           <div
             className="shrink-0 flex items-center justify-center overflow-hidden"
@@ -371,7 +371,7 @@ export function ProfileScreen() {
         {/* ── Tab switcher ────────────────────────────────────────────────── */}
         <div
           style={{
-            display: 'flex', gap: 4, padding: 4, borderRadius: 14,
+            display: 'flex', gap: 4, padding: 4, 
             background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
           }}
         >
@@ -394,7 +394,7 @@ export function ProfileScreen() {
         {activeTab === 'general' && (
           <>
             {/* Theme */}
-            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <section className="p-5" style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               {/* Live preview strip */}
               <div className="flex items-center gap-3 mb-5 p-3 rounded-xl"
                 style={{
@@ -425,7 +425,7 @@ export function ProfileScreen() {
                     <button key={id} type="button" onClick={() => updateSettings({ theme: id as ThemeId })}
                       className="text-left p-4 transition-all"
                       style={{
-                        borderRadius: 14,
+                        
                         background: isActive ? preset.glow.replace(/0\.(35|30|28)/, '0.10') : 'rgba(255,255,255,0.04)',
                         border: `1px solid ${isActive ? preset.glow.replace(/0\.(35|30|28)/, '0.38') : 'rgba(255,255,255,0.08)'}`,
                         boxShadow: isActive ? `0 0 24px ${preset.glow}` : 'none',
@@ -448,7 +448,7 @@ export function ProfileScreen() {
             </section>
 
             {/* Language */}
-            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <section className="p-5" style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-2 mb-5">
                 <Languages className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                 <h2 className="text-base font-semibold text-white">{ts.language}</h2>
@@ -460,7 +460,7 @@ export function ProfileScreen() {
               />
             </section>
             {/* Embed Provider */}
-            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <section className="p-5" style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-2 mb-2">
                 <Globe className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                 <h2 className="text-base font-semibold text-white">Video Provider</h2>
@@ -475,7 +475,7 @@ export function ProfileScreen() {
                     <button key={id} type="button" onClick={() => updateSettings({ embedProvider: id })}
                       className="p-4 text-left transition-all"
                       style={{
-                        borderRadius: 14,
+                        
                         background: isActive ? theme.glow.replace(/0\.(35|30|28)/, '0.10') : 'rgba(255,255,255,0.04)',
                         border: `1px solid ${isActive ? theme.accent + '60' : 'rgba(255,255,255,0.08)'}`,
                         boxShadow: isActive ? `0 0 24px ${theme.glow}` : 'none',
@@ -522,7 +522,7 @@ export function ProfileScreen() {
 
             {/* ── Profile fields ──────────────────────────────────────────── */}
             <section className="flex flex-col gap-4 p-5"
-              style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
 
               {/* Username */}
               <div>
@@ -548,7 +548,7 @@ export function ProfileScreen() {
                   style={{
                     background: 'rgba(255,255,255,0.06)',
                     border: `1px solid ${usernameStatus === 'taken' ? 'rgba(248,113,113,0.5)' : usernameStatus === 'available' ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                    borderRadius: 10,
+                    
                   }} />
               </div>
 
@@ -562,7 +562,7 @@ export function ProfileScreen() {
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder={t.form.fullNamePlaceholder} maxLength={80}
                   className="w-full px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10 }} />
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',}} />
               </div>
 
               {/* Country */}
@@ -576,7 +576,7 @@ export function ProfileScreen() {
                   onChange={(e) => setCountry(e.target.value.toUpperCase().slice(0, 2))}
                   placeholder="PL" maxLength={2}
                   className="w-full px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10 }} />
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',}} />
               </div>
 
               {/* Avatar URL */}
@@ -589,7 +589,7 @@ export function ProfileScreen() {
                   onChange={(e) => setAvatarUrl(e.target.value)}
                   placeholder="https://…"
                   className="w-full px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10 }} />
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',}} />
               </div>
 
               {/* Banner URL */}
@@ -602,7 +602,7 @@ export function ProfileScreen() {
                   onChange={(e) => setBannerUrl(e.target.value)}
                   placeholder={t.form.bannerUrlPlaceholder}
                   className="w-full px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10 }} />
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',}} />
               </div>
 
               {/* Bio */}
@@ -615,7 +615,7 @@ export function ProfileScreen() {
                   onChange={(e) => setBio(e.target.value)}
                   placeholder={t.form.bioPlaceholder} maxLength={500} rows={3}
                   className="w-full px-3.5 py-2.5 text-sm text-white outline-none transition-colors resize-none"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontFamily: 'inherit' }} />
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',  fontFamily: 'inherit' }} />
                 <p className="text-right mt-1 text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>{bio.length}/500</p>
               </div>
 
@@ -637,7 +637,7 @@ export function ProfileScreen() {
                   onClick={() => setIsPublic(v => !v)}
                   className="no-bg-hover"
                   style={{
-                    width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+                    width: 44, height: 24,  flexShrink: 0,
                     background: isPublic ? 'var(--accent)' : 'rgba(255,255,255,0.15)',
                     border: 'none', cursor: 'pointer', position: 'relative',
                     transition: 'background 0.2s',
@@ -656,7 +656,7 @@ export function ProfileScreen() {
             </section>
 
             {/* ── Pinned Favorites ────────────────────────────────────────── */}
-            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <section className="p-5" style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-2 mb-1">
                 <Pin size={15} style={{ color: 'var(--accent)' }} />
                 <h2 className="text-base font-semibold text-white">{t.pins.title}</h2>
@@ -672,7 +672,7 @@ export function ProfileScreen() {
                 <div className="grid grid-cols-4 gap-2 mb-5">
                   {pinnedItems.map(item => (
                     <div key={`${item.mediaType}-${item.id}`} style={{ position: 'relative' }}>
-                      <div style={{ aspectRatio: '2/3', borderRadius: 8, overflow: 'hidden', background: 'rgba(255,255,255,0.06)' }}>
+                      <div style={{ aspectRatio: '2/3',  overflow: 'hidden', background: 'rgba(255,255,255,0.06)' }}>
                         {item.posterPath ? (
                           <img
                             src={item.posterPath.startsWith('http') ? item.posterPath : `${POSTER_BASE}${item.posterPath}`}
@@ -727,7 +727,7 @@ export function ProfileScreen() {
                         disabled={pinnedItems.length >= 4}
                       >
                         <div style={{
-                          aspectRatio: '2/3', borderRadius: 6, overflow: 'hidden',
+                          aspectRatio: '2/3',  overflow: 'hidden',
                           background: 'rgba(255,255,255,0.06)',
                           border: '1px solid rgba(255,255,255,0.1)',
                           marginBottom: 3,
@@ -788,7 +788,7 @@ export function ProfileScreen() {
           <div className="flex flex-col gap-5">
 
             {/* Playback */}
-            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <section className="p-5" style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-2 mb-5">
                 <Volume2 className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                 <h2 className="text-base font-semibold text-white">playback</h2>
@@ -811,7 +811,7 @@ export function ProfileScreen() {
                   className="w-full"
                   style={{
                     WebkitAppearance: 'none', appearance: 'none', height: 5,
-                    borderRadius: 3, outline: 'none', cursor: 'pointer',
+                     outline: 'none', cursor: 'pointer',
                     background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${(clientSettings.volumeBoost - 100) / 2}%, rgba(255,255,255,0.15) ${(clientSettings.volumeBoost - 100) / 2}%, rgba(255,255,255,0.15) 100%)`,
                   }}
                 />
@@ -819,7 +819,7 @@ export function ProfileScreen() {
             </section>
 
             {/* Integrations & toggles */}
-            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <section className="p-5" style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-2 mb-5">
                 <Shield className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                 <h2 className="text-base font-semibold text-white">integrations & system</h2>
@@ -863,7 +863,7 @@ export function ProfileScreen() {
             </section>
 
             {/* PiP shortcut */}
-            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <section className="p-5" style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-2 mb-4">
                 <Keyboard className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                 <h2 className="text-base font-semibold text-white">shortcuts</h2>
@@ -878,7 +878,7 @@ export function ProfileScreen() {
                 className="w-full text-center outline-none"
                 style={{
                   padding: '9px 12px', background: 'rgba(255,255,255,0.06)',
-                  border: '1px dashed rgba(255,255,255,0.25)', borderRadius: 10,
+                  border: '1px dashed rgba(255,255,255,0.25)', 
                   fontFamily: 'ui-monospace,monospace', fontSize: 13, fontWeight: 600,
                   color: 'var(--accent)', cursor: 'pointer',
                 }}
@@ -888,7 +888,7 @@ export function ProfileScreen() {
             </section>
 
             {/* App version */}
-            <section className="p-5" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <section className="p-5" style={{  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-2 mb-4">
                 <Info className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                 <h2 className="text-base font-semibold text-white">app info</h2>
@@ -911,7 +911,7 @@ export function ProfileScreen() {
                   disabled={updateStatus === 'checking'}
                   className="flex items-center gap-1.5 text-xs font-semibold transition-colors"
                   style={{
-                    padding: '6px 12px', borderRadius: 8, flexShrink: 0,
+                    padding: '6px 12px',  flexShrink: 0,
                     background: 'transparent', border: '1px solid var(--accent)',
                     color: 'var(--accent)', cursor: updateStatus === 'checking' ? 'default' : 'pointer',
                     opacity: updateStatus === 'checking' ? 0.5 : 1,

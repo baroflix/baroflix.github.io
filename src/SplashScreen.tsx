@@ -90,18 +90,27 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
             />
 
             {/* Logo text */}
-            <motion.img
-              src="/1x/Asset 1.webp"
-              alt="Baroflix"
+            <motion.div
               initial={{ opacity: 0, y: 18, scale: 0.88 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-              style={{
-                position: 'relative',
-                width: 'min(70vw, 420px)',
-                height: 'auto',
-              }}
-            />
+              style={{ position: 'relative', display: 'flex', alignItems: 'baseline', gap: 0 }}
+            >
+              <span style={{
+                fontFamily: "'Geist Mono Variable', 'Geist Mono', monospace",
+                fontWeight: 700,
+                fontSize: 'min(13vw, 72px)',
+                letterSpacing: '-0.04em',
+                color: '#ffffff',
+                lineHeight: 1,
+              }}>baro</span>
+              <span style={{
+                fontFamily: "'Geist Pixel', monospace",
+                fontSize: 'min(13vw, 72px)',
+                color: theme.accent,
+                lineHeight: 1,
+              }}>flix</span>
+            </motion.div>
 
             {/* Animated underline bar */}
             <motion.div
@@ -109,11 +118,9 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
               animate={{ scaleX: 1, opacity: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
               style={{
-                height: 3,
-                width: 80,
-                borderRadius: 99,
+                height: 2,
+                width: 64,
                 background: theme.accent,
-                boxShadow: `0 0 18px ${theme.glow.replace(/0\.(35|30|28)/, '0.50')}`,
                 transformOrigin: 'left',
                 position: 'relative',
               }}
@@ -125,9 +132,9 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 0.45, y: 0 }}
               transition={{ duration: 0.6, delay: 0.65 }}
               style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '0.78rem',
-                letterSpacing: '0.25em',
+                fontFamily: "'Geist Mono Variable', 'Geist Mono', monospace",
+                fontSize: '0.7rem',
+                letterSpacing: '0.2em',
                 color: 'white',
                 textTransform: 'uppercase',
                 position: 'relative',

@@ -274,7 +274,7 @@ export function FullscreenPlayer({
                   gap: 6,
                   padding: '0 14px',
                   height: 36,
-                  borderRadius: 18,
+                  
                   background: 'rgba(255,255,255,0.12)',
                   border: '1px solid rgba(255,255,255,0.2)',
                   cursor: 'pointer',

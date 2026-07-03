@@ -77,7 +77,7 @@ export function NetworkPage() {
             )}
           </div>
           <div>
-            <h1 className="text-4xl sm:text-6xl font-bold text-white mb-2" style={{ fontFamily: 'DM Serif Display, serif' }}>
+            <h1 className="text-4xl sm:text-6xl font-bold text-white mb-2" style={{  }}>
               {network.name} Hub
             </h1>
             <p className="text-white/50 text-lg">

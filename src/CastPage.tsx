@@ -108,7 +108,7 @@ export function CastPage() {
 
           {/* Main Content */}
           <div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6" style={{ fontFamily: 'DM Serif Display, serif' }}>
+            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6" style={{  }}>
               {details.name}
             </h1>
             
@@ -129,7 +129,7 @@ export function CastPage() {
                     {/* Timeline dot */}
                     <div className="absolute -left-[41px] top-2 w-4 h-4 rounded-full bg-[var(--accent)] border-4 border-[#080808]" />
                     
-                    <h3 className="text-xl font-bold text-white mb-6 sticky top-24 z-10 py-2" style={{ fontFamily: 'DM Serif Display, serif', background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
+                    <h3 className="text-xl font-bold text-white mb-6 sticky top-24 z-10 py-2" style={{ background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
                       {year}
                     </h3>
                     

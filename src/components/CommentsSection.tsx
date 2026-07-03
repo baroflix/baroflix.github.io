@@ -44,10 +44,10 @@ function CommentImage({ url }: { url: string }) {
   const [expanded, setExpanded] = useState(false)
   return (
     <div style={{ marginTop: 4, maxWidth: 480 }}>
-      {state === 'loading' && <div className="skeleton" style={{ height: 90, borderRadius: 8 }} />}
+      {state === 'loading' && <div className="skeleton" style={{ height: 90,}} />}
       {state === 'error' && (
         <div style={{
-          padding: '6px 10px', borderRadius: 8, fontSize: 10,
+          padding: '6px 10px',  fontSize: 10,
           background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
           color: 'rgba(255,255,255,0.3)',
         }}>🖼 Image unavailable</div>
@@ -63,7 +63,7 @@ function CommentImage({ url }: { url: string }) {
           maxWidth: '100%',
           maxHeight: expanded ? 280 : 120,
           objectFit: expanded ? 'contain' : 'cover',
-          borderRadius: 8, cursor: expanded ? 'zoom-out' : 'zoom-in',
+           cursor: expanded ? 'zoom-out' : 'zoom-in',
           border: '1px solid rgba(255,255,255,0.07)',
           background: 'rgba(0,0,0,0.3)',
           transition: 'max-height 0.25s ease',
@@ -250,7 +250,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
       style={{
         marginTop: '3rem',
         padding: '1.5rem',
-        borderRadius: 20,
+        
         background: 'rgba(255,255,255,0.03)',
         border: '1px solid rgba(255,255,255,0.07)',
       }}
@@ -264,7 +264,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
         {!loading && (
           <span style={{
             marginLeft: 4, fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)',
-            background: 'rgba(255,255,255,0.06)', padding: '1px 8px', borderRadius: 99,
+            background: 'rgba(255,255,255,0.06)', padding: '1px 8px', 
           }}>
             {comments.length}
           </span>
@@ -299,7 +299,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
                   gap: '0.75rem',
                   alignItems: 'flex-start',
                   padding: '0.875rem',
-                  borderRadius: 12,
+                  
                   background: isOwn ? 'rgba(var(--accent-rgb, 139,92,246),0.07)' : 'rgba(255,255,255,0.03)',
                   border: `1px solid ${isOwn ? 'rgba(var(--accent-rgb,139,92,246),0.2)' : 'rgba(255,255,255,0.05)'}`,
                 }}
@@ -342,7 +342,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
                     {badgeCfg && (
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: 3,
-                        padding: '1px 6px', borderRadius: 999,
+                        padding: '1px 6px', 
                         background: badgeCfg.bg, border: `1px solid ${badgeCfg.border}`,
                         color: badgeCfg.color, fontSize: 10, fontWeight: 600, lineHeight: 1.5,
                       }}>
@@ -375,7 +375,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
                     onClick={() => handleDelete(comment.id)}
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer',
-                      color: 'rgba(255,255,255,0.2)', padding: 4, borderRadius: 6,
+                      color: 'rgba(255,255,255,0.2)', padding: 4, 
                       flexShrink: 0, display: 'flex', alignItems: 'center', transition: 'color 0.15s',
                     }}
                     onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = '#f87171')}
@@ -405,7 +405,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
               referrerPolicy="no-referrer"
               style={{
                 maxHeight: 80, maxWidth: 240, objectFit: 'cover',
-                borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)',
+                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             />
           )}
@@ -440,7 +440,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
               style={{
                 flex: 1, padding: '0.625rem 0.875rem',
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 10, color: 'white', fontSize: '0.875rem',
+                 color: 'white', fontSize: '0.875rem',
                 resize: 'none', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5,
               }}
             />
@@ -450,7 +450,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
               type="submit"
               disabled={submitting || !content.trim()}
               style={{
-                padding: '0.625rem 1rem', borderRadius: 10, border: 'none',
+                padding: '0.625rem 1rem',  border: 'none',
                 background: 'var(--accent, #8b5cf6)', color: 'white', fontWeight: 600,
                 fontSize: '0.85rem', cursor: submitting || !content.trim() ? 'not-allowed' : 'pointer',
                 opacity: submitting || !content.trim() ? 0.45 : 1,
@@ -630,7 +630,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
   // ── Render ──────────────────────────────────────────────────
   return (
     <section style={{
-      padding: '1.5rem', borderRadius: 20,
+      padding: '1.5rem', 
       background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
       marginBottom: 24,
     }}>
@@ -641,7 +641,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
         {!loading && (
           <span style={{
             marginLeft: 4, fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)',
-            background: 'rgba(255,255,255,0.06)', padding: '1px 8px', borderRadius: 99,
+            background: 'rgba(255,255,255,0.06)', padding: '1px 8px', 
           }}>
             {comments.length}
           </span>
@@ -651,7 +651,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
       {/* Comment list */}
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: '1.5rem' }}>
-          {[1, 2].map(i => <div key={i} className="skeleton" style={{ height: 64, borderRadius: 12 }} />)}
+          {[1, 2].map(i => <div key={i} className="skeleton" style={{ height: 64,}} />)}
         </div>
       ) : comments.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '2rem 0', color: 'rgba(255,255,255,0.25)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
@@ -671,7 +671,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
             return (
               <div key={comment.id} style={{
                 display: 'flex', gap: '0.75rem', alignItems: 'flex-start',
-                padding: '0.875rem', borderRadius: 12,
+                padding: '0.875rem', 
                 background: isOwn ? 'rgba(var(--accent-rgb,139,92,246),0.07)' : 'rgba(255,255,255,0.03)',
                 border: `1px solid ${isOwn ? 'rgba(var(--accent-rgb,139,92,246),0.2)' : 'rgba(255,255,255,0.05)'}`,
               }}>
@@ -703,7 +703,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
                     {badgeCfg && (
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: 3,
-                        padding: '1px 6px', borderRadius: 999,
+                        padding: '1px 6px', 
                         background: badgeCfg.bg, border: `1px solid ${badgeCfg.border}`,
                         color: badgeCfg.color, fontSize: 10, fontWeight: 600, lineHeight: 1.5,
                       }}>
@@ -712,7 +712,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
                     )}
                     {isOwner && !isOwn && (
                       <span style={{
-                        fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 999,
+                        fontSize: 10, fontWeight: 600, padding: '1px 6px', 
                         background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)',
                         border: '1px solid rgba(255,255,255,0.1)',
                       }}>
@@ -741,7 +741,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
                     onClick={() => handleDelete(comment.id)}
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer',
-                      color: 'rgba(255,255,255,0.2)', padding: 4, borderRadius: 6,
+                      color: 'rgba(255,255,255,0.2)', padding: 4, 
                       flexShrink: 0, display: 'flex', alignItems: 'center', transition: 'color 0.15s',
                     }}
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#f87171' }}
@@ -769,7 +769,7 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
               referrerPolicy="no-referrer"
               style={{
                 maxHeight: 80, maxWidth: 240, objectFit: 'cover',
-                borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)',
+                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             />
           )}
@@ -799,12 +799,12 @@ export function ProfileCommentsSection({ profileId, profileOwnerId }: ProfileCom
               style={{
                 flex: 1, padding: '0.625rem 0.875rem',
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 10, color: 'white', fontSize: '0.875rem',
+                 color: 'white', fontSize: '0.875rem',
                 resize: 'none', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5,
               }}
             />
             <button type="submit" disabled={submitting || !content.trim()} style={{
-              padding: '0.625rem 1rem', borderRadius: 10, border: 'none',
+              padding: '0.625rem 1rem',  border: 'none',
               background: 'var(--accent)', color: 'white', fontWeight: 600,
               fontSize: '0.85rem', cursor: submitting || !content.trim() ? 'not-allowed' : 'pointer',
               opacity: submitting || !content.trim() ? 0.45 : 1,

@@ -51,7 +51,7 @@ export function TvLoginScreen() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: 'radial-gradient(ellipse at 60% 0%, rgba(var(--accent-rgb, 139,92,246),0.12) 0%, transparent 60%)' }}>
-      <div style={{ width: '100%', maxWidth: 420, textAlign: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 20, padding: '2rem', backdropFilter: 'blur(16px)' }}>
+      <div style={{ width: '100%', maxWidth: 420, textAlign: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',  padding: '2rem', backdropFilter: 'blur(16px)' }}>
         
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white', marginBottom: '1rem' }}>TV Login</h1>
         
@@ -64,7 +64,7 @@ export function TvLoginScreen() {
             </p>
             <button
               onClick={signInWithGoogle}
-              style={{ width: '100%', padding: '0.7rem', borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: 500, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
+              style={{ width: '100%', padding: '0.7rem',  border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: 500, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
             >
               <Globe size={16} />
               Continue with Google

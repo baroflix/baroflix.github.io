@@ -102,7 +102,7 @@ function CollectionCard({ id, fallbackTitle }: { id: number; fallbackTitle: stri
     <Link
       to={`/collection/${id}`}
       className="group relative overflow-hidden block transition-transform hover:-translate-y-1"
-      style={{ aspectRatio: '16/9', borderRadius: 20, border: '1px solid var(--border)' }}
+      style={{ aspectRatio: '16/9',  border: '1px solid var(--border)' }}
     >
       {image ? (
         <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -111,7 +111,7 @@ function CollectionCard({ id, fallbackTitle }: { id: number; fallbackTitle: stri
       )}
       <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,8,8,0.95), transparent 70%)' }} />
       <div className="absolute bottom-5 left-5 right-5">
-        <h3 className="text-lg font-medium text-white truncate" style={{ fontFamily: 'DM Serif Display, serif' }}>
+        <h3 className="text-lg font-medium text-white truncate" style={{  }}>
           {title}
         </h3>
       </div>
@@ -184,7 +184,7 @@ function FilterDropdown({
                 zIndex: 200,
                 maxHeight: 220,
                 overflowY: 'auto',
-                borderRadius: 12,
+                
                 background: 'var(--surface-dropdown)',
                 border: '1px solid var(--border)',
                 backdropFilter: 'blur(24px)',
@@ -592,7 +592,7 @@ export function BrowsePage() {
 
       {/* Page Header */}
       <div className="space-y-2 mb-12">
-        <h1 className="text-3xl sm:text-4xl font-normal text-white" style={{ fontFamily: 'DM Serif Display, serif' }}>
+        <h1 className="text-3xl sm:text-4xl font-normal text-white" style={{  }}>
           {t.nav.browse}
         </h1>
         <p className="text-sm text-white/50 max-w-2xl leading-relaxed">

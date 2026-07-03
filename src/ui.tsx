@@ -23,7 +23,7 @@ export function MediaCard({ item }: { item: MediaItem }) {
       <Link
         to={link}
         className="group block overflow-hidden h-full"
-        style={{ borderRadius: 16, border: '1px solid var(--border)' }}
+        style={{ border: '1px solid var(--border)' }}
       >
         {/* Poster */}
         <div className="relative aspect-[2/3] bg-white/5 overflow-hidden">
@@ -40,12 +40,10 @@ export function MediaCard({ item }: { item: MediaItem }) {
           />
           {/* Type badge — always on dark image, keep dark bg + white text */}
           <div
-            className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest"
+            className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest font-mono"
             style={{
-              background: 'rgba(8,8,8,0.7)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 999,
+              background: 'rgba(8,8,8,0.75)',
+              border: '1px solid rgba(255,255,255,0.12)',
               color: 'rgba(255,255,255,0.7)',
             }}
           >
@@ -54,12 +52,10 @@ export function MediaCard({ item }: { item: MediaItem }) {
           {/* Score — always on dark image */}
           {item.vote_average ? (
             <div
-              className="absolute bottom-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold"
+              className="absolute bottom-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold font-mono"
               style={{
-                background: 'rgba(8,8,8,0.75)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 999,
+                background: 'rgba(8,8,8,0.8)',
+                border: '1px solid rgba(255,255,255,0.12)',
                 color: '#fff',
               }}
             >
@@ -73,10 +69,9 @@ export function MediaCard({ item }: { item: MediaItem }) {
             style={{ background: 'var(--accent-dim)' }}
           >
             <div
-              className="flex items-center justify-center w-12 h-12 rounded-full"
+              className="flex items-center justify-center w-11 h-11"
               style={{
                 background: 'var(--accent)',
-                boxShadow: '0 0 32px var(--accent-glow)',
               }}
             >
               <Play className="w-5 h-5 text-white fill-white" />
@@ -158,7 +153,7 @@ export function ContentRail({ items, loading }: { items: MediaItem[]; loading: b
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="skeleton shrink-0 rounded-2xl"
+            className="skeleton shrink-0"
             style={{ width: 160, aspectRatio: '2/3' }}
           />
         ))}
@@ -176,8 +171,8 @@ export function ContentRail({ items, loading }: { items: MediaItem[]; loading: b
         onClick={() => scroll('left')}
         tabIndex={-1}
         aria-label="Scroll left"
-        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 flex items-center justify-center w-9 h-9 rounded-full opacity-0 group-hover/rail:opacity-100 transition-opacity"
-        style={{ background: 'rgba(8,8,8,0.9)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 flex items-center justify-center w-9 h-9 opacity-0 group-hover/rail:opacity-100 transition-opacity"
+        style={{ background: 'rgba(8,8,8,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}
       >
         <ChevronLeft className="w-4 h-4 text-white" />
       </button>
@@ -199,8 +194,8 @@ export function ContentRail({ items, loading }: { items: MediaItem[]; loading: b
         onClick={() => scroll('right')}
         tabIndex={-1}
         aria-label="Scroll right"
-        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 flex items-center justify-center w-9 h-9 rounded-full opacity-0 group-hover/rail:opacity-100 transition-opacity"
-        style={{ background: 'rgba(8,8,8,0.9)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 flex items-center justify-center w-9 h-9 opacity-0 group-hover/rail:opacity-100 transition-opacity"
+        style={{ background: 'rgba(8,8,8,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}
       >
         <ChevronRight className="w-4 h-4 text-white" />
       </button>
@@ -239,8 +234,8 @@ export function ContinueWatchingRail({ history, onRemove }: {
         onClick={() => scroll('left')}
         tabIndex={-1}
         aria-label="Scroll left"
-        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 flex items-center justify-center w-9 h-9 rounded-full opacity-0 group-hover/rail:opacity-100 transition-opacity"
-        style={{ background: 'rgba(8,8,8,0.9)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 flex items-center justify-center w-9 h-9 opacity-0 group-hover/rail:opacity-100 transition-opacity"
+        style={{ background: 'rgba(8,8,8,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}
       >
         <ChevronLeft className="w-4 h-4 text-white" />
       </button>
@@ -260,7 +255,6 @@ export function ContinueWatchingRail({ history, onRemove }: {
           className="group shrink-0 overflow-hidden transition-transform hover:-translate-y-1 relative"
           style={{
             width: 220,
-            borderRadius: 14,
             border: '1px solid var(--border)',
             background: 'var(--bg-card)',
           }}
@@ -275,13 +269,13 @@ export function ContinueWatchingRail({ history, onRemove }: {
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(index) }}
-              className="absolute top-1.5 right-1.5 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-20"
+              className="absolute top-1.5 right-1.5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20"
               style={{
                 width: 20,
                 height: 20,
-                background: 'rgba(0,0,0,0.6)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                color: 'rgba(255,255,255,0.7)',
+                background: 'rgba(0,0,0,0.8)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'rgba(255,255,255,0.8)',
               }}
               aria-label="Remove from continue watching"
             >
@@ -306,13 +300,12 @@ export function ContinueWatchingRail({ history, onRemove }: {
             <Link
               to={`/title/${item.mediaType}/${item.id}${item.season && item.episode ? `?season=${item.season}&episode=${item.episode}&autoplay=1` : '?autoplay=1'}`}
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center justify-center rounded-full shrink-0 transition-all hover:scale-110 opacity-0 group-hover:opacity-100"
+              className="flex items-center justify-center shrink-0 transition-all opacity-0 group-hover:opacity-100"
               style={{
                 width: 28,
                 height: 28,
                 background: 'var(--accent)',
                 color: '#fff',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
               }}
               aria-label="Continue watching"
             >
@@ -329,8 +322,8 @@ export function ContinueWatchingRail({ history, onRemove }: {
         onClick={() => scroll('right')}
         tabIndex={-1}
         aria-label="Scroll right"
-        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 flex items-center justify-center w-9 h-9 rounded-full opacity-0 group-hover/rail:opacity-100 transition-opacity"
-        style={{ background: 'rgba(8,8,8,0.9)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 flex items-center justify-center w-9 h-9 opacity-0 group-hover/rail:opacity-100 transition-opacity"
+        style={{ background: 'rgba(8,8,8,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}
       >
         <ChevronRight className="w-4 h-4 text-white" />
       </button>
@@ -344,13 +337,13 @@ export function SectionHeader({ number, title, subtitle }: { number?: string; ti
   return (
     <div className="flex items-end gap-4 mb-5">
       {number && (
-        <span className="text-4xl font-bold tabular-nums" style={{ color: 'var(--text-ghost)', fontFamily: 'DM Serif Display, serif' }}>
+        <span className="text-4xl font-bold tabular-nums font-mono" style={{ color: 'var(--text-ghost)' }}>
           {number}
         </span>
       )}
       <div>
-        {subtitle && <div className="text-[11px] uppercase tracking-widest mb-1" style={{ color: 'var(--accent)' }}>{subtitle}</div>}
-        <h2 className="text-xl font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+        {subtitle && <div className="text-[10px] uppercase tracking-[0.15em] mb-1 font-mono" style={{ color: 'var(--accent)' }}>{subtitle}</div>}
+        <h2 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>{title}</h2>
       </div>
     </div>
   )
@@ -361,9 +354,8 @@ export function SectionHeader({ number, title, subtitle }: { number?: string; ti
 export function Chip({ children }: { children: React.ReactNode }) {
   return (
     <span
-      className="inline-block px-3 py-1 text-xs font-medium"
+      className="inline-block px-2.5 py-0.5 text-xs font-mono"
       style={{
-        borderRadius: 999,
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
         color: 'var(--text-secondary)',
@@ -380,7 +372,7 @@ export function EmptyPanel({ label, description }: { label: string; description:
   return (
     <div
       className="py-10 px-6 text-center"
-      style={{ borderRadius: 16, border: '1px dashed var(--border)' }}
+      style={{ border: '1px dashed var(--border)' }}
     >
       <div className="text-base font-semibold" style={{ color: 'var(--text-secondary)' }}>{label}</div>
       <p className="mt-2 text-sm" style={{ color: 'var(--text-tertiary)' }}>{description}</p>
@@ -393,8 +385,8 @@ export function EmptyPanel({ label, description }: { label: string; description:
 export function SetupNotice({ compact = false, message }: { compact?: boolean; message?: string }) {
   return (
     <div
-      className={`${compact ? 'p-4' : 'p-6'} rounded-2xl`}
-      style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)' }}
+      className={`${compact ? 'p-4' : 'p-6'}`}
+      style={{ background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.2)', borderLeft: '3px solid rgba(229,9,20,0.6)' }}
     >
       <div className="text-sm font-semibold mb-1" style={{ color: 'var(--accent)' }}>TMDB Setup Required</div>
       <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -410,10 +402,10 @@ export function FactBadge({ label, value }: { label: string; value: string }) {
   return (
     <div
       className="px-4 py-3"
-      style={{ borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+      style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
     >
-      <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-tertiary)' }}>{label}</div>
-      <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{value}</div>
+      <div className="text-[10px] uppercase tracking-[0.12em] mb-1 font-mono" style={{ color: 'var(--text-tertiary)' }}>{label}</div>
+      <div className="text-sm font-semibold font-mono" style={{ color: 'var(--text-primary)' }}>{value}</div>
     </div>
   )
 }
@@ -425,7 +417,7 @@ export function CastCard({ member }: { member: CastMember }) {
     <Link
       to={`/person/${member.id}`}
       className="flex items-center gap-3 p-3 transition-colors"
-      style={{ borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+      style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-card-hover)' }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-card)' }}
     >
@@ -460,11 +452,11 @@ export function GridSkeleton({ columnsClassName = 'grid-cols-2 sm:grid-cols-3 lg
   return (
     <div className={`grid gap-3 ${columnsClassName}`}>
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)' }}>
+        <div key={i} style={{ overflow: 'hidden', border: '1px solid var(--border)' }}>
           <div className="skeleton" style={{ aspectRatio: '2/3' }} />
           <div style={{ padding: 12, background: 'var(--bg-card)' }}>
-            <div className="skeleton h-3 rounded-full mb-2" style={{ width: '60%' }} />
-            <div className="skeleton h-2.5 rounded-full" style={{ width: '40%' }} />
+            <div className="skeleton h-3 mb-2" style={{ width: '60%' }} />
+            <div className="skeleton h-2.5" style={{ width: '40%' }} />
           </div>
         </div>
       ))}
@@ -487,7 +479,6 @@ export function SelectField({
         onChange={(e) => onChange(e.target.value)}
         className="w-full px-4 py-3 outline-none transition-colors"
         style={{
-          borderRadius: 12,
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',
           color: 'var(--text-primary)',
@@ -506,21 +497,14 @@ export function PlayerFrame({ src, title }: { src: string; title: string }) {
     <div
       className="overflow-hidden"
       style={{
-        borderRadius: 20,
         border: '1px solid var(--border)',
-        boxShadow: '0 0 80px var(--accent-glow), 0 32px 80px rgba(0,0,0,0.7)',
       }}
     >
       <div
-        className="flex items-center gap-3 px-5 py-3 border-b"
+        className="flex items-center gap-3 px-5 py-2.5 border-b"
         style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}
       >
-        <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full" style={{ background: '#ff5f57' }} />
-          <div className="w-3 h-3 rounded-full" style={{ background: '#ffbd2e' }} />
-          <div className="w-3 h-3 rounded-full" style={{ background: '#28ca41' }} />
-        </div>
-        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{title}</span>
+        <span className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>{title}</span>
       </div>
       <div style={{ background: '#000' }}>
         <iframe
@@ -547,7 +531,6 @@ export function BackButton() {
       onClick={() => navigate(-1)}
       className="inline-flex items-center gap-2 px-4 py-2 text-sm transition-colors cursor-pointer"
       style={{
-        borderRadius: 999,
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
         color: 'var(--text-secondary)',

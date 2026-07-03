@@ -390,7 +390,6 @@ export function TitlePage() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mt-6 overflow-hidden"
           style={{
-            borderRadius: 24,
             border: '1px solid rgba(255,255,255,0.09)',
             background: 'rgba(255,255,255,0.03)',
             position: 'relative',
@@ -433,10 +432,9 @@ export function TitlePage() {
                 />
               ) : (
                 <h1
-                  className="text-4xl sm:text-5xl lg:text-6xl font-normal text-white"
+                  className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white"
                   style={{
-                    fontFamily: 'DM Serif Display, serif',
-                    letterSpacing: '-0.02em',
+                    letterSpacing: '-0.04em',
                     textShadow: '0 4px 32px rgba(0,0,0,0.7)',
                   }}
                 >
@@ -633,7 +631,6 @@ export function TitlePage() {
               style={{
                 width: 180,
                 aspectRatio: '2/3',
-                borderRadius: 14,
                 border: '1px solid rgba(255,255,255,0.12)',
                 background: 'transparent',
                 padding: 0,
@@ -772,7 +769,7 @@ export function TitlePage() {
               src={posterOriginalSrc}
               alt={title}
               className="max-h-[90dvh] w-auto object-contain shadow-2xl"
-              style={{ borderRadius: 16, maxWidth: '90vw' }}
+              style={{ maxWidth: '90vw' }}
               initial={{ scale: 0.88, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.88, opacity: 0 }}
@@ -967,7 +964,6 @@ function SeasonPanel({
               key={ep.id}
               className="text-left transition-all cursor-pointer p-2 sm:p-3"
               style={{
-                borderRadius: 12,
                 background: isWatched
                   ? 'rgba(var(--accent-rgb,139,92,246),0.08)'
                   : isActive
@@ -991,7 +987,7 @@ function SeasonPanel({
                 {/* Thumbnail */}
                 <div
                   className="shrink-0 overflow-hidden relative"
-                  style={{ width: 'clamp(60px, 17vw, 128px)', aspectRatio: '16/9', borderRadius: 7, background: 'rgba(255,255,255,0.06)' }}
+                  style={{ width: 'clamp(60px, 17vw, 128px)', aspectRatio: '16/9', background: 'rgba(255,255,255,0.06)' }}
                 >
                   {ep.still_path ? (
                     <img src={imageUrl(ep.still_path, 'w342')} alt={ep.name} className="w-full h-full object-cover" loading="lazy" />

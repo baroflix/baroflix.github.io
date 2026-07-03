@@ -1,6 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
+@font-face {
+  font-family: 'Geist Pixel';
+  src: url('/GeistPixel-Square.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
 @import 'tailwindcss';
 
+/* ─── Tailwind Theme Override — zero radius everywhere ───────────────────── */
+@theme {
+  --radius:     0px;
+  --radius-sm:  0px;
+  --radius-md:  0px;
+  --radius-lg:  0px;
+  --radius-xl:  0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-full:0px;
+
+  --font-sans: 'Geist Variable', 'Geist', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono Variable', 'Geist Mono', monospace;
+}
 
 /* ─── Design Tokens ────────────────────────────────────────────────────────── */
 :root {
@@ -23,27 +46,20 @@
   --text-secondary: rgba(255,255,255,0.55);
   --text-tertiary:  rgba(255,255,255,0.30);
 
-  /* Radii */
-  --radius-sm:  8px;
-  --radius-md:  14px;
-  --radius-lg:  20px;
-  --radius-xl:  28px;
-  --radius-pill:999px;
-
-  /* Shadows */
-  --shadow-card: 0 2px 16px rgba(0,0,0,0.5), 0 0 0 1px var(--border);
+  /* Shadows — flat/structured instead of diffuse */
+  --shadow-card: 0 0 0 1px var(--border);
   --shadow-glow: 0 0 0 2px var(--accent), 0 8px 48px var(--accent-glow);
-  --shadow-panel:0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px var(--border);
+  --shadow-panel:0 0 0 1px var(--border);
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
-  --duration-fast: 180ms;
-  --duration-base: 280ms;
-  --duration-slow: 500ms;
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 400ms;
 
   /* Typography */
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Geist Variable', 'Geist', system-ui, -apple-system, sans-serif;
   font-size: 16px;
   line-height: 1.6;
   font-weight: 400;
@@ -55,22 +71,16 @@
 }
 
 /* ─── Light theme (Lapis) ───────────────────────────────────────────────────── */
-/* Design tokens are overridden via JS in Shell.tsx.
-   This block handles Tailwind utility classes and patterns that can't be
-   changed via CSS variables because they use hardcoded values. */
 :root.light-theme {
   color-scheme: light;
 }
 
-/* Cards / panels */
 .light-theme .glass {
   background: rgba(255,255,255,0.75);
   border-color: rgba(0,0,0,0.09);
 }
 
 /* ── Tailwind text-white / opacity variants inside page content ── */
-/* The hero section is excluded via .hero-section so white text on
-   dark backdrops is preserved. */
 .light-theme .page-content .text-white { color: var(--text-primary) !important; }
 .light-theme .page-content .text-white\/90 { color: var(--text-primary) !important; }
 .light-theme .page-content .text-white\/80 { color: var(--text-secondary) !important; }
@@ -81,7 +91,6 @@
 .light-theme .page-content .text-white\/30 { color: var(--text-tertiary) !important; }
 .light-theme .page-content .text-white\/20 { color: var(--text-tertiary) !important; }
 
-/* Restore white inside the hero (dark backdrop) */
 .light-theme .hero-section .text-white,
 .light-theme .hero-section .text-white\/90,
 .light-theme .hero-section .text-white\/80,
@@ -90,16 +99,13 @@
 .light-theme .hero-section .text-white\/50,
 .light-theme .hero-section .text-white\/40 { color: inherit !important; }
 
-/* Restore white inside dark-overlay collection cards */
 .light-theme .dark-overlay .text-white,
 .light-theme .dark-overlay .text-white\/60,
 .light-theme .dark-overlay .text-white\/40 { color: inherit !important; }
 
-/* Tailwind bg-white/X → use card bg in light mode for panels */
 .light-theme .page-content .bg-white\/5 { background: var(--bg-card) !important; }
 .light-theme .page-content .bg-white\/10 { background: var(--bg-card-hover) !important; }
 
-/* Borders */
 .light-theme .page-content .border-white\/10 { border-color: var(--border) !important; }
 .light-theme .page-content .border-white\/20 { border-color: var(--border-hover) !important; }
 
@@ -115,13 +121,10 @@ body {
   background-color: var(--bg);
   color: var(--text-primary);
   overflow-x: hidden;
-  /* Prevent pull-to-refresh on mobile (iOS Safari / Android Chrome) */
   overscroll-behavior-y: contain;
 }
 
-/* Subtle noise texture — gives depth to dark surfaces.
-   Disabled on mobile/tablet: the fixed full-screen paint is expensive on
-   lower-powered GPUs and contributes to Safari tab crashes on iPad. */
+/* Subtle noise texture */
 @media (hover: hover) {
   body::after {
     content: '';
@@ -129,14 +132,13 @@ body {
     inset: 0;
     pointer-events: none;
     z-index: 9999;
-    opacity: 0.025;
+    opacity: 0.02;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 200px 200px;
   }
 }
 
-/* Ambient gradient background — driven by --accent-glow / --accent-dim CSS vars
-   which are set dynamically by Shell.tsx on :root when the theme changes */
+/* Ambient accent gradient */
 body::before {
   content: '';
   position: fixed;
@@ -152,11 +154,24 @@ body::before {
 #root { min-height: 100vh; position: relative; z-index: 1; }
 
 /* ─── Typography ───────────────────────────────────────────────────────────── */
-h1, h2, h3, h4, h5, h6, .font-display {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-weight: 400;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Geist Variable', 'Geist', system-ui, sans-serif;
+  font-weight: 700;
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+}
+
+/* Pixel display class — use for hero headings, logo "flix", big section titles */
+.font-pixel {
+  font-family: 'Geist Pixel', monospace;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+/* Mono class for data, metadata, counters, tags */
+.font-mono {
+  font-family: 'Geist Mono Variable', 'Geist Mono', monospace;
 }
 
 a {
@@ -170,14 +185,14 @@ img {
 }
 
 /* ─── Scrollbar ────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.15);
-  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 0;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
-* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.24); }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
 
 /* ─── Selection ────────────────────────────────────────────────────────────── */
 ::selection {
@@ -187,7 +202,6 @@ img {
 
 /* ─── Animations ───────────────────────────────────────────────────────────── */
 
-/* Ken Burns pan+zoom for hero backdrops */
 @keyframes ken-burns {
   0%   { transform: scale(1.0) translate(0%, 0%); }
   33%  { transform: scale(1.08) translate(-1%, -0.5%); }
@@ -195,30 +209,24 @@ img {
   100% { transform: scale(1.0) translate(0%, 0%); }
 }
 
-/* Subtle shimmer for skeleton loaders */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }
   100% { background-position: 400px 0; }
 }
 
-/* Pulse glow */
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
   50%       { box-shadow: 0 0 40px var(--accent-glow), 0 0 80px var(--accent-dim); }
 }
 
-/* Fade-in-up for content entry */
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(24px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Spinner for loading states */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
-
 
 /* ─── Utility Classes ──────────────────────────────────────────────────────── */
 
@@ -228,7 +236,7 @@ img {
 }
 
 .animate-fade-up {
-  animation: fade-up 0.6s var(--ease-out-expo) both;
+  animation: fade-up 0.5s var(--ease-out-expo) both;
 }
 
 .animate-pulse-glow {
@@ -240,14 +248,14 @@ img {
   background: linear-gradient(
     90deg,
     rgba(255,255,255,0.04) 25%,
-    rgba(255,255,255,0.09) 50%,
+    rgba(255,255,255,0.08) 50%,
     rgba(255,255,255,0.04) 75%
   );
   background-size: 400px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
-/* Glass panel */
+/* Glass panel — kept for specific use cases (nav blur etc.) */
 .glass {
   background: var(--bg-card);
   backdrop-filter: blur(24px) saturate(180%);
@@ -261,15 +269,12 @@ img {
 }
 
 /* ─── Mobile & safe-area ────────────────────────────────────────────────────── */
-
-/* Respect iOS home indicator / notch on all pages */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   body {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
-/* Minimum touch target size on mobile */
 @media (max-width: 639px) {
   button, a, [role="button"] {
     min-height: 36px;
@@ -297,8 +302,8 @@ img {
 /* ─── Focus Styles ─────────────────────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: var(--radius-sm);
+  outline-offset: 2px;
+  border-radius: 0;
 }
 
 /* ─── Episode synopsis auto-scroll ─────────────────────────────────────────── */
@@ -327,27 +332,26 @@ a, button, [role="button"], select, label {
   cursor: pointer;
 }
 
-/* TV Mode / Spatial Navigation Focus */
 *:focus:not(:focus-visible) {
   outline: none !important;
 }
 
 *:focus-visible:not(input):not(textarea):not(select) {
-  outline: 4px solid var(--accent) !important;
-  outline-offset: 4px !important;
-  box-shadow: 0 0 32px var(--accent-glow) !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 24px var(--accent-glow) !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 100;
   position: relative;
 }
 
 a:focus-visible, button:focus-visible, [tabindex="0"]:focus-visible {
-  transform: scale(1.05) !important;
+  transform: scale(1.03) !important;
 }
 
 @media (hover: hover) {
-  a:not(.primary-btn):not(.no-bg-hover):hover, 
-  button:not(.primary-btn):not(.no-bg-hover):hover, 
+  a:not(.primary-btn):not(.no-bg-hover):hover,
+  button:not(.primary-btn):not(.no-bg-hover):hover,
   [role="button"]:not(.primary-btn):not(.no-bg-hover):hover {
     background-color: var(--accent-dim) !important;
   }
