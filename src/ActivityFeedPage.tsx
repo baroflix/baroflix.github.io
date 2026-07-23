@@ -265,6 +265,11 @@ export function ActivityFeedPage() {
     return uid ? localStorage.getItem(`baroflix_notif_seen_${uid}`) : null
   })
 
+  useEffect(() => {
+    const uid = session?.user?.id
+    setLastSeen(uid ? localStorage.getItem(`baroflix_notif_seen_${uid}`) : null)
+  }, [session?.user?.id])
+
   // When Shell clears the badge, refresh our lastSeen so items stop being "new"
   useEffect(() => {
     const handler = () => {

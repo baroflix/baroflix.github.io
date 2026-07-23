@@ -194,9 +194,6 @@ export function TitlePage() {
     }, { replace: true })
   }, [autoplayParam, mediaType, isEpisodic, seasonDetails, details])
 
-  if (!hasTmdbCredentials && mediaType !== 'anime') return <div className="px-4 sm:px-6 pt-20 sm:pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
-  if (!mediaType) return <Navigate replace to="/" />
-
   const title = details ? titleFromItem(details) : 'Loading…'
   const backdropSrc = imageUrl(details?.backdrop_path, 'w1280') || heroFallback
   const posterSrc = imageUrl(details?.poster_path, 'w780') || heroFallback
@@ -318,6 +315,9 @@ export function TitlePage() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [posterOpen]);
+
+  if (!hasTmdbCredentials && mediaType !== 'anime') return <div className="px-4 sm:px-6 pt-20 sm:pt-24 max-w-3xl mx-auto"><SetupNotice /></div>
+  if (!mediaType) return <Navigate replace to="/" />
 
   return (
     <>

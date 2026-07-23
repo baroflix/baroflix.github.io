@@ -158,6 +158,8 @@ export function SportsPage() {
   const [streams, setStreams] = useState<Stream[]>([])
   const [loadingStreams, setLoadingStreams] = useState(false)
   const [activeStream, setActiveStream] = useState<Stream | null>(null)
+  const matchesRequestRef = useRef(0)
+  const streamsRequestRef = useRef(0)
 
   // Fetch recent chat messages and subscribe to supabase realtime
   useEffect(() => {
@@ -275,6 +277,7 @@ export function SportsPage() {
 
   // Fetch matches based on status filter & selected sport
   const loadMatches = () => {
+    const requestId = ++matchesRequestRef.current
     setLoadingMatches(true)
     setError(null)
 
@@ -291,6 +294,7 @@ export function SportsPage() {
 
     promise
       .then((data) => {
+        if (requestId !== matchesRequestRef.current) return
         // If we fetched the generic live/today endpoint, filter by sport locally if needed
         if ((statusFilter === 'live' || statusFilter === 'today') && selectedSport !== 'all') {
           setMatches(data.filter(m => m.category === selectedSport))
@@ -299,10 +303,15 @@ export function SportsPage() {
         }
       })
       .catch((err) => {
+        if (requestId !== matchesRequestRef.current) return
         console.error('Failed to load matches:', err)
         setError('Could not retrieve match data. Please try again.')
       })
-      .finally(() => setLoadingMatches(false))
+      .finally(() => {
+        if (requestId === matchesRequestRef.current) {
+          setLoadingMatches(false)
+        }
+      })
   }
 
   useEffect(() => {
@@ -337,14 +346,18 @@ export function SportsPage() {
   // Fetch streams when active match or source changes
   useEffect(() => {
     if (!activeMatch || !selectedSource) {
+      streamsRequestRef.current += 1
       setStreams([])
       setActiveStream(null)
+      setLoadingStreams(false)
       return
     }
 
+    const requestId = ++streamsRequestRef.current
     setLoadingStreams(true)
     fetchStreams(selectedSource.source, selectedSource.id)
       .then((data) => {
+        if (requestId !== streamsRequestRef.current) return
         setStreams(data)
         if (data.length > 0) {
           // Default to the first stream, preferably in HD or English
@@ -357,9 +370,14 @@ export function SportsPage() {
         }
       })
       .catch((err) => {
+        if (requestId !== streamsRequestRef.current) return
         console.error('Failed to load streams:', err)
       })
-      .finally(() => setLoadingStreams(false))
+      .finally(() => {
+        if (requestId === streamsRequestRef.current) {
+          setLoadingStreams(false)
+        }
+      })
   }, [activeMatch, selectedSource])
 
   // Format Unix timestamp into a readable date/time

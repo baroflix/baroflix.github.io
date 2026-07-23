@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useEffectEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Users, Copy, Check, LogOut, Radio, Play } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -42,6 +42,13 @@ export function WatchPartyPanel({
   const [copied, setCopied] = useState(false)
   const [participants, setParticipants] = useState<Participant[]>([])
 
+  const handleMediaChange = useEffectEvent((payload: any) => {
+    const { mediaType: nextMediaType, id: nextId, season: nextSeason, episode: nextEpisode } = payload.payload ?? {}
+    if (String(nextId) === String(movieId) && nextMediaType === mediaType) {
+      onStartPlayback(nextSeason, nextEpisode)
+    }
+  })
+
   // Setup presence syncing when room changes
   useEffect(() => {
     if (!activeRoomId || !session) {
@@ -71,11 +78,7 @@ export function WatchPartyPanel({
         setParticipants(parsed)
       })
       .on('broadcast', { event: 'change_media' }, (payload: any) => {
-        const { mediaType: pType, id: pId, season: pSeason, episode: pEpisode } = payload.payload
-        // Start playback if it matches this title or triggers it
-        if (String(pId) === String(movieId) && pType === mediaType) {
-          onStartPlayback(pSeason, pEpisode)
-        }
+        handleMediaChange(payload)
       })
 
     // Subscribe to channel
@@ -100,7 +103,7 @@ export function WatchPartyPanel({
       supabase.removeChannel(chan)
       setChannel(null)
     }
-  }, [activeRoomId, session, profile])
+  }, [activeRoomId, session, profile, setChannel])
 
   const handleCreateRoom = () => {
     if (!session) return
