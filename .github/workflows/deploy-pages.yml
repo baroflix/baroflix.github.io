@@ -18,6 +18,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_TMDB_API_KEY: ${{ secrets.VITE_TMDB_API_KEY }}
+      VITE_TMDB_ACCESS_TOKEN: ${{ secrets.VITE_TMDB_ACCESS_TOKEN }}
+      VITE_SITE_URL: https://baroflix.github.io
     steps:
       - name: Checkout
         uses: actions/checkout@v4
