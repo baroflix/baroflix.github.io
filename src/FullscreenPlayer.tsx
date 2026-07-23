@@ -249,6 +249,24 @@ export function FullscreenPlayer({
           flexDirection: 'column',
         }}
       >
+        {/* Cross-origin iframes swallow pointer movement, so keep a small
+            top hotspot that can always wake the overlay without covering the player. */}
+        <div
+          onMouseMove={wake}
+          onPointerMove={wake}
+          onPointerDown={wake}
+          onTouchStart={wake}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 96,
+            zIndex: 5,
+            background: 'transparent',
+          }}
+        />
+
         {/* ── Unified controls overlay — auto-hides as one unit ─────────── */}
         <AnimatePresence>
           {showControls && (
