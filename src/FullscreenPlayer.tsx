@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useEffectEvent, useState, useRef } from 'react'
 import { X, SkipForward } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { STORAGE_KEYS, writeWatchedEntry } from './hooks'
@@ -21,6 +21,12 @@ export function FullscreenPlayer({
 }) {
   const [showControls, setShowControls] = useState(true)
   const timeoutRef = useRef<number | null>(null)
+
+  const wake = useEffectEvent(() => {
+    setShowControls(true)
+    if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
+    timeoutRef.current = window.setTimeout(() => setShowControls(false), 5000)
+  })
 
   // Real progress tracking from videasy player
   useEffect(() => {
@@ -193,15 +199,10 @@ export function FullscreenPlayer({
     }
   }, [progressKey])
 
-  const wake = () => {
-    setShowControls(true)
-    if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
-    timeoutRef.current = window.setTimeout(() => setShowControls(false), 5000)
-  }
-
   // Close on Escape key
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      wake()
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
@@ -218,9 +219,15 @@ export function FullscreenPlayer({
   // Auto-hide controls after inactivity
   useEffect(() => {
     window.addEventListener('mousemove', wake)
+    window.addEventListener('pointermove', wake)
+    window.addEventListener('pointerdown', wake)
+    window.addEventListener('touchstart', wake)
     wake()
     return () => {
       window.removeEventListener('mousemove', wake)
+      window.removeEventListener('pointermove', wake)
+      window.removeEventListener('pointerdown', wake)
+      window.removeEventListener('touchstart', wake)
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
     }
   }, [])
@@ -242,9 +249,9 @@ export function FullscreenPlayer({
           flexDirection: 'column',
         }}
       >
-        {/* ── Top bar (gradient + Next Episode — auto-hides) ───────────── */}
+        {/* ── Unified controls overlay — auto-hides as one unit ─────────── */}
         <AnimatePresence>
-          {showControls && onNextEpisode && (
+          {showControls && (
             <motion.div
               initial={{ y: -40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -254,7 +261,7 @@ export function FullscreenPlayer({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
-                padding: '12px 64px 12px 20px',
+                padding: '12px 20px',
                 background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%)',
                 position: 'absolute',
                 top: 0,
@@ -265,62 +272,56 @@ export function FullscreenPlayer({
                 pointerEvents: 'none',
               }}
             >
+              {onNextEpisode ? (
+                <button
+                  type="button"
+                  onClick={onNextEpisode}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0 14px',
+                    height: 36,
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    flexShrink: 0,
+                    fontFamily: 'Inter, sans-serif',
+                    pointerEvents: 'auto',
+                  }}
+                >
+                  <SkipForward style={{ width: 14, height: 14 }} />
+                  Next Episode
+                </button>
+              ) : null}
+
               <button
                 type="button"
-                onClick={onNextEpisode}
+                onClick={onClose}
+                aria-label="Close player"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6,
-                  padding: '0 14px',
-                  height: 36,
-                  
-                  background: 'rgba(255,255,255,0.12)',
+                  justifyContent: 'center',
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
                   border: '1px solid rgba(255,255,255,0.2)',
                   cursor: 'pointer',
                   color: '#fff',
-                  fontSize: 13,
-                  fontWeight: 600,
                   flexShrink: 0,
-                  fontFamily: 'Inter, sans-serif',
                   pointerEvents: 'auto',
                 }}
               >
-                <SkipForward style={{ width: 14, height: 14 }} />
-                Next Episode
+                <X style={{ width: 18, height: 18 }} />
               </button>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* ── Close button — always visible ─────────────────────────────── */}
-        <button
-          type="button"
-          onClick={onClose}
-          onTouchStart={wake}
-          aria-label="Close player"
-          style={{
-            position: 'absolute',
-            top: 16,
-            right: 20,
-            zIndex: 20,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            background: showControls ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.5)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            cursor: 'pointer',
-            color: '#fff',
-            opacity: showControls ? 1 : 0.4,
-            transition: 'opacity 0.3s, background 0.3s',
-            flexShrink: 0,
-          }}
-        >
-          <X style={{ width: 18, height: 18 }} />
-        </button>
 
         {/* ── iframe — takes up the full screen ──────────────────────── */}
         <iframe
