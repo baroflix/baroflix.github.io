@@ -1,4 +1,6 @@
 declare module 'spatial-navigation-js'
+declare module '@fontsource-variable/geist'
+declare module '@fontsource-variable/geist-mono'
 
 interface ElectronBridge {
   readonly isElectron: true
