@@ -28,7 +28,7 @@ export function FullscreenPlayer({
     timeoutRef.current = window.setTimeout(() => setShowControls(false), 5000)
   })
 
-  // Real progress tracking from videasy player
+  // Real progress tracking from embedded players that post playback updates.
   useEffect(() => {
     let lastSavedTime = 0
     let latestTimestamp = 0
@@ -352,7 +352,6 @@ export function FullscreenPlayer({
             display: 'block',
           }}
           allow="autoplay; fullscreen *; picture-in-picture *; encrypted-media"
-          allowFullScreen
           referrerPolicy="no-referrer-when-downgrade"
         />
 

@@ -175,7 +175,7 @@ export function HomePage() {
   }
 
   const playerUrl = playback
-    ? buildEmbedUrl(settings.embedProvider ?? 'videasy', playback.mediaType, playback.id, playback.season, playback.episode, { color: THEME_PRESETS[settings.theme].accent })
+    ? buildEmbedUrl(settings.embedProvider ?? 'vidsrc', playback.mediaType, playback.id, playback.season, playback.episode, { color: THEME_PRESETS[settings.theme].accent })
     : null
 
   const progressKey = playback ? `${playback.mediaType}-${playback.id}-${playback.season || 0}-${playback.episode || 0}` : undefined

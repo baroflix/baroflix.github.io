@@ -512,7 +512,6 @@ export function PlayerFrame({ src, title }: { src: string; title: string }) {
           src={src}
           className="aspect-video w-full block"
           allow="autoplay; fullscreen; picture-in-picture"
-          allowFullScreen
           loading="lazy"
           referrerPolicy="strict-origin-when-cross-origin"
         />

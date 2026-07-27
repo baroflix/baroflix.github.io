@@ -252,7 +252,10 @@ export function buildEmbedUrl(
   }
 
   switch (provider) {
+    case 'videasy':
     case 'vidsrc':
+      // Videasy currently redirects to a player that fails its own upstream CORS fetches.
+      // Route this provider through VidSrc so existing users keep a working playback source.
       return isTv
         ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}`
         : `https://vidsrc.to/embed/movie/${id}`
@@ -267,18 +270,12 @@ export function buildEmbedUrl(
         ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`
         : `https://www.2embed.cc/embed/${id}`
 
-    case 'videasy':
     default: {
       const base = isTv
-        ? `https://player.videasy.net/tv/${id}/${s}/${e}`
-        : `https://player.videasy.net/movie/${id}`
+        ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}`
+        : `https://vidsrc.to/embed/movie/${id}`
       const params = new URLSearchParams()
       if (options?.color) params.set('color', options.color.replace('#', ''))
-      if (isTv) {
-        params.set('nextEpisode', 'true')
-        params.set('episodeSelector', 'true')
-        params.set('autoplayNextEpisode', 'true')
-      }
       params.set('overlay', 'true')
       return `${base}?${params.toString()}`
     }

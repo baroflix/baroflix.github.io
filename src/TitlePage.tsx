@@ -204,7 +204,7 @@ export function TitlePage() {
   const defaultEpisode = (historyEntry && historyEntry.season === activeSeason && selectedSeasonParam == null) ? historyEntry.episode : undefined
   const activeEpisode = selectedEpisodeParam ?? defaultEpisode ?? seasonDetails?.episodes[0]?.episode_number ?? 1
   const playerUrl = playback
-    ? buildEmbedUrl(settings.embedProvider ?? 'videasy', playback.mediaType, playback.id, playback.season, playback.episode, {
+    ? buildEmbedUrl(settings.embedProvider ?? 'vidsrc', playback.mediaType, playback.id, playback.season, playback.episode, {
       color: THEME_PRESETS[settings.theme].accent,
       language: animeLang,
     })

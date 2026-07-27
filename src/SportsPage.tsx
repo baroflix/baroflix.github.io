@@ -836,7 +836,6 @@ export function SportsPage() {
                         src={activeStream.embedUrl}
                         className="w-full h-full block border-0"
                         allow="autoplay; fullscreen; picture-in-picture"
-                        allowFullScreen
                         referrerPolicy="strict-origin-when-cross-origin"
                       />
                     ) : (

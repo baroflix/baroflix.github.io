@@ -470,7 +470,7 @@ export function ProfileScreen() {
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {(Object.entries(EMBED_PROVIDERS) as [EmbedProviderId, { label: string; description: string }][]).map(([id, p]) => {
-                  const isActive = (settings.embedProvider ?? 'videasy') === id
+                  const isActive = (settings.embedProvider ?? 'vidsrc') === id
                   return (
                     <button key={id} type="button" onClick={() => updateSettings({ embedProvider: id })}
                       className="p-4 text-left transition-all"
